@@ -1,10 +1,5 @@
 {
-  "currentMonth": [
-    {
-      "date": "2025-02-06",
-      "amount": 567
-    }
-  ],
+  "currentMonth": [],
   "history": [],
-  "sha": "7ec4dda6931b6fc55740e9bb79a6bbfc9e6e354d"
+  "sha": "11da5327fa05518fd8cf49fd79bba1f92958da47"
 }
