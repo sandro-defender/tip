@@ -1,1 +1,1 @@
-
+echo '{"currentMonth":[],"history":[]}' > data.json
