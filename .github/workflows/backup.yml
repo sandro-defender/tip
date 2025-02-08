@@ -4,11 +4,7 @@ on:
   push:
     paths:
       - "*.json"  # აკონტროლებს მხოლოდ .json ფაილების ცვლილებებს
-  workflow_dispatch:
 
-permissions:
-  contents: write
-  
 jobs:
   backup:
     runs-on: ubuntu-latest
