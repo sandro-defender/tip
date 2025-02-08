@@ -11,8 +11,12 @@
     {
       "date": "2025-02-01",
       "amount": 8093
+    },
+    {
+      "date": "2025-02-07",
+      "amount": 12613
     }
   ],
   "history": [],
-  "sha": "e3160db78492d76a59f14eeabbb79e03cccddaff"
+  "sha": "45f6e70cdd11c17eda62b3fe36064addee51446b"
 }
