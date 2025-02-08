@@ -1,4 +1,4 @@
-name: Backup Changed Files
+name: Backup Changed JSON Files
 
 on:
   push:
@@ -9,13 +9,16 @@ jobs:
   backup:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write  # საჭიროა რეპოზიტორიაში ცვლილებების შესატანად
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # უზრუნველყოფს სრული გიტ ისტორიის მიღებას
 
-      - name: Get list of changed files
+      - name: Get list of changed JSON files
         id: changed-files
         uses: tj-actions/changed-files@v45
         with:
@@ -27,7 +30,7 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Backup changed files
+      - name: Backup changed JSON files
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
