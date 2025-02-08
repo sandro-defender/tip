@@ -33,23 +33,11 @@ jobs:
       - name: Backup changed JSON files
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          mkdir -p backups/$TIMESTAMP
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            # ამოიღეთ ფაილის სახელი გაფართოების გარეშე
-            filename=$(basename "$file" .json)
-            # ამოიღეთ თვე ფაილის სახელიდან
-            file_month=$(echo $filename | cut -d '-' -f 2)
-            # ამოიღეთ მიმდინარე თვე
-            current_month=$(date +"%m")
-            # თუ ფაილის თვე არ ემთხვევა მიმდინარე თვეს, შექმენით ახალი საქაღალდე
-            if [ "$file_month" != "$current_month" ]; then
-              TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-              mkdir -p backups/$TIMESTAMP
-              cp "$file" "backups/$TIMESTAMP/${filename}_backup.json"
-            else
-              # თუ თვე ემთხვევა, უბრალოდ დააკოპირეთ ფაილი ახალი სახელით
-              cp "$file" "${filename}_backup.json"
-            fi
+            cp "$file" "backups/$TIMESTAMP/$file"
           done
-          git add .
-          git commit -m "Backup of changed JSON files"
+          git add backups/$TIMESTAMP/
+          git commit -m "Backup on $TIMESTAMP due to file change"
           git push
