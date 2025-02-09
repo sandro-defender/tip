@@ -328,9 +328,9 @@
             document.getElementById('results').innerHTML = `
                 <div class="result-card">
                     <h4>საერთო თანხა</h4>
-                    <p>ჯამი: ${total.toFixed(2)} $</p>
-                    <p>სავარაუდო: ${(CONFIG.FORECAST_FACTOR).toFixed(2)} 💵</p>
-                    <p>Total Points: ${totalPoints.toFixed(2)} 💰</p>
+                    <p>ჯამი: ${total.toLocaleString('en-US', { minimumFractionDigits: 1 })} $</p>
+                    <p>სავარაუდო: ${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { minimumFractionDigits: 1 })} 💵</p>
+                    <p>Points: ${totalPoints.toLocaleString('en-US', { minimumFractionDigits: 1 })}║ Days: ${daysInMonth.toLocaleString('en-US', { minimumFractionDigits: 0  })}</p>
                 </div>
                 ${Object.entries(POINTS).map(([key, value]) => `
                     <div class="result-card">
