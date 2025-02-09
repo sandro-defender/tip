@@ -31,13 +31,24 @@ jobs:
           git config --global user.email "github-actions@github.com"
 
       - name: Backup changed JSON files
-        if: steps.changed-files.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.all_changed_files != ''
         run: |
-          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-          mkdir -p backups/$TIMESTAMP
+          MONTH=$(date +"%Y-%m")  # მაგალითად: 2025-02
+          TIMESTAMP=$(date +"%d.%m-%H.%M")  # მაგალითად: 09.02-14.30
+          mkdir -p backups/$MONTH  # ვქმნით მიმდინარე თვის საქაღალდეს
+
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            cp "$file" "backups/$TIMESTAMP/$file"
+            BASENAME=$(basename "$file")  # ვიღებთ მხოლოდ ფაილის სახელს
+            cp "$file" "backups/$MONTH/$TIMESTAMP-$BASENAME"
           done
-          git add backups/$TIMESTAMP/
-          git commit -m "Backup on $TIMESTAMP due to file change"
+
+          git add backups/$MONTH/
+          git commit -m "Backup JSON files on $TIMESTAMP"
           git push
+
+      - name: Ensure backups directory is tracked
+        run: |
+          touch backups/.gitkeep
+          git add backups/.gitkeep || true
+          git commit -m "Ensure backups directory exists" || true
+          git push || true
