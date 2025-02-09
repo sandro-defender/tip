@@ -44,6 +44,9 @@ jobs:
 
           git add backups/$MONTH/
           git commit -m "Backup JSON files on $TIMESTAMP"
+
+          # ვათანაბრებთ ლოკალურ და რემოუთ ბრენჩს, შემდეგ ვუშვებთ ცვლილებებს
+          git pull --rebase
           git push
 
       - name: Ensure backups directory is tracked
