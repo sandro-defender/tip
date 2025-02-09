@@ -31,7 +31,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
 
       - name: Backup changed JSON files
-        if: steps.changed-files.outputs.all_changed_files != ''
+        if: steps.changed-files.outputs.all_changed_files != 'true'
         run: |
           MONTH=$(date +"%Y-%m")  # მაგალითად: 2025-02
           TIMESTAMP=$(date +"%d.%m-%H.%M")  # მაგალითად: 09.02-14.30
