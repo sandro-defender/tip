@@ -1,0 +1,45 @@
+name: FTP Deploy with Backup
+
+on:
+  push:
+    branches:
+      - main  # ან შეცვალე საჭირო ბრენჩზე
+
+jobs:
+  deploy:
+    name: Upload to FTP with Backup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: Backup old index.html from FTP
+        run: |
+          lftp -e "
+          open ${{ secrets.FTP_SERVER }};
+          user ${{ secrets.FTP_USER }} ${{ secrets.FTP_PASS }};
+          get /tip/index.html -o backup_index.html;
+          bye;
+          "
+      
+      - name: Commit & Push Backup to GitHub
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add backup_index.html
+          git commit -m "Backup old index.html from FTP"
+          git push
+
+      - name: Upload new index.html to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: "./html/"
+          server-dir: "/tip/"
+          include: "index.html"
