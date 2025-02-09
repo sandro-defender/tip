@@ -1,4 +1,4 @@
-name: Backup Changed JSON Files working
+name: Backup Changed JSON Files test
 
 on:
   push:
