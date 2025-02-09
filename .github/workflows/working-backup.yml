@@ -1,0 +1,43 @@
+name: Backup Changed JSON Files
+
+on:
+  push:
+    paths:
+      - "*.json"  # აკონტროლებს მხოლოდ .json ფაილების ცვლილებებს
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # საჭიროა რეპოზიტორიაში ცვლილებების შესატანად
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # უზრუნველყოფს სრული გიტ ისტორიის მიღებას
+
+      - name: Get list of changed JSON files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            *.json
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Backup changed JSON files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          mkdir -p backups/$TIMESTAMP
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            cp "$file" "backups/$TIMESTAMP/$file"
+          done
+          git add backups/$TIMESTAMP/
+          git commit -m "Backup on $TIMESTAMP due to file change"
+          git push
