@@ -1,0 +1,51 @@
+name: Backup Changed JSON Files
+
+on:
+  push:
+    paths:
+      - "*.json"  # მხოლოდ .json ფაილების ცვლილებების ბექაპი
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # საჭიროა ბექაპის შესანახად
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # სრულად ვიღებთ Git-ის ისტორიას, რათა თავიდან ავიცილოთ push-ის პრობლემები
+
+      - name: Get list of changed JSON files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            *.json
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Backup changed JSON files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          MONTH=$(date +"%Y-%m")  # მაგ.: 2025-02
+          TIMESTAMP=$(date +"%d.%m-%H.%M")  # მაგ.: 09.02-16.30
+          mkdir -p backups/$MONTH  # ქმნის მიმდინარე თვის საქაღალდეს
+
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            BASENAME=$(basename "$file")  # იღებს ფაილის სახელს
+            cp "$file" "backups/$MONTH/$TIMESTAMP-$BASENAME"
+          done
+
+          git add backups/$MONTH/
+          git commit -m "Backup JSON files on $TIMESTAMP"
+
+      - name: Push changes to repository
+        run: |
+          git pull --rebase origin main  # თავიდან ავიცილოთ non-fast-forward შეცდომა
+          git push
