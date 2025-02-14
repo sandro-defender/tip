@@ -119,10 +119,14 @@
     {
       "date": "2024-12-01",
       "amount": 5418
+    },
+    {
+      "date": "2024-12-31",
+      "amount": 6785
     }
   ],
   "history": [],
-  "sha": "197ccbe357b404472673e7037f4bff091a1c0ae4",
+  "sha": "7544993ab9a2b107fdb51390470933769e7b41c7",
   "totalPoints": 5664.66,
   "totaltip": 199396
 }
