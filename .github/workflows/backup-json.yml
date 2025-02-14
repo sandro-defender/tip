@@ -3,7 +3,7 @@ name: Backup Changed JSON Files
 on:
   push:
     paths:
-      - "*.json"  # მხოლოდ .json ფაილების ცვლილებების ბექაპი
+      - "data/*.json"  # მხოლოდ data ფოლდერში .json ფაილების ცვლილებების ბექაპი
 
 jobs:
   backup:
@@ -23,7 +23,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            *.json
+            data/*.json
 
       - name: Set up Git
         run: |
@@ -38,8 +38,8 @@ jobs:
           mkdir -p backups/$MONTH  # ქმნის მიმდინარე თვის საქაღალდეს
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            BASENAME=$(basename "$file")  # იღებს ფაილის სახელს
-            cp "$file" "backups/$MONTH/$TIMESTAMP-$BASENAME"
+            RELATIVE_PATH="${file#data/}"  # ამოიღებს 'data/' პრეფიქსს
+            cp "$file" "backups/$MONTH/$TIMESTAMP-$RELATIVE_PATH"
           done
 
           git add backups/$MONTH/
