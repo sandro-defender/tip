@@ -1,10 +1,6 @@
 {
   "currentMonth": [
     {
-      "date": "2024-12-31",
-      "amount": 6785
-    },
-    {
       "date": "2024-12-30",
       "amount": 7521
     },
@@ -126,7 +122,7 @@
     }
   ],
   "history": [],
-  "sha": "a0f8ad3fa0d7ebeca22a7ff2dd903713fdc3279b",
+  "sha": "197ccbe357b404472673e7037f4bff091a1c0ae4",
   "totalPoints": 5664.66,
-  "totaltip": 199396.0
+  "totaltip": 199396
 }
