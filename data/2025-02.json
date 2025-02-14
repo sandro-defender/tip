@@ -1,5 +1,10 @@
 {
-  "currentMonth": [],
+  "currentMonth": [
+    {
+      "date": "2024-12-31",
+      "amount": 6785
+    }
+  ],
   "totalPoints": 5684.6,
-  "sha": "cf2f348305369e99837f15436848228cdd6d03f4"
+  "sha": "fdd1c936c5a920ad97d4037148ea2d747434ae05"
 }
