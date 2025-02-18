@@ -1,5 +1,11 @@
 {
-  "currentMonth": [],
-  "totalPoints": 0,
-  "monthlyTotalRecords": []
+  "currentMonth": [
+    {
+      "date": "2025-02-17",
+      "amount": 56656
+    }
+  ],
+  "totalPoints": 5684.6,
+  "monthlyTotalRecords": [],
+  "sha": "1fdba96e1ea831480b395fca295f3ca9f3009a34"
 }
