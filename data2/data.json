@@ -1,7 +1,12 @@
 {
   "monthlyData": {
     "2025-02": {
-      "currentMonth": [],
+      "currentMonth": [
+        {
+          "date": "2025-02-17",
+          "amount": 3454
+        }
+      ],
       "totalPoints": 5684.6
     }
   }
