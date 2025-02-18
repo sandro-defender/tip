@@ -128,5 +128,12 @@
   "history": [],
   "sha": "a0f8ad3fa0d7ebeca22a7ff2dd903713fdc3279b",
   "totalPoints": 5684.6,
-  "totaltip": 266608.0
+  "totaltip": 266608,
+  "monthlyTotalRecords": [
+    {
+      "month": "2025-02",
+      "totalPoints": 393.50657894736844,
+      "updatedAt": "2025-02-18T07:19:15.784Z"
+    }
+  ]
 }
