@@ -1,6 +1,10 @@
 {
   "currentMonth": [
     {
+      "date": "2025-02-27",
+      "amount": 6878
+    },
+    {
       "date": "2025-02-26",
       "amount": 6913
     },
@@ -105,11 +109,11 @@
       "amount": 8093
     },
     {
-      "date": "2025-02-27",
-      "amount": 6878
+      "date": "2025-02-28",
+      "amount": 1
     }
   ],
   "history": [],
-  "sha": "d844abfebe9548d3335c99f278e303d5c16f9e9f",
+  "sha": "55104d6b75f7f05e9bc9496d9f976ab27aa4508b",
   "totalPoints": 5684.6
 }
