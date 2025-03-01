@@ -107,13 +107,9 @@
     {
       "date": "2025-02-01",
       "amount": 8093
-    },
-    {
-      "date": "2025-02-28",
-      "amount": 1
     }
   ],
   "history": [],
-  "sha": "55104d6b75f7f05e9bc9496d9f976ab27aa4508b",
+  "sha": "102cf8fa9ffb417f41155f26342c7d9e11938aa6",
   "totalPoints": 5684.6
 }
