@@ -1,0 +1,14 @@
+{
+  "currentMonth": [
+    {
+      "date": "2025-03-01",
+      "amount": 7410
+    },
+    {
+      "date": "2025-03-02",
+      "amount": 6602
+    }
+  ],
+  "totalPoints": 5684.6,
+  "sha": "d5b50538028b0f1c9f94da6b094b31c7a4faf7f1"
+}
