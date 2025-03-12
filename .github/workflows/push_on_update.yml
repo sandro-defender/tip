@@ -1,0 +1,32 @@
+name: Send Push Notification on File Change
+
+on:
+  push:
+    branches:
+      - main  # როცა main ბრენჩზე იქნება commit
+
+jobs:
+  send_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install PHP and dependencies
+        run: |
+          sudo apt update
+          sudo apt install php-cli composer
+          composer require minishlink/web-push
+
+      - name: Fetch last commit info
+        run: |
+          echo "LAST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          echo "LAST_COMMIT_FILE=$(git diff-tree --no-commit-id --name-only -r $(git rev-parse HEAD))" >> $GITHUB_ENV
+          echo "COMMIT_URL=https://github.com/${{ github.repository }}/commit/$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Fetch subscriptions from InfinityFree
+        run: |
+          curl -o subscriptions.json https://iveria.ct.ws/subscriptions.json
+
+      - name: Send Push Notification
+        run: php push.php
