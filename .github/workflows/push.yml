@@ -1,0 +1,44 @@
+name: Send Push Notification
+
+on:
+  workflow_dispatch:  # ხელით გაშვება GitHub Actions-იდან
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install web-push
+
+      - name: Send Push Notification
+        run: |
+          node -e '
+          const webPush = require("web-push");
+          const vapidKeys = {
+              publicKey: process.env.VAPID_PUBLIC_KEY,
+              privateKey: process.env.VAPID_PRIVATE_KEY
+          };
+          webPush.setVapidDetails(
+              "mailto:your-email@example.com",
+              vapidKeys.publicKey,
+              vapidKeys.privateKey
+          );
+          const subscription = JSON.parse(process.env.PUSH_SUBSCRIPTION);
+          const payload = JSON.stringify({
+              title: "📢 ახალი შეტყობინება!",
+              body: "ეს არის ტესტური Push შეტყობინება.",
+              icon: "/icon.png"
+          });
+          webPush.sendNotification(subscription, payload).then(() => {
+              console.log("✅ შეტყობინება გაგზავნილია!");
+          }).catch((err) => {
+              console.error("❌ შეცდომა Push გაგზავნისას:", err);
+          });
+          '
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
