@@ -24,8 +24,6 @@ const filesToPrecache = [
   { url: '/index.html', revision: VERSION },
   { url: '/manifest.json', revision: VERSION },
   { url: '/includes/menu.html', revision: VERSION },
-  { url: '/html/protected/tip.html', revision: VERSION },
-  { url: '/html/protected/statistics.html', revision: VERSION },
   { url: '/html/allowed/salary.html', revision: VERSION }
 ];
 
