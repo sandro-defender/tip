@@ -647,10 +647,26 @@
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker.register('/workbox-service-worker.js')
                 .then(registration => {
                     console.log('Service Worker registered:', registration);
-                    registration.update();
+                    
+                    // Проверяем, нужно ли обновление
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Есть обновленная версия сервис-воркера
+                                console.log('Новая версия service worker установлена');
+                                
+                                // Можно показать уведомление для пользователя
+                                if (confirm('Доступна новая версия. Обновить сейчас?')) {
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            }
+                        });
+                    });
+                    
                     if (navigator.serviceWorker.controller) {
                         navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
                     } else {
@@ -796,7 +812,7 @@
             window.location.reload();
         }
 
-        // Attention Box Handlingს
+        // Attention Box Handling
         function closeAttentionBox() {
             const box = document.getElementById('attentionBox');
             if (!box) return;
