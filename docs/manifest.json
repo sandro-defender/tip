@@ -1,0 +1,53 @@
+{
+  "name": "Iveria Staff Tools",
+  "short_name": "Iveria Staff",
+  "description": "tools for iveria staff",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "screenshots": [
+    {
+      "src": "/screenshots/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/screenshot2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "icons": [
+    {
+      "src": "https://staff.you.ge/icon/iveria.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://staff.you.ge/icon/iveria2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "lang": "en-US",
+  "file_handlers": [
+    {
+      "action": "/handle-files",
+      "accept": {
+        "text/html": [".html"],
+        "text/plain": [".txt"]
+      }
+    }
+  ],
+  "offline_enabled": true
+}
