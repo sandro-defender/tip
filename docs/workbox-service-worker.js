@@ -24,7 +24,7 @@ const filesToPrecache = [
   { url: '/index.html', revision: VERSION },
   { url: '/manifest.json', revision: VERSION },
   { url: '/includes/menu.html', revision: VERSION },
-  { url: '/html/allowed/salary.html', revision: VERSION }
+  { url: '/salary.html', revision: VERSION }
 ];
 
 // Предварительное кэширование
