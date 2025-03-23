@@ -24,13 +24,13 @@
   ],
   "icons": [
     {
-      "src": "https://staff.you.ge/icon/iveria.png",
+      "src": "https://git.you.ge/icon/iveria.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://staff.you.ge/icon/iveria2.png",
+      "src": "https://git.you.ge/icon/iveria2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
