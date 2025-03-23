@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <script>
+        fetch("/includes/head.html")
+            .then(response => response.text())
+            .then(data => document.head.innerHTML += data)
+            .catch(error => console.error("Ошибка загрузки head:", error));
+    </script>
+    <title>ხელფასის კალკულატორი</title>
+    <style>
+        :root {
+            --primary: #2a6df5;
+            --secondary: #1ac972;
+            --background: #f8faff;
+            --text: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 1px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            animation: slideIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fe;
+            border-radius: 15px;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+            color: var(--text);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .toggle-btn.selected {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(42,109,245,0.3);
+        }
+
+        .currency-input {
+            position: relative;
+            z-index: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            background: transparent;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            height: 50px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .currency-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .results {
+            background: linear-gradient(145deg, #2a6df5, #1e4eb2);
+            color: white;
+            border-radius: 20px;
+            padding: 3px;
+            margin-top: 15px;
+            box-shadow: 0 10px 30px rgba(42,109,245,0.2);
+        }
+
+        .results h3 {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.95);
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 3px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-family: 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .result-item span:first-child {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .result-item span:not(:first-child) {
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #5ee4ff;
+            text-shadow: 0 0 10px rgba(94,228,255,0.3);
+        }
+
+        .result-item:hover {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+        }
+
+        .result-section {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .toggle-btn {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+
+        .notice-banner {
+            background: #ff9800;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(255, 152, 0, 0.2);
+        }
+
+        .rate-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            position: relative;
+            touch-action: pan-x;
+            user-select: none;
+            background: #f8f9fe;
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .rate-hint {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #666;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swipe-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swipe-arrow {
+            font-size: 1.2rem;
+            animation: swipeHint 2s infinite;
+            opacity: 0.6;
+        }
+
+        .left-arrow { animation-delay: 0s; }
+        .right-arrow { animation-delay: 0.5s; }
+
+        @keyframes swipeHint {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        .rate-control:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                rgba(42,109,245,0.1) 0%, 
+                rgba(255,255,255,0) 20%, 
+                rgba(255,255,255,0) 80%, 
+                rgba(42,109,245,0.1) 100%);
+            pointer-events: none;
+            border-radius: 12px;
+        }
+
+        .rate-btn {
+            position: relative;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .rate-btn:hover {
+            background: #1d5bd9;
+            transform: scale(1.05);
+        }
+
+        .rate-btn:active {
+            transform: scale(0.95);
+        }
+
+        .debug-window {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            max-height: 400px;
+            overflow: auto;
+            z-index: 1000;
+            white-space: pre;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        @media (max-width: 360px) {
+            .result-item {
+                font-size: 0.85rem;
+            }
+
+            .result-item span:first-child {
+                font-size: 0.8rem;
+            }
+
+            .result-item span:not(:first-child) {
+                font-size: 0.9rem;
+            }
+
+            .results h3 {
+                font-size: 1rem;
+            }
+
+            .result-section {
+                padding: 8px;
+                margin: 10px 0;
+            }
+
+            .container {
+                padding: 5px;
+            }
+
+            .calculator {
+                padding: 15px;
+            }
+        }
+        .notice-banner table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .notice-banner td, .notice-banner th {
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            font-size: 0.85em;
+        }
+        
+        @media (max-width: 480px) {
+            .notice-banner td, .notice-banner th {
+                padding: 6px;
+                font-size: 0.75em;
+            }
+        }
+
+        .collapsible-table {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-table.expanded {
+            max-height: 500px; /* Adjust this value based on your table height */
+        }
+
+        .table-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-toggle:after {
+            content: '▼';
+            font-size: 0.8em;
+            transform: rotate(-90deg);
+            transition: transform 0.3s ease;
+        }
+
+        .table-toggle.expanded:after {
+            transform: rotate(0);
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-container"></div>
+    <div class="container">
+        <div class="notice-banner">
+            v0.6
+        </div>
+        <div class="notice-banner">
+            <button class="table-toggle" onclick="toggleTable(this)">
+                მონაცემები 14.5 დღესთვის "174სთ"
+            </button>
+            <div class="collapsible-table">
+                <table>
+                    <tr>
+                        <tr>
+                            <th>პოზიცია</th>
+                            <th>მოცემული ხელფასი ($)</th>
+                            <th>2% ამ თანხიდან ($)</th>
+                            <th>ხელფასი 2%-ის გამოკლებით ($)</th>
+                            <th>საათში (ხელზე) ($)</th>
+                        </tr>
+                        <tr>
+                            <td>D3</td>
+                            <td>525</td>
+                            <td>10.5</td>
+                            <td>514.5</td>
+                            <td>2.9586</td>
+                        </tr>
+                        <tr>
+                            <td>D2</td>
+                            <td>630</td>
+                            <td>12.6</td>
+                            <td>617.4</td>
+                            <td>3.5483</td>
+                        </tr>
+                        <tr>
+                            <td>D1</td>
+                            <td>735</td>
+                            <td>14.7</td>
+                            <td>720.3</td>
+                            <td>4.1414</td>
+                        </tr>
+                        <tr>
+                            <td>I2</td>
+                            <td>840</td>
+                            <td>16.8</td>
+                            <td>823.2</td>
+                            <td>4.7333</td>
+                        </tr>
+                        <tr>
+                            <td>I1</td>
+                            <td>945</td>
+                            <td>18.9</td>
+                            <td>926.1</td>
+                            <td>5.3236</td>
+                        </tr>
+                        <tr>
+                            <td>Ti</td>
+                            <td>1050</td>
+                            <td>21</td>
+                            <td>1029</td>
+                            <td>5.9138</td>
+                        </tr>
+                </table>
+            </div>
+        </div>
+    
+        <div class="calculator">
+            <!-- სამუშაო დღეები -->
+            <div class="section">
+                <h2>📅 სამუშაო დღეები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-days="13">13 დღე</button>
+                    <button class="toggle-btn" data-days="14">14 დღე</button>
+                    <button class="toggle-btn selected" data-days="15">15 დღე</button>
+                    <button class="toggle-btn" data-days="16">16 დღე</button>
+                </div>
+            </div>
+
+            <!-- პოზიცია -->
+            <div class="section">
+                <h2>🧑‍🧑‍🧒‍🧒 პოზიცია</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-position="tr">TR</button>
+                    <button class="toggle-btn" data-position="d3">D3</button>
+                    <button class="toggle-btn" data-position="d2">D2</button>
+                    <button class="toggle-btn" data-position="d1">D1</button>
+                    <button class="toggle-btn selected" data-position="i2">I2</button>
+                    <button class="toggle-btn" data-position="i1">I1</button>
+                    <button class="toggle-btn" data-position="ti">IT</button>
+                </div>
+            </div>
+
+            <!-- დამატებითი სმენები -->
+            <div class="section">
+                <h2>➕ დამატებითი სმენები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-shifts="0">0</button>
+                    <button class="toggle-btn" data-shifts="1">1</button>
+                    <button class="toggle-btn" data-shifts="2">2</button>
+                    <button class="toggle-btn" data-shifts="3">3</button>
+                    <button class="toggle-btn" data-shifts="4">4</button>
+                </div>
+            </div>
+
+            <!-- გაცდენები -->
+            <div class="section">
+                <h2>➖ გაცდენები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-missed="0">0</button>
+                    <button class="toggle-btn" data-missed="1">1</button>
+                    <button class="toggle-btn" data-missed="2">2</button>
+                    <button class="toggle-btn" data-missed="3">3</button>
+                    <button class="toggle-btn" data-missed="4">4</button>
+                </div>
+            </div>
+
+            <!-- დამატებითი პარამეტრები -->
+            <div class="section">
+                <h2>⚙️ პარამეტრები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-option="vacation">🏖️ შვებულება</button>
+                    <button class="toggle-btn selected" data-option="pension">📈 პენსია (2%)</button>
+                </div>
+                <!-- Add insurance input after buttons -->
+                <div class="rate-control" style="margin-bottom: 15px;">
+                    <span style="padding: 10px;">🏥 დაზღვევა (₾):</span>
+                    <input type="number" class="currency-input" id="insuranceAmount" value="0" step="1" min="0" style="text-align: center; width: 130px;" placeholder="დაზღვევის თანხა">
+                </div>
+                <div class="rate-control">
+                    <button class="rate-btn" onclick="calculator.adjustRate(-0.01)">-</button>
+                    <input type="number" class="currency-input" id="exchangeRate" value="2.800" step="0.01" min="0" placeholder="USD/GEL კურსი">
+                    <button class="rate-btn" onclick="calculator.adjustRate(0.01)">+</button>
+                    <div class="swipe-area"></div>
+                    <div class="rate-hint">
+                        <div class="swipe-indicator">
+                            <span class="swipe-arrow left-arrow">←</span>
+                            გადაასრიალე კურსის შესაცვლელად
+                            <span class="swipe-arrow right-arrow">→</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- შედეგები -->
+            <div class="results">
+                <div class="result-section">
+                    <h3>💰 ხელფასი</h3>
+                    <div class="result-item">
+                        <span>დღე/სთ:</span>
+                        <span id="totalDays">0</span>
+                        <span id="totalHours">0 სთ</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ჯამი:</span>
+                        <span id="totalSalary">$0.00</span>
+                        <span id="totalGelSalary">₾0.00</span>
+                    </div>
+                    <!-- ახალი გრაფა ცვლილებისთვის -->
+                    <div id="salaryDiffRow" style="display: none;" class="result-item">
+                        <span>ცვლილება:</span>
+                        <span id="salaryDiffUSD">$0.00</span>
+                        <span id="salaryDiffGEL">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>დღგ:</span>
+                        <span id="taxAmount">$0.00</span>
+                        <span id="taxAmountGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>პენსია:</span>
+                        <span id="PensionAmount">$0.00</span>
+                        <span id="PensionAmountGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ასაღები:</span>
+                        <span id="netSalaryUSD">$0.00</span>
+                        <span id="netSalary">₾0.00</span>
+                    </div>
+                </div>
+                
+                <div class="result-section">
+                    <h3>🎁 ჩაი</h3>
+                    <div class="result-item">
+                        <span>ჯამი:</span>
+                        <span id="tipAmountUSD">$0.00</span>
+                        <span id="tipAmountGel">₾0.00</span>
+                    </div>
+                    <!-- ახალი გრაფა ცვლილებისთვის -->
+                    <div id="tipDiffRow" style="display: none;" class="result-item">
+                        <span>ცვლილება:</span>
+                        <span id="tipDiffUSD">$0.00</span>
+                        <span id="tipDiffGEL">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>დღგ:</span>
+                        <span id="tipTaxUSD">$0.00</span>
+                        <span id="tipTaxGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>პენსია:</span>
+                        <span id="tipPensionUSD">$0.00</span>
+                        <span id="tipPensionGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ასაღები:</span>
+                        <span id="grandTotalUSD">$0.00</span>
+                        <span id="grandTotalGel">₾0.00</span>
+                    </div>
+                </div>
+                <div class="result-section">
+                    <h3>ჯამი</h3>
+                    <div class="result-item">
+                        <span>ჯამი:</span>
+                        <span id="BothTotalUSD">$0.00</span>
+                        <span id="BothTotalGel">₾0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="debug-toggle" onclick="toggleDebug()">🐞</button>
+    <div class="debug-window" id="debugWindow"></div>
+
+    <script>
+ /*       // მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('menu-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading menu:', error));
+        */
+        // Global configuration
+        const CONFIG = {
+            // Base rates for positions ($ per 174 hours)
+            RATES: {
+                'tr': 525,
+                'd3': 525,
+                'd2': 630,
+                'd1': 735,
+                'i2': 840,
+                'i1': 945,
+                'ti': 1050
+            },
+            
+            // Convert monthly rates to hourly rates
+            getRatePerHour: function(position) {
+                return this.RATES[position] / 174;
+            },
+            
+            // Tip multipliers per position
+            TIP_MULTIPLIERS: {
+                'point': 1,
+                'tr': 7,
+                'd3': 8,
+                'd2': 10,
+                'd1': 11,
+                'pb': 12,
+                'i2': 14.5,
+                'i1': 16,
+                'ti': 17.5
+            },
+
+            // Working hours
+            REGULAR_HOURS: 12,
+            EXTRA_SHIFT_HOURS: 18,
+            VACATION_BASE_DAYS: 14.5,
+            
+            // Deduction rates
+            PENSION_RATE: 0.02,
+            
+            // Exchange rate default
+            DEFAULT_EXCHANGE_RATE: 2.80,
+            
+            // Change EXTRA_SHIFT_TIP_BONUS to be calculated from tip amount
+            EXTRA_SHIFT_TIP_MULTIPLIER: 0.5,
+
+            // Tip adjustment formula constants
+            TIP_ADJUSTMENT_DIVISOR: 0.78,
+            
+            // Formula helper function
+            adjustTipAmount: function(x) {
+                return x / this.TIP_ADJUSTMENT_DIVISOR;
+            },
+
+            // Default insurance amount
+            INSURANCE_DEFAULT: 0
+        };
+
+        const calculator = {
+            days: 15,
+            rate: CONFIG.getRatePerHour('i2'), // Default to i2 position
+            shifts: 0,
+            missedDays: 0,
+            options: new Set(['pension']),
+            exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
+            tipPoints: 0,
+            position: 'i2', // Default position
+            insuranceAmount: parseFloat(localStorage.getItem('insuranceAmount')) || CONFIG.INSURANCE_DEFAULT,
+            
+            init() {
+                console.log('Initializing calculator...');
+                
+                // Set default values
+                document.getElementById('exchangeRate').value = this.exchangeRate.toFixed(2);
+                document.getElementById('insuranceAmount').value = this.insuranceAmount;
+                
+                // Process URL parameters
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('tipAmount') && params.has('position')) {
+                    const position = params.get('position').toLowerCase();
+                    if (CONFIG.RATES[position]) {
+                        this.position = position;
+                        this.rate = CONFIG.getRatePerHour(position);
+                        this.tipPoints = parseFloat(params.get('tipAmount')) || 0;
+                        
+                        // Select position button
+                        this.selectPositionButton(position);
+                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.tipPoints}`);
+                    }
+                }
+
+                this.initEventListeners();
+                this.calculate();
+            },
+
+            selectPositionButton(position) {
+                document.querySelectorAll('[data-position]').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.position.toLowerCase() === position);
+                });
+            },
+
+            initEventListeners() {
+                document.querySelectorAll('.toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.handleToggle(btn));
+                });
+
+                const exchangeRateInput = document.getElementById('exchangeRate');
+                exchangeRateInput.addEventListener('input', (e) => {
+                    this.exchangeRate = parseFloat(e.target.value) || CONFIG.DEFAULT_EXCHANGE_RATE;
+                    // Save to localStorage on manual input
+                    localStorage.setItem('exchangeRate', this.exchangeRate);
+                    this.calculate();
+                });
+
+                const insuranceInput = document.getElementById('insuranceAmount');
+                insuranceInput.addEventListener('input', (e) => {
+                    this.insuranceAmount = parseFloat(e.target.value) || 0;
+                    localStorage.setItem('insuranceAmount', this.insuranceAmount);
+                    this.calculate();
+                });
+
+                this.initSwipeControls();
+            },
+
+            initSwipeControls() {
+                const rateControl = document.querySelector('.rate-control');
+                let startX = 0;
+                let currentX = 0;
+                const sensitivity = 50;
+
+                rateControl.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    currentX = startX;
+                }, { passive: true });
+
+                rateControl.addEventListener('touchmove', (e) => {
+                    currentX = e.touches[0].clientX;
+                    const diff = currentX - startX;
+                    if (Math.abs(diff) >= sensitivity) {
+                        this.adjustRate(diff > 0 ? 0.01 : -0.01);
+                        startX = currentX;
+                    }
+                    e.preventDefault();
+                });
+            },
+
+            adjustRate(amount) {
+                const input = document.getElementById('exchangeRate');
+                const newValue = (parseFloat(input.value) + amount).toFixed(2);
+                input.value = newValue;
+                this.exchangeRate = parseFloat(newValue);
+                // Save to localStorage whenever rate changes
+                localStorage.setItem('exchangeRate', this.exchangeRate);
+                this.calculate();
+            },
+
+            handleToggle(btn) {
+                const type = btn.dataset.days ? 'days' :
+                            btn.dataset.position ? 'rate' :
+                            btn.dataset.shifts ? 'shifts' :
+                            btn.dataset.missed ? 'missed' : 'option';
+
+                if (type === 'option') {
+                    btn.classList.toggle('selected');
+                    this.options[btn.classList.contains('selected') ? 'add' : 'delete'](btn.dataset.option);
+                } else {
+                    const selector = `[data-${type === 'rate' ? 'position' : type}]`;
+                    document.querySelectorAll(selector).forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    
+                    switch(type) {
+                        case 'rate':
+                            const pos = btn.dataset.position.toLowerCase();
+                            if (CONFIG.RATES[pos]) {
+                                this.position = pos;
+                                this.rate = CONFIG.getRatePerHour(pos);
+                                console.log(`Position changed: ${this.position}, rate: ${this.rate}`);
+                            }
+                            break;
+                        case 'days':
+                            this.days = parseFloat(btn.dataset.days);
+                            break;
+                        case 'shifts':
+                            this.shifts = parseFloat(btn.dataset.shifts);
+                            break;
+                        case 'missed':
+                            this.missedDays = parseFloat(btn.dataset.missed);
+                            break;
+                    }
+                }
+
+                this.calculate();
+            },
+
+            updateDebug(calculations) {
+                const debugWindow = document.getElementById('debugWindow');
+                const {
+                    hours = 0,
+                    baseHours = 0,
+                    extraHours = 0,
+                    missedHours = 0,
+                    baseSalary = 0,
+                    extraSalary = 0,
+                    missedSalary = 0,
+                    totalSalary = 0,
+                    grossTips = 0,
+                    tipDiff = 0,
+                    tipTax = 0,
+                    tipPension = 0,
+                    netTips = 0
+                } = calculations || {};
+
+                // Format money with colors
+                const formatMoney = (amount, symbol = '$') => 
+                    `${amount >= 0 ? '💵' : '💸'} ${symbol}${Math.abs(amount).toFixed(2)}`;
+                
+                const formatPercent = (amount, total) => 
+                    total ? ` (${((amount/total)*100).toFixed(1)}%)` : '';
+
+                const insuranceUSD = this.insuranceAmount / this.exchangeRate;
+
+                let debugText = `
+🔍 Debug Information
+═══════════════════
+
+👤 Position Settings
+──────────────────
+📋 Position: ${this.position.toUpperCase()}
+💰 Rate: ${formatMoney(this.rate)}/hr
+📅 Working Days: ${this.days}
+➕ Extra Shifts: ${this.shifts}
+➖ Missed Days: ${this.missedDays}
+💱 Exchange Rate: ${this.exchangeRate} GEL
+🎯 Tip Points: ${this.tipPoints}
+⚙️ Options: ${Array.from(this.options).join(', ')}
+
+⏰ Hours Breakdown
+──────────────────
+📊 Base Hours: ${baseHours} (${this.days} days × ${CONFIG.REGULAR_HOURS}hrs)
+📈 Extra Hours: ${extraHours} (${this.shifts} shifts × ${CONFIG.EXTRA_SHIFT_HOURS}hrs)
+📉 Missed Hours: ${missedHours}
+📋 Total Hours: ${hours}
+
+💰 Salary Details
+──────────────────
+💵 Base Salary: ${formatMoney(baseSalary)}
+${extraSalary ? `📈 Extra Pay: ${formatMoney(extraSalary)}${formatPercent(extraSalary, totalSalary)}\n` : ''}
+${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(missedSalary, totalSalary)}\n` : ''}
+💰 Total Salary: ${formatMoney(totalSalary)} / ${formatMoney(totalSalary * this.exchangeRate, '₾')}
+
+🎁 Tips Calculation
+──────────────────
+💰 Base Tips: ${formatMoney(grossTips)}
+${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
+${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
+${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
+💵 Net Tips: ${formatMoney(netTips)} / ${formatMoney(netTips * this.exchangeRate, '₾')}
+
+💵 Final Summary
+──────────────────
+Total Take Home: ${formatMoney(netTips + (totalSalary - (this.options.has('tax') ? totalSalary * CONFIG.TAX_RATE : 0) - (this.options.has('pension') ? totalSalary * CONFIG.PENSION_RATE : 0) - insuranceUSD))}
+In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? totalSalary * CONFIG.TAX_RATE : 0) - (this.options.has('pension') ? totalSalary * CONFIG.PENSION_RATE : 0) - insuranceUSD)) * this.exchangeRate, '₾')}
+💊 Insurance: ₾${this.insuranceAmount.toFixed(2)} / $${insuranceUSD.toFixed(2)}
+`;
+
+                debugWindow.style.whiteSpace = 'pre-wrap';
+                debugWindow.style.fontFamily = 'monospace';
+                debugWindow.style.fontSize = '14px';
+                debugWindow.style.lineHeight = '1.5';
+                debugWindow.textContent = debugText;
+            },
+
+            calculate() {
+                try {
+                    if (!this.position || !CONFIG.RATES[this.position]) {
+                        throw new Error('Position or rate not set');
+                    }
+
+                    // Get hourly rate for position
+                    this.rate = CONFIG.getRatePerHour(this.position);
+
+                    // Rest of calculation logic
+                    const baseHours = this.options.has('vacation') ? 
+                        CONFIG.VACATION_BASE_DAYS * CONFIG.REGULAR_HOURS :
+                        this.days * CONFIG.REGULAR_HOURS;
+                    
+                    const extraHours = this.shifts * CONFIG.EXTRA_SHIFT_HOURS;
+                    const missedHours = this.missedDays * CONFIG.EXTRA_SHIFT_HOURS;
+                    const totalHours = baseHours + extraHours - missedHours;
+
+                    // Salary calculations stay the same
+                    const baseSalary = baseHours * this.rate;
+                    const extraSalary = extraHours * this.rate;
+                    const missedSalary = missedHours * this.rate;
+                    const totalSalary = baseSalary + extraSalary - missedSalary;
+
+                    // New tip calculation logic for tax handling
+                    let baseTipAmount = this.tipPoints;  // This is the amount after tax is already deducted
+                    let positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
+                    
+                    // Calculate base tips with position multiplier
+                    let grossTips = baseTipAmount * positionMultiplier;
+                    let tipDiff = 0;
+
+                    // Handle shifts and missed days
+                    if (this.shifts === this.missedDays) {
+                        tipDiff = 0;
+                    } else if (this.shifts > this.missedDays) {
+                        const effectiveShifts = this.shifts - this.missedDays;
+                        const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * effectiveShifts;
+                        grossTips += shiftBonus;
+                        tipDiff = shiftBonus;
+                    } else if (this.missedDays > this.shifts) {
+                        const missedAmount = (grossTips / this.days) * (this.missedDays - this.shifts);
+                        grossTips -= missedAmount;
+                        tipDiff = -missedAmount;
+                    }
+
+                    // Calculate tax amount that was originally deducted (20%)
+                    const originalTaxAmount = grossTips * 0.25; // Since original tax was 20%, we need 25% of after-tax amount to get back to pre-tax
+                    
+                    // Calculate pension on the original amount
+                    const pensionAmount = grossTips * CONFIG.PENSION_RATE;
+
+                    // Calculate final tips
+                    let finalTips = grossTips;
+                    
+                    // Only handle pension deduction
+                    if (this.options.has('pension')) {
+                        finalTips -= pensionAmount;
+                    }
+
+                    this.updateUI({
+                        hours: totalHours,
+                        baseHours,
+                        extraHours,
+                        missedHours,
+                        baseSalary,
+                        extraSalary,
+                        missedSalary,
+                        totalSalary,
+                        grossTips: finalTips,
+                        tipDiff,
+                        tipTax: this.options.has('tax') ? originalTaxAmount : 0,
+                        tipPension: this.options.has('pension') ? pensionAmount : 0,
+                        netTips: finalTips  // Remove the extra pension deduction here
+                    });
+
+                } catch (error) {
+                    console.error('Calculation error:', error);
+                    this.showError('Calculation failed: ' + error.message);
+                }
+            },
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:red;color:white;padding:10px;border-radius:5px;z-index:1000;';
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 3000);
+            },
+
+            updateUI(calculations) {
+                // Destructure all needed values
+                const { 
+                    hours, baseHours, extraHours, missedHours,
+                    baseSalary, extraSalary, missedSalary, totalSalary,
+                    grossTips, tipDiff, tipTax, tipPension, netTips 
+                } = calculations;
+
+                // Update debug info first to ensure all values are passed correctly
+                this.updateDebug(calculations);
+
+                // Update hours display
+                document.getElementById('totalHours').textContent = hours;
+                document.getElementById('totalDays').textContent = (hours / CONFIG.REGULAR_HOURS).toFixed(1);
+
+                // Update base amounts
+                document.getElementById('totalSalary').textContent = `$${totalSalary.toFixed(1)}`;
+                document.getElementById('totalGelSalary').textContent = `/ ₾${(totalSalary * this.exchangeRate).toFixed(1)}`;
+
+                // Update salary section with 20% already deducted tax
+                const baseTax = totalSalary * 0.2; // Changed from CONFIG.TAX_RATE to direct 0.2 for 20%
+                const salaryPension = totalSalary * CONFIG.PENSION_RATE;
+                const insuranceUSD = this.insuranceAmount / this.exchangeRate;
+                const deductions = (this.options.has('pension') ? salaryPension : 0);
+                const netSalaryUSD = totalSalary - deductions - insuranceUSD;
+                const netSalaryGEL = netSalaryUSD * this.exchangeRate;
+
+                document.getElementById('netSalaryUSD').textContent = `$${netSalaryUSD.toFixed(1)}`;
+                document.getElementById('netSalary').textContent = `/ ₾${netSalaryGEL.toFixed(1)}`;
+                document.getElementById('taxAmount').textContent = `$${(totalSalary * 0.25).toFixed(1)}`; // Show original deducted amount
+                document.getElementById('taxAmountGel').textContent = `/ ₾${(totalSalary * 0.25 * this.exchangeRate).toFixed(1)}`;
+                document.getElementById('PensionAmount').textContent = `$${this.options.has('pension') ? salaryPension.toFixed(1) : '0.0'}`;
+                document.getElementById('PensionAmountGel').textContent = `/ ₾${this.options.has('pension') ? (salaryPension * this.exchangeRate).toFixed(1) : '0.0'}`;
+
+                // Update tips section - show original 20% tax that was deducted
+                const originalTipTax = (grossTips + tipPension) * 0.25; // 25% of current amount equals original 20% deduction
+                document.getElementById('tipAmountUSD').textContent = `$${(grossTips + tipPension).toFixed(1)}`;
+                document.getElementById('tipAmountGel').textContent = `/ ₾${((grossTips + tipPension) * this.exchangeRate).toFixed(1)}`;
+                
+                document.getElementById('tipTaxUSD').textContent = `$${originalTipTax.toFixed(1)}`;
+                document.getElementById('tipTaxGel').textContent = `/ ₾${(originalTipTax * this.exchangeRate).toFixed(1)}`;
+                
+                document.getElementById('tipPensionUSD').textContent = `$${tipPension.toFixed(1)}`;
+                document.getElementById('tipPensionGel').textContent = `/ ₾${(tipPension * this.exchangeRate).toFixed(1)}`;
+                
+                // Show net tips (after pension deduction) in the grand total
+                document.getElementById('grandTotalUSD').textContent = `$${grossTips.toFixed(1)}`;
+                document.getElementById('grandTotalGel').textContent = `/ ₾${(grossTips * this.exchangeRate).toFixed(1)}`;
+
+                // Calculate final total with gross tips but net salary
+                document.getElementById('BothTotalUSD').textContent = `$${(grossTips + netSalaryUSD).toFixed(1)}`;
+                document.getElementById('BothTotalGel').textContent = `/ ₾${((grossTips * this.exchangeRate) + netSalaryGEL).toFixed(1)}`;
+
+                // Update differences display
+                const salaryDiffRow = document.getElementById('salaryDiffRow');
+                const tipDiffRow = document.getElementById('tipDiffRow');
+
+                if (this.shifts > 0 || this.missedDays > 0) {
+                    if (tipDiff !== 0) {
+                        tipDiffRow.style.display = 'flex';
+                        const sign = tipDiff > 0 ? '+' : '-';
+                        document.getElementById('tipDiffUSD').textContent = `${sign}$${Math.abs(tipDiff).toFixed(1)}`;
+                        document.getElementById('tipDiffGEL').textContent = `/ ${sign}₾${Math.abs(tipDiff * this.exchangeRate).toFixed(1)}`;
+                    } else {
+                        tipDiffRow.style.display = 'none';
+                    }
+                } else {
+                    salaryDiffRow.style.display = 'none';
+                    tipDiffRow.style.display = 'none';
+                }
+            }
+        };
+
+        // Add debug toggle function
+        function toggleDebug() {
+            const debugWindow = document.getElementById('debugWindow');
+            debugWindow.style.display = debugWindow.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Initialize calculator
+        calculator.init();
+        
+        function toggleTable(button) {
+            const table = button.nextElementSibling;
+            button.classList.toggle('expanded');
+            table.classList.toggle('expanded');
+        }
+
+
+
+    </script>
+<!-- In the HTML file -->
+<script src="/js/menu.js"></script>
+<script>
+    createNeumorphismMenu();
+</script>
+</body>
+</html>
