@@ -4,6 +4,12 @@ importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox
 // Версия для управления кэшем
 const VERSION = "v1.0.0";
 
+// Список URL-адресов для исключения из кэша
+const EXCLUDED_URLS = [
+  'waust.at/s.js',
+  'google-analytics.com'
+];
+
 // Включаем логирование в режиме разработки
 workbox.setConfig({ debug: true });
 
@@ -30,6 +36,19 @@ const filesToPrecache = [
 
 // Предварительное кэширование
 precacheAndRoute(filesToPrecache);
+
+// Исключаем указанные URL из кэширования
+registerRoute(
+  ({ url }) => EXCLUDED_URLS.some(excludedUrl => url.href.includes(excludedUrl)),
+  new NetworkFirst({
+    cacheName: 'no-cache',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [0, 200],
+      }),
+    ],
+  })
+);
 
 // Стратегия NetworkFirst для HTML запросов
 registerRoute(
