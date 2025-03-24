@@ -161,13 +161,10 @@
             max-width: 200px;
             height: auto;
             opacity: 0;
-            transition: opacity 0.3s ease;
-            transform: scale(0.95);
         }
 
         .logo-container img.active {
             opacity: 1;
-            transform: scale(1);
         }
 
         .logo-container img[src$=".png"] {
@@ -552,7 +549,7 @@
                 </a>
             </div>
             <div class="logo-container">
-                <img src="/img/logo1.png" alt="Logo 1" class="active">
+                <img src="/img/logo1.png" alt="Logo 1">
                 <img src="/img/logo2.png" alt="Logo 2">
                 <img src="/img/logo3.png" alt="Logo 3">
                 <img src="/img/logo4.png" alt="Logo 4">
@@ -902,6 +899,9 @@
 
             const images = container.querySelectorAll('img');
             if (images.length === 0) return;
+
+            // Remove active class from all images first
+            images.forEach(img => img.classList.remove('active'));
 
             // Select random image
             const randomIndex = Math.floor(Math.random() * images.length);
