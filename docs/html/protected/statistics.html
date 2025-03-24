@@ -375,7 +375,8 @@
             REPO: 'sandro-defender/tip',
             BRANCH: 'main',
             TIMEZONE_OFFSET: 4,
-            PASSWORD: '4545'
+            PASSWORD: '4545',
+            DATA_PATH: '/data' // Путь к данным на GitHub Pages
         };
         let allData = [];
         let currentMonth = '';
@@ -424,8 +425,8 @@
                 showLoader();
                 currentMonth = getCurrentMonthFile();
                 
-                // Получаем список файлов через raw.githubusercontent.com
-                const response = await fetch(`https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/data/`);
+                // Получаем список файлов через GitHub Pages
+                const response = await fetch(`${CONFIG.DATA_PATH}/`);
                 
                 if (!response.ok) {
                     throw new Error(`Error: ${response.status}`);
