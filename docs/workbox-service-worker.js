@@ -5,7 +5,7 @@ importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox
 const VERSION = "v1.0.0";
 
 // Включаем логирование в режиме разработки
-workbox.setConfig({ debug: false });
+workbox.setConfig({ debug: true });
 
 // Используем стратегии из Workbox
 const { strategies } = workbox;
@@ -24,6 +24,7 @@ const filesToPrecache = [
   { url: '/index.html', revision: VERSION },
   { url: '/manifest.json', revision: VERSION },
   { url: '/includes/menu.html', revision: VERSION },
+  { url: '/includes/head.html', revision: VERSION },
   { url: '/salary.html', revision: VERSION }
 ];
 
