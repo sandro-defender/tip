@@ -161,35 +161,25 @@
             max-width: 200px;
             height: auto;
             opacity: 0;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(0.8) translateY(20px);
-            filter: blur(5px);
+            transition: opacity 0.3s ease;
+            transform: scale(0.95);
         }
 
         .logo-container img.active {
             opacity: 1;
-            transform: scale(1) translateY(0);
-            filter: blur(0);
+            transform: scale(1);
         }
 
         .logo-container img[src$=".png"] {
-            filter: invert(1) blur(5px);
-        }
-
-        .logo-container img.active[src$=".png"] {
-            filter: invert(1) blur(0);
+            filter: invert(1);
         }
 
         [data-theme="dark"] .logo-container img[src$=".png"] {
-            filter: invert(0) blur(5px);
-        }
-
-        [data-theme="dark"] .logo-container img.active[src$=".png"] {
-            filter: invert(0) blur(0);
+            filter: invert(0);
         }
 
         .logo-container img:hover {
-            transform: scale(1.05) translateY(-5px);
+            transform: scale(1.05);
         }
 
         .link-item {
@@ -562,13 +552,12 @@
                 </a>
             </div>
             <div class="logo-container">
-                <img src="/img/logo1.png" alt="Logo 1" title="Logo 1" class="active">
-                <img src="/img/logo2.png" alt="Logo 2" title="Logo 2">
-                <img src="/img/logo3.png" alt="Logo 3" title="Logo 3">
-                <img src="/img/logo4.png" alt="Logo 4" title="Logo 4">
-                <img src="/img/logo5.png" alt="Logo 5" title="Logo 5">
-                <img src="/img/logo6.png" alt="Logo 6" title="Logo 6">
-                <img src="/img/logo7.png" alt="Logo 7" title="Logo 7">
+                <img src="/img/logo1.png" alt="Logo 1" class="active">
+                <img src="/img/logo2.png" alt="Logo 2">
+                <img src="/img/logo3.png" alt="Logo 3">
+                <img src="/img/logo4.png" alt="Logo 4">
+                <img src="/img/logo5.png" alt="Logo 5">
+                <img src="/img/logo6.png" alt="Logo 6">
             </div>
         </div>
 
@@ -906,50 +895,21 @@
             }
         });
 
-        // Logo Gallery Animation
-        function initLogoGallery() {
+        // Logo Random Selection
+        function initLogoSelection() {
             const container = document.querySelector('.logo-container');
             if (!container) return;
 
             const images = container.querySelectorAll('img');
-            let currentIndex = 0;
-            const interval = 4000; // 4 seconds between transitions
-            let isTransitioning = false;
+            if (images.length === 0) return;
 
-            function showNextImage() {
-                if (isTransitioning) return;
-                isTransitioning = true;
-
-                // Remove active class from current image
-                images[currentIndex].classList.remove('active');
-                
-                // Move to next image
-                currentIndex = (currentIndex + 1) % images.length;
-                
-                // Add active class to next image
-                images[currentIndex].classList.add('active');
-
-                // Reset transition lock after animation
-                setTimeout(() => {
-                    isTransitioning = false;
-                }, 800); // Match this with CSS transition duration
-            }
-
-            // Start the animation
-            setInterval(showNextImage, interval);
-
-            // Add pause on hover
-            container.addEventListener('mouseenter', () => {
-                container.style.animationPlayState = 'paused';
-            });
-
-            container.addEventListener('mouseleave', () => {
-                container.style.animationPlayState = 'running';
-            });
+            // Select random image
+            const randomIndex = Math.floor(Math.random() * images.length);
+            images[randomIndex].classList.add('active');
         }
 
-        // Initialize logo gallery when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initLogoGallery);
+        // Initialize logo selection when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initLogoSelection);
     </script>
     <!-- Add before closing body tag -->
         <script>
