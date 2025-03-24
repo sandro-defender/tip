@@ -605,6 +605,12 @@
                 <span class="label">App Version:</span>
                 <span id="app-version" class="loading">Loading...</span>
                 <button onclick="reloadpage()">Reload</button>
+                <button id="myButton" style="display: none;" onclick="window.location.href='admin/';">Admin</button>
+                <script>
+                if (navigator.userAgent.includes("15E148")) {
+                    document.getElementById("myButton").style.display = "block";
+                }
+                </script>
             </div>
             <div class="status-item">
                 <span class="label">SW Version:</span>
@@ -614,6 +620,7 @@
             <div class="status-item">
                 <span class="label">Status:</span>
                 <span id="online-status">Checking...</span>
+                <script id="_wauhg5">var _wau = _wau || []; _wau.push(["small", "1lmrxybvst", "hg5"]);</script><script async src="//waust.at/s.js"></script>
             </div>
             <div class="status-item">
                 <span class="label">IP:</span>
