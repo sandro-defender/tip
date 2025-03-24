@@ -370,39 +370,14 @@
             })
             .catch(error => console.error('Error loading menu:', error));
 
-        // ⚙️ კონფიგურაცია
+        // ⚙️ კონფიგურაცია (გადატანა ცალკე ფაილში სასურველია)
         const CONFIG = {
             REPO: 'sandro-defender/tip',
-            BRANCH: 'main',
+            TOKEN: '', // გადაიტანეთ უსაფრთხო ადგილას
             TIMEZONE_OFFSET: 4,
-            PASSWORD: '4545',
-            FILES: [
-                '2024-01.json',
-                '2024-02.json',
-                '2024-03.json',
-                '2024-04.json',
-                '2024-05.json',
-                '2024-06.json',
-                '2024-07.json',
-                '2024-08.json',
-                '2024-09.json',
-                '2024-10.json',
-                '2024-11.json',
-                '2024-12.json',
-                '2025-01.json',
-                '2025-02.json',
-                '2025-03.json',
-                '2025-04.json',
-                '2025-05.json',
-                '2025-06.json',
-                '2025-07.json',
-                '2025-08.json',
-                '2025-09.json',
-                '2025-10.json',
-                '2025-11.json',
-                '2025-12.json'
-            ]
+            PASSWORD: '4545' // გადაიტანეთ უსაფრთხო ადგილას
         };
+
         let allData = [];
         let currentMonth = '';
 
@@ -450,18 +425,25 @@
                 showLoader();
                 currentMonth = getCurrentMonthFile();
                 
-                // Загружаем каждый файл из списка
-                for (const fileName of CONFIG.FILES) {
-                    const file = {
-                        name: fileName,
-                        download_url: `https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/data/${fileName}`
-                    };
+                const response = await fetch(`https://api.github.com/repos/${CONFIG.REPO}/contents/data/`, {
+                    headers: { Authorization: `token ${CONFIG.TOKEN}` }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 403) throw new Error('API ლიმიტი ამოიწურა');
+                    throw new Error(`GitHub Error: ${response.status}`);
+                }
+                
+                const files = await response.json();
+                const jsonFiles = files.filter(file => file.name.endsWith('.json'));
+                
+                for (const file of jsonFiles) {
                     const data = await loadFileData(file);
                     if (data) allData.push(data);
                 }
                 
                 updateStatistics();
-                showStats(null, 'daily');
+                showStats(null, 'daily'); // Pass null as event
             } catch (error) {
                 showError(`შეცდომა: ${error.message}`);
             } finally {
@@ -472,17 +454,10 @@
         // ფაილის მონაცემების ჩატვირთვა
         async function loadFileData(file) {
             try {
-                const response = await fetch(file.download_url);
-                if (!response.ok) {
-                    // Пропускаем файлы, которые еще не существуют
-                    if (response.status === 404) {
-                        console.log(`File ${file.name} not found, skipping...`);
-                        return null;
-                    }
-                    throw new Error('ფაილის ჩატვირთვა ვერ მოხერხდა');
-                }
+                const fileResponse = await fetch(file.download_url);
+                if (!fileResponse.ok) throw new Error('ფაილის ჩატვირთვა ვერ მოხერხდა');
                 
-                const data = await response.json();
+                const data = await fileResponse.json();
                 if (!data.currentMonth) throw new Error('არასწორი ფაილის ფორმატი');
                 
                 const monthName = file.name.replace('.json', '');
@@ -503,7 +478,7 @@
                     totalPoints: data.totalPoints || 5684.6,
                     forecast: forecast,
                     actualTotal: data.currentMonth.reduce((sum, e) => sum + e.amount, 0),
-                    daysInMonth: daysInMonth
+                    daysInMonth: daysInMonth // დამატებითი ინფორმაცია
                 };
             } catch (e) {
                 console.error(`შეცდომა ფაილის დამუშავებისას ${file.name}:`, e);
