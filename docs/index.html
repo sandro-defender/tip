@@ -152,6 +152,8 @@
             position: relative;
             height: 200px;
             overflow: hidden;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
         }
 
         .logo-container img {
@@ -159,25 +161,35 @@
             max-width: 200px;
             height: auto;
             opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-            transform: scale(0.95);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.8) translateY(20px);
+            filter: blur(5px);
         }
 
         .logo-container img.active {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1) translateY(0);
+            filter: blur(0);
         }
 
         .logo-container img[src$=".png"] {
-            filter: invert(1);
+            filter: invert(1) blur(5px);
+        }
+
+        .logo-container img.active[src$=".png"] {
+            filter: invert(1) blur(0);
         }
 
         [data-theme="dark"] .logo-container img[src$=".png"] {
-            filter: invert(0);
+            filter: invert(0) blur(5px);
+        }
+
+        [data-theme="dark"] .logo-container img.active[src$=".png"] {
+            filter: invert(0) blur(0);
         }
 
         .logo-container img:hover {
-            transform: scale(1.05);
+            transform: scale(1.05) translateY(-5px);
         }
 
         .link-item {
@@ -901,9 +913,13 @@
 
             const images = container.querySelectorAll('img');
             let currentIndex = 0;
-            const interval = 3000; // 3 seconds between transitions
+            const interval = 4000; // 4 seconds between transitions
+            let isTransitioning = false;
 
             function showNextImage() {
+                if (isTransitioning) return;
+                isTransitioning = true;
+
                 // Remove active class from current image
                 images[currentIndex].classList.remove('active');
                 
@@ -912,10 +928,24 @@
                 
                 // Add active class to next image
                 images[currentIndex].classList.add('active');
+
+                // Reset transition lock after animation
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 800); // Match this with CSS transition duration
             }
 
             // Start the animation
             setInterval(showNextImage, interval);
+
+            // Add pause on hover
+            container.addEventListener('mouseenter', () => {
+                container.style.animationPlayState = 'paused';
+            });
+
+            container.addEventListener('mouseleave', () => {
+                container.style.animationPlayState = 'running';
+            });
         }
 
         // Initialize logo gallery when DOM is loaded
