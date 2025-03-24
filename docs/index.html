@@ -142,6 +142,26 @@
             box-sizing: border-box;
         }
 
+        /* Logo Styles */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo-container img:hover {
+            opacity: 1;
+        }
+
         .link-item {
             display: flex;
             flex-direction: column;
@@ -511,7 +531,9 @@
                     <span>ხელფასი</span>
                 </a>
             </div>
-
+            <div class="logo-container">
+                <img src="/img/logo1.png" alt="Logo" title="Logo">
+            </div>
         </div>
 
         <!-- Information Section -->
