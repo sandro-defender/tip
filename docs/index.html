@@ -161,6 +161,7 @@
             max-width: 200px;
             height: auto;
             opacity: 0;
+            cursor: pointer;
         }
 
         .logo-container img.active {
@@ -906,6 +907,13 @@
             // Select random image
             const randomIndex = Math.floor(Math.random() * images.length);
             images[randomIndex].classList.add('active');
+
+            // Add click handler to reload page
+            images.forEach(img => {
+                img.addEventListener('click', () => {
+                    window.location.reload();
+                });
+            });
         }
 
         // Initialize logo selection when DOM is loaded
