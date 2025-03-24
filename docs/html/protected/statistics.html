@@ -376,7 +376,32 @@
             BRANCH: 'main',
             TIMEZONE_OFFSET: 4,
             PASSWORD: '4545',
-            DATA_PATH: '/data' // Путь к данным на GitHub Pages
+            FILES: [
+                '2024-01.json',
+                '2024-02.json',
+                '2024-03.json',
+                '2024-04.json',
+                '2024-05.json',
+                '2024-06.json',
+                '2024-07.json',
+                '2024-08.json',
+                '2024-09.json',
+                '2024-10.json',
+                '2024-11.json',
+                '2024-12.json',
+                '2025-01.json',
+                '2025-02.json',
+                '2025-03.json',
+                '2025-04.json',
+                '2025-05.json',
+                '2025-06.json',
+                '2025-07.json',
+                '2025-08.json',
+                '2025-09.json',
+                '2025-10.json',
+                '2025-11.json',
+                '2025-12.json'
+            ]
         };
         let allData = [];
         let currentMonth = '';
@@ -425,27 +450,12 @@
                 showLoader();
                 currentMonth = getCurrentMonthFile();
                 
-                // Получаем список файлов через GitHub Pages
-                const response = await fetch(`${CONFIG.DATA_PATH}/`);
-                
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.status}`);
-                }
-                
-                const text = await response.text();
-                // Парсим HTML для получения списка файлов
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
-                const links = Array.from(doc.querySelectorAll('a'));
-                const jsonFiles = links
-                    .map(link => link.href)
-                    .filter(href => href.endsWith('.json'))
-                    .map(href => ({
-                        name: href.split('/').pop(),
-                        download_url: href
-                    }));
-                
-                for (const file of jsonFiles) {
+                // Загружаем каждый файл из списка
+                for (const fileName of CONFIG.FILES) {
+                    const file = {
+                        name: fileName,
+                        download_url: `https://raw.githubusercontent.com/${CONFIG.REPO}/${CONFIG.BRANCH}/data/${fileName}`
+                    };
                     const data = await loadFileData(file);
                     if (data) allData.push(data);
                 }
@@ -464,6 +474,11 @@
             try {
                 const response = await fetch(file.download_url);
                 if (!response.ok) {
+                    // Пропускаем файлы, которые еще не существуют
+                    if (response.status === 404) {
+                        console.log(`File ${file.name} not found, skipping...`);
+                        return null;
+                    }
                     throw new Error('ფაილის ჩატვირთვა ვერ მოხერხდა');
                 }
                 
