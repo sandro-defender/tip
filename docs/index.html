@@ -166,6 +166,19 @@
 
         .logo-container img.active {
             opacity: 1;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0% {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+            }
+            100% {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+            }
         }
 
         .logo-container img[src$=".png"] {
