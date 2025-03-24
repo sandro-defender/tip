@@ -1,0 +1,11 @@
+# Конфиденциальные файлы
+.env
+.env.local
+.env.*.local
+
+# Зависимости
+node_modules/
+
+# Системные файлы
+.DS_Store
+Thumbs.db 
