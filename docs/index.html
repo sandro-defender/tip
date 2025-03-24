@@ -149,15 +149,23 @@
             align-items: center;
             padding: 20px;
             margin-top: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
+            position: relative;
+            height: 200px;
+            overflow: hidden;
         }
 
         .logo-container img {
+            position: absolute;
             max-width: 200px;
             height: auto;
-            opacity: 0.8;
-            transition: all 0.3s ease;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            transform: scale(0.95);
+        }
+
+        .logo-container img.active {
+            opacity: 1;
+            transform: scale(1);
         }
 
         .logo-container img[src$=".png"] {
@@ -169,7 +177,6 @@
         }
 
         .logo-container img:hover {
-            opacity: 1;
             transform: scale(1.05);
         }
 
@@ -543,16 +550,13 @@
                 </a>
             </div>
             <div class="logo-container">
-                <img src="/img/logo1.WEBP" alt="Logo 1" title="Logo 1">
-                <img src="/img/logo2.WEBP" alt="Logo 2" title="Logo 2">
-                <img src="/img/logo3.WEBP" alt="Logo 3" title="Logo 3">
-                <img src="/img/logo4.WEBP" alt="Logo 4" title="Logo 4">
-                <img src="/img/logo5.WEBP" alt="Logo 5" title="Logo 5">
-                <img src="/img/logo6.WEBP" alt="Logo 6" title="Logo 6">
+                <img src="/img/logo1.png" alt="Logo 1" title="Logo 1" class="active">
+                <img src="/img/logo2.png" alt="Logo 2" title="Logo 2">
+                <img src="/img/logo3.png" alt="Logo 3" title="Logo 3">
+                <img src="/img/logo4.png" alt="Logo 4" title="Logo 4">
+                <img src="/img/logo5.png" alt="Logo 5" title="Logo 5">
+                <img src="/img/logo6.png" alt="Logo 6" title="Logo 6">
                 <img src="/img/logo7.png" alt="Logo 7" title="Logo 7">
-                <img src="/img/logo8.webp" alt="Logo 8" title="Logo 8">
-                <img src="/img/logo9.webp" alt="Logo 9" title="Logo 9">
-                <img src="/img/logo10.webp" alt="Logo 10" title="Logo 10">
             </div>
         </div>
 
@@ -889,6 +893,33 @@
                 box.style.display = 'block';
             }
         });
+
+        // Logo Gallery Animation
+        function initLogoGallery() {
+            const container = document.querySelector('.logo-container');
+            if (!container) return;
+
+            const images = container.querySelectorAll('img');
+            let currentIndex = 0;
+            const interval = 3000; // 3 seconds between transitions
+
+            function showNextImage() {
+                // Remove active class from current image
+                images[currentIndex].classList.remove('active');
+                
+                // Move to next image
+                currentIndex = (currentIndex + 1) % images.length;
+                
+                // Add active class to next image
+                images[currentIndex].classList.add('active');
+            }
+
+            // Start the animation
+            setInterval(showNextImage, interval);
+        }
+
+        // Initialize logo gallery when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initLogoGallery);
     </script>
     <!-- Add before closing body tag -->
         <script>
