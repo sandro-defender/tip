@@ -361,16 +361,22 @@
             </div>
         </div>
     </div>
-    <script type="module">
-        import CONFIG from '/js/config.js';
-        
-        // ⚠️ ВАЖНО: Для работы с GitHub Pages вам нужно:
-        // 1. Создать файл .env в корне проекта со следующим содержимым:
-        // GITHUB_TOKEN=ваш_токен
-        // STATS_PASSWORD=ваш_пароль
-        // 2. Добавить .env в .gitignore
-        // 3. Настроить GitHub Actions для подстановки переменных окружения при деплое
-        
+    <script>
+        // მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('menu-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading menu:', error));
+
+        // ⚙️ კონფიგურაცია (გადატანა ცალკე ფაილში სასურველია)
+        const CONFIG = {
+            REPO: 'sandro-defender/tip',
+            TOKEN: '', // გადაიტანეთ უსაფრთხო ადგილას
+            TIMEZONE_OFFSET: 4,
+            PASSWORD: '4545' // გადაიტანეთ უსაფრთხო ადგილას
+        };
         let allData = [];
         let currentMonth = '';
 
