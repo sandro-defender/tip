@@ -149,17 +149,28 @@
             align-items: center;
             padding: 20px;
             margin-top: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
         .logo-container img {
             max-width: 200px;
             height: auto;
             opacity: 0.8;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
+        }
+
+        .logo-container img[src$=".png"] {
+            filter: invert(1);
+        }
+
+        [data-theme="dark"] .logo-container img[src$=".png"] {
+            filter: invert(0);
         }
 
         .logo-container img:hover {
             opacity: 1;
+            transform: scale(1.05);
         }
 
         .link-item {
@@ -532,7 +543,16 @@
                 </a>
             </div>
             <div class="logo-container">
-                <img src="/img/logo1.png" alt="Logo" title="Logo">
+                <img src="/img/logo1.WEBP" alt="Logo 1" title="Logo 1">
+                <img src="/img/logo2.WEBP" alt="Logo 2" title="Logo 2">
+                <img src="/img/logo3.WEBP" alt="Logo 3" title="Logo 3">
+                <img src="/img/logo4.WEBP" alt="Logo 4" title="Logo 4">
+                <img src="/img/logo5.WEBP" alt="Logo 5" title="Logo 5">
+                <img src="/img/logo6.WEBP" alt="Logo 6" title="Logo 6">
+                <img src="/img/logo7.png" alt="Logo 7" title="Logo 7">
+                <img src="/img/logo8.webp" alt="Logo 8" title="Logo 8">
+                <img src="/img/logo9.webp" alt="Logo 9" title="Logo 9">
+                <img src="/img/logo10.webp" alt="Logo 10" title="Logo 10">
             </div>
         </div>
 
