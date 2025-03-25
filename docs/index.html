@@ -778,8 +778,19 @@
         // Online Status
         const onlineStatus = document.getElementById('online-status');
         const updateStatus = () => {
-            onlineStatus.textContent = navigator.onLine ? '✅ Online' : '❌ Offline';
-            onlineStatus.style.color = navigator.onLine ? 'var(--success)' : 'var(--danger)';
+            const isOnline = navigator.onLine;
+            onlineStatus.textContent = isOnline ? '✅ Online' : '❌ Offline';
+            onlineStatus.style.color = isOnline ? 'var(--success)' : 'var(--danger)';
+            
+            // Изменяем цвет активного логотипа
+            const activeLogo = document.querySelector('.logo-container img.active');
+            if (activeLogo) {
+                if (!isOnline) {
+                    activeLogo.style.filter = 'brightness(0.8) sepia(1) saturate(10000%) hue-rotate(0deg)';
+                } else {
+                    activeLogo.style.filter = '';
+                }
+            }
         };
         updateStatus();
         window.addEventListener('online', updateStatus);
