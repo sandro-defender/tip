@@ -647,12 +647,12 @@
 
         // Theme Toggle with Persistence and Particles Integration
         document.addEventListener('DOMContentLoaded', function() {
-            applyParticlesConfig('light'); // Default to light theme
+            applyParticlesConfig('dark'); // Default to dark theme
         });
 
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
-        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedTheme = localStorage.getItem('theme') || 'dark';
         body.setAttribute('data-theme', savedTheme);
         themeToggle.textContent = savedTheme === 'light' ? '🌙' : '🌞';
         applyParticlesConfig(savedTheme);
@@ -708,7 +708,7 @@
         }
 
         // Set initial theme based on user preference
-        const theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const theme = 'dark'; // Always set to dark theme
         applyParticlesConfig(theme);
 
         // Service Worker Registration
