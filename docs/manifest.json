@@ -2,7 +2,7 @@
   "name": "Iveria Staff Tools",
   "short_name": "Iveria Staff",
   "description": "tools for iveria staff",
-  "start_url": "/",
+  "start_url": "https://staff.you.ge/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
