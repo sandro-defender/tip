@@ -3,7 +3,7 @@
   "short_name": "Iveria Staff",
   "description": "tools for iveria staff",
   "start_url": "https://staff.you.ge/",
-  "scope": "/",
+  "scope": "https://staff.you.ge/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
