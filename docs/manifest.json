@@ -10,12 +10,6 @@
   "orientation": "portrait",
   "screenshots": [
     {
-      "src": "https://git.you.ge/screenshots/screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
       "src": "https://git.you.ge/screenshots/screenshot2.png",
       "sizes": "750x1334",
       "type": "image/png",
@@ -25,7 +19,7 @@
       "src": "https://git.you.ge/screenshots/scr_3.png",
       "sizes": "1242x2688",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "narrow"
     }
   ],
   "icons": [
