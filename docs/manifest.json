@@ -114,14 +114,6 @@
   "prefer_related_applications": false,
   "dir": "ltr",
   "lang": "en-US",
-  "file_handlers": [
-    {
-      "action": "/handle-files",
-      "accept": {
-        "text/html": [".html"],
-        "text/plain": [".txt"]
-      }
-    }
   ],
   "offline_enabled": true
 }
