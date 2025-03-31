@@ -1,0 +1,127 @@
+{
+  "name": "Iveria Staff Tools",
+  "short_name": "Iveria Staff",
+  "description": "tools for iveria staff",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "screenshots": [
+    {
+      "src": "https://git.you.ge/screenshots/scr_1.png",
+      "sizes": "1242x2688",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://git.you.ge/screenshots/scr_2.png",
+      "sizes": "1242x2688",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://git.you.ge/screenshots/scr_3.png",
+      "sizes": "1242x2688",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://git.you.ge/screenshots/wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "https://git.you.ge/icon/ios_splash_screens/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://git.you.ge/icon/iveria3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "splash_screens": [
+    {
+      "src": "https://git.you.ge/icons/android/splash-1125x2436.png",
+      "sizes": "1125x2436",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-1242x2208.png",
+      "sizes": "1242x2208",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-1668x2224.png",
+      "sizes": "1668x2224",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-2048x2732.png",
+      "sizes": "2048x2732",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-1536x2048.png",
+      "sizes": "1536x2048",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-320x426.png",
+      "sizes": "320x426",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-320x470.png",
+      "sizes": "320x470",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-480x640.png",
+      "sizes": "480x640",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-720x960.png",
+      "sizes": "720x960",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-960x1280.png",
+      "sizes": "960x1280",
+      "type": "image/png"
+    },
+    {
+      "src": "https://git.you.ge/icons/android/splash-1280x1920.png",
+      "sizes": "1280x1920",
+      "type": "image/png"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "lang": "en-US",
+  "file_handlers": [
+    {
+      "action": "/handle-files",
+      "accept": {
+        "text/html": [".html"],
+        "text/plain": [".txt"]
+      }
+    }
+  ],
+  "offline_enabled": true
+}
