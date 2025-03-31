@@ -10,8 +10,14 @@
   "orientation": "portrait",
   "screenshots": [
     {
-      "src": "https://git.you.ge/screenshots/screenshot2.png",
-      "sizes": "750x1334",
+      "src": "https://git.you.ge/screenshots/scr_1.png",
+      "sizes": "1242x2688",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://git.you.ge/screenshots/scr_2.png",
+      "sizes": "1242x2688",
       "type": "image/png",
       "form_factor": "narrow"
     },
@@ -20,17 +26,23 @@
       "sizes": "1242x2688",
       "type": "image/png",
       "form_factor": "narrow"
+    },
+    {
+      "src": "https://git.you.ge/screenshots/wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ],
   "icons": [
     {
-      "src": "https://git.you.ge/icon/iveria.png",
+      "src": "https://git.you.ge/icon/ios_splash_screens/icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://git.you.ge/icon/iveria2.png",
+      "src": "https://git.you.ge/icon/iveria3.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
