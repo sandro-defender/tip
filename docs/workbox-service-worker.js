@@ -2,7 +2,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
 // Версия для управления кэшем
-const VERSION = "v1.1.5";
+const VERSION = "v1.1.6";
 
 // Список URL-адресов для исключения из кэша
 const EXCLUDED_URLS = [
