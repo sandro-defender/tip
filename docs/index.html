@@ -194,7 +194,14 @@
         .logo-container img:hover {
             transform: scale(1.05);
         }
+        /* Show the logo only in PWA mode */
+        body[data-pwa="true"] .logo-container {
+            visibility: visible; /* Show in PWA mode */
+        }
 
+        body[data-pwa="true"] .logo-container img {
+            opacity: 1; /* Make the image visible in PWA mode */
+        }
         .link-item {
             display: flex;
             flex-direction: column;
@@ -976,11 +983,9 @@
             deferredPrompt = null;
         });
         if (window.matchMedia('(display-mode: standalone)').matches) {
-            // Code to show images or content only in PWA
-            document.querySelector('.logo-container').style.display = 'block';
+            document.body.setAttribute('data-pwa', 'true');
         } else {
-            // Code to hide images or content
-            document.querySelector('.logo-container').style.display = 'none';
+            document.body.removeAttribute('data-pwa');
         }
     </script>
     <script src="js/install-helper.js"></script>
