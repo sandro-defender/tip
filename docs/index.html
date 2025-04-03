@@ -336,44 +336,6 @@
             content: ' ⏳';
         }
 
-        /* Page Loading Indicator */
-        .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            transform-origin: 0 50%;
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-            z-index: 9999;
-        }
-
-        .page-loader.loading {
-            transform: scaleX(1);
-        }
-
-        /* Service Worker Status Indicator */
-        .sw-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 8px;
-        }
-
-        .sw-status.ready {
-            color: var(--success);
-        }
-
-        .sw-status.error {
-            color: var(--danger);
-        }
-
-        .sw-status.loading {
-            color: var(--text);
-        }
-
         /* Responsive Design */
         @media (max-width: 640px) {
             .welcome-page {
@@ -662,9 +624,7 @@
             </div>
             <div class="status-item">
                 <span class="label">SW Version:</span>
-                <span id="sw-version" class="loading">
-                    <span class="sw-status loading">Checking...</span>
-                </span>
+                <span id="sw-version" class="loading">Loading...</span>
                 <button onclick="clearPWA()">Clear Cache</button>
             </div>
             <div class="status-item">
@@ -678,9 +638,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader"></div>
 
     <script>
         // Menu Functionality
@@ -733,52 +690,21 @@
         const theme = 'dark'; // Always set to dark theme
         applyParticlesConfig(theme);
 
-        // Page Loader
-        const pageLoader = document.getElementById('pageLoader');
-        let loadTimeout;
-
-        function showLoader() {
-            pageLoader.classList.add('loading');
-        }
-
-        function hideLoader() {
-            pageLoader.classList.remove('loading');
-        }
-
-        // Show loader on navigation
-        window.addEventListener('beforeunload', showLoader);
-
-        // Hide loader when page is loaded
-        window.addEventListener('load', () => {
-            clearTimeout(loadTimeout);
-            loadTimeout = setTimeout(hideLoader, 500);
-        });
-
-        // Service Worker Registration with Enhanced Status
+        // Service Worker Registration
         if ('serviceWorker' in navigator) {
-            const swVersion = document.getElementById('sw-version');
-            const swStatus = swVersion.querySelector('.sw-status');
-
-            function updateSWStatus(status, message) {
-                swStatus.className = `sw-status ${status}`;
-                swStatus.textContent = message;
-            }
-
             navigator.serviceWorker.register('/workbox-service-worker.js')
                 .then(registration => {
                     console.log('Service Worker registered:', registration);
-                    updateSWStatus('ready', 'Active');
                     
-                    // Check for updates
+                    // Проверяем, нужно ли обновление
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
-                        updateSWStatus('loading', 'Updating...');
-                        
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Есть обновленная версия сервис-воркера
                                 console.log('service worker -ის ახალი ვერსია დაყენებულია');
-                                updateSWStatus('ready', 'Update Available');
                                 
+                                // Можно показать уведомление для пользователя
                                 if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
                                     newWorker.postMessage({ type: 'SKIP_WAITING' });
                                 }
@@ -796,21 +722,19 @@
                 })
                 .catch(error => {
                     console.error('Service Worker registration failed:', error);
-                    updateSWStatus('error', 'Failed');
+                    document.getElementById('sw-version').textContent = 'Failed';
+                    document.getElementById('sw-version').classList.remove('loading');
                 });
 
             navigator.serviceWorker.addEventListener('message', event => {
                 if (event.data && event.data.version) {
-                    swVersion.textContent = event.data.version;
-                    swVersion.classList.remove('loading');
+                    document.getElementById('sw-version').textContent = event.data.version;
+                    document.getElementById('sw-version').classList.remove('loading');
                 }
             });
         } else {
-            const swVersion = document.getElementById('sw-version');
-            const swStatus = swVersion.querySelector('.sw-status');
-            swStatus.className = 'sw-status error';
-            swStatus.textContent = 'Unsupported';
-            swVersion.classList.remove('loading');
+            document.getElementById('sw-version').textContent = 'Unsupported';
+            document.getElementById('sw-version').classList.remove('loading');
         }
 
         // App Version Fetching
