@@ -2,7 +2,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
 // Версия для управления кэшем
-const VERSION = "v1.0.1";
+const VERSION = "v1.1.0";
 
 // Список URL-адресов для исключения из кэша
 const EXCLUDED_URLS = [
@@ -11,7 +11,7 @@ const EXCLUDED_URLS = [
 ];
 
 // Включаем логирование в режиме разработки
-workbox.setConfig({ debug: true });
+workbox.setConfig({ debug: false });
 
 // Используем стратегии из Workbox
 const { strategies } = workbox;
@@ -31,7 +31,10 @@ const filesToPrecache = [
   { url: '/manifest.json', revision: VERSION },
   { url: '/includes/menu.html', revision: VERSION },
   { url: '/includes/head.html', revision: VERSION },
-  { url: '/salary.html', revision: VERSION }
+  { url: '/tip', revision: VERSION },
+  { url: '/statistics', revision: VERSION },
+  { url: '/shift', revision: VERSION },
+  { url: '/salary', revision: VERSION }
 ];
 
 // Предварительное кэширование
@@ -120,30 +123,55 @@ registerRoute(
   })
 );
 
+// Функция для логирования ошибок
+function logError(error, context) {
+  console.error(`[Service Worker] Ошибка в ${context}:`, error);
+  // Отправляем ошибку в систему мониторинга, если она есть
+  if (self.reportError) {
+    self.reportError(error);
+  }
+}
+
 // Обработка сообщений от клиентов
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'GET_VERSION') {
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ version: VERSION });
-      });
-    }).catch(err => console.error("[Service Worker] Ошибка при отправке версии:", err));
+    self.clients.matchAll()
+      .then(clients => {
+        clients.forEach(client => {
+          if (client && typeof client.postMessage === 'function') {
+            try {
+              client.postMessage({ version: VERSION });
+            } catch (err) {
+              logError(err, 'отправка версии клиенту');
+            }
+          }
+        });
+      })
+      .catch(err => logError(err, 'получение списка клиентов'));
   }
   
   if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    self.skipWaiting()
+      .catch(err => logError(err, 'пропуск ожидания'));
   }
 });
 
 // Обработка синхронизации
 self.addEventListener('sync', event => {
   if (event.tag === 'syncData') {
-    event.waitUntil(syncData());
+    event.waitUntil(syncData().catch(err => logError(err, 'синхронизация данных')));
   }
 });
 
 // Функция для синхронизации данных
 async function syncData() {
-  // Здесь логика синхронизации данных
-  console.log('Выполняется фоновая синхронизация данных');
+  try {
+    console.log('Начало фоновой синхронизации данных');
+    // Здесь логика синхронизации данных
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Имитация работы
+    console.log('Синхронизация данных успешно завершена');
+  } catch (error) {
+    logError(error, 'функция syncData');
+    throw error; // Пробрасываем ошибку дальше для обработки в обработчике события
+  }
 } 
