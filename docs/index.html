@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Staff Portal">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="apple-touch-fullscreen" content="yes">
     <script>
         fetch("/includes/head.html")
             .then(response => response.text())
@@ -13,13 +8,8 @@
             .catch(error => console.error("Ошибка загрузки head:", error));
     </script>
     <title>Staff Portal</title>
-    <link rel="manifest" href="manifest.json"> 
-    
-    <link rel="apple-touch-icon-precomposed" href="https://git.you.ge/icon/maskable-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://git.you.ge/icon/iveria3-180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://git.you.ge/icon/maskable-icon.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://git.you.ge/icon/maskable-icon.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="https://git.you.ge/icon/maskable-icon.png">
+    <link rel="manifest" href="https://git.you.ge/manifest/manifest.json">
+
     <!-- Add Particles.js Library -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
@@ -520,34 +510,9 @@
                 font-size: 0.9375rem;
             }
         }
-
-        /* Service Worker Loading Indicator */
-        .sw-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--primary);
-            transform-origin: 0 50%;
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-            z-index: 9999;
-        }
-
-        .sw-loading.active {
-            transform: scaleX(0.5);
-        }
-
-        .sw-loading.complete {
-            transform: scaleX(1);
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            opacity: 0;
-        }
     </style>
 </head>
 <body>
-    <div class="sw-loading"></div>
     <!-- Particles Container -->
     <div id="particles-js"></div>
 
@@ -593,7 +558,7 @@
                     <span class="link-icon">📖</span>
                     <span>ინსტრუქცია</span>
                 </a>
-                <a href="/html/allowed/salary.html" class="link-item" title="Salary">
+                <a href="/salary" class="link-item" title="Salary">
                     <span class="link-icon">🏦</span>
                     <span>ხელფასი</span>
                 </a>
@@ -617,7 +582,7 @@
                 <p>გვერდის ტელეფონის ეკრანზე შესანახად დააჭირეთ მწვანე ღილაკს ქვედა კუთხეში, ან ნახეთ 
                     <a href="/instructions" title="instructions">📖 ინსტრუქცია</a> ;</p>
                     <video src="https://git.you.ge/video/ios-install.mp4" controls height="480"></video>
-                <p>ბოლო განახლება: 17.03.2025</p>
+                <p>ბოლო განახლება: 29.03.2025</p>
             </div>
         </div>
 
@@ -626,12 +591,12 @@
             <div class="attention-box-header">
                 <div class="attention-box-title">
                     <span>⚠️</span>
-                    <span>ყურადღება!</span>
+                    <span>Welcome!</span>
                 </div>
                 <button class="attention-box-close" onclick="closeAttentionBox()">✕</button>
             </div>
-            <div class="attention-box-content" data-message-id="message3">
-                ვისაც აპლიკაციის სახით გავქვთ ჩაწერილი 13.03.2025 -მდე, გთხოვთ წაშალოთ და ახლიდან ჩაიწეროთ.
+            <div class="attention-box-content" data-message-id="message1">
+                მოგესალმებით! პაროლის გასაგებად "მეტა"-ს ჩატში იკითხეთ. სხვა კითხვები თუ გექნებათ არ მოგერიდოთ :D
             </div>
         </div>
 
@@ -656,7 +621,7 @@
             <div class="status-item">
                 <span class="label">Status:</span>
                 <span id="online-status">Checking...</span>
-                <script id="_wauhg5">var _wau = _wau || []; _wau.push(["small", "1lmrxybvst", "hg5"]);</script><script async src="//waust.at/s.js"></script>
+              <!--   <script id="_wauhg5">var _wau = _wau || []; _wau.push(["small", "1lmrxybvst", "hg5"]);</script><script async src="//waust.at/s.js"></script>   -->
             </div>
             <div class="status-item">
                 <span class="label">IP:</span>
@@ -758,10 +723,10 @@
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                 // Есть обновленная версия сервис-воркера
-                                console.log('Новая версия service worker установлена');
+                                console.log('service worker -ის ახალი ვერსია დაყენებულია');
                                 
                                 // Можно показать уведомление для пользователя
-                                if (confirm('Доступна новая версия. Обновить сейчас?')) {
+                                if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
                                     newWorker.postMessage({ type: 'SKIP_WAITING' });
                                 }
                             }
