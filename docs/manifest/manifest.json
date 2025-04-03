@@ -62,62 +62,62 @@
   ],
   "splash_screens": [
     {
-      "src": "https://git.you.ge/icons/android/splash-1125x2436.png",
+      "src": "https://git.you.ge/icon/android/splash-1125x2436.png",
       "sizes": "1125x2436",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-750x1334.png",
+      "src": "https://git.you.ge/icon/android/splash-750x1334.png",
       "sizes": "750x1334",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-1242x2208.png",
+      "src": "https://git.you.ge/icon/android/splash-1242x2208.png",
       "sizes": "1242x2208",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-1668x2224.png",
+      "src": "https://git.you.ge/icon/android/splash-1668x2224.png",
       "sizes": "1668x2224",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-2048x2732.png",
+      "src": "https://git.you.ge/icon/android/splash-2048x2732.png",
       "sizes": "2048x2732",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-1536x2048.png",
+      "src": "https://git.you.ge/icon/android/splash-1536x2048.png",
       "sizes": "1536x2048",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-320x426.png",
+      "src": "https://git.you.ge/icon/android/splash-320x426.png",
       "sizes": "320x426",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-320x470.png",
+      "src": "https://git.you.ge/icon/android/splash-320x470.png",
       "sizes": "320x470",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-480x640.png",
+      "src": "https://git.you.ge/icon/android/splash-480x640.png",
       "sizes": "480x640",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-720x960.png",
+      "src": "https://git.you.ge/icon/android/splash-720x960.png",
       "sizes": "720x960",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-960x1280.png",
+      "src": "https://git.you.ge/icon/android/splash-960x1280.png",
       "sizes": "960x1280",
       "type": "image/png"
     },
     {
-      "src": "https://git.you.ge/icons/android/splash-1280x1920.png",
+      "src": "https://git.you.ge/icon/android/splash-1280x1920.png",
       "sizes": "1280x1920",
       "type": "image/png"
     }
