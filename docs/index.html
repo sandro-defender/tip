@@ -8,8 +8,8 @@
             .catch(error => console.error("Ошибка загрузки head:", error));
     </script>
     <title>Staff Portal</title>
-    <link rel="manifest" href="https://git.you.ge/manifest.json">
-
+    <link rel="manifest" href="https://git.you.ge/manifest/manifest.json">
+ 
 
     <!-- Add Particles.js Library -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
@@ -155,6 +155,14 @@
             overflow: hidden;
             background: rgba(0, 0, 0, 0);
             border-radius: 20px;
+            display: none; /* Скрываем по умолчанию */
+        }
+
+        /* Показываем логотип только в PWA режиме */
+        @media all and (display-mode: standalone) {
+            .logo-container {
+                display: flex;
+            }
         }
 
         .logo-container img {
@@ -194,14 +202,7 @@
         .logo-container img:hover {
             transform: scale(1.05);
         }
-        /* Show the logo only in PWA mode */
-        body[data-pwa="true"] .logo-container {
-            visibility: visible; /* Show in PWA mode */
-        }
 
-        body[data-pwa="true"] .logo-container img {
-            opacity: 1; /* Make the image visible in PWA mode */
-        }
         .link-item {
             display: flex;
             flex-direction: column;
@@ -518,7 +519,6 @@
                 font-size: 0.9375rem;
             }
         }
-
     </style>
 </head>
 <body>
@@ -572,7 +572,6 @@
                     <span>ხელფასი</span>
                 </a>
             </div>
-            <!-- Скрытый логотип для иконки приложения -->
             <div class="logo-container">
                 <img src="https://git.you.ge/img/staff-1.png" alt="img 1" role="presentation">
                 <img src="https://git.you.ge/img/staff-2.png" alt="img 2" role="presentation">
@@ -982,11 +981,6 @@
             }
             deferredPrompt = null;
         });
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            document.body.setAttribute('data-pwa', 'true');
-        } else {
-            document.body.removeAttribute('data-pwa');
-        }
     </script>
     <script src="js/install-helper.js"></script>
     <script>
