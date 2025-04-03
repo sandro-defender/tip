@@ -567,10 +567,12 @@
             </div>
             <!-- Скрытый логотип для иконки приложения -->
             <div class="logo-container">
-                <img src="https://git.you.ge/img/webp/staff-2.webp" alt="img 2" role="presentation" alt="Transparent Image">
-                <img src="https://git.you.ge/img/webp/staff-3.webp" alt="img 3" role="presentation" alt="Transparent Image">
-                <img src="https://git.you.ge/img/webp/staff-4.webp" alt="img 4" role="presentation" alt="Transparent Image">
-                <img src="https://git.you.ge/img/webp/staff-5.webp" alt="img 5" role="presentation" alt="Transparent Image">
+                <img src="https://git.you.ge/img/staff-1.png" alt="img 1" role="presentation">
+                <img src="https://git.you.ge/img/staff-2.png" alt="img 2" role="presentation">
+                <img src="https://git.you.ge/img/staff-3.png" alt="img 3" role="presentation">
+                <img src="https://git.you.ge/img/staff-4.png" alt="img 4" role="presentation">
+                <img src="https://git.you.ge/img/staff-5.png" alt="img 5" role="presentation">
+                <img src="https://git.you.ge/img/staff-6.png" alt="img 6" role="presentation">
             </div>
         </div>
 
@@ -973,6 +975,13 @@
             }
             deferredPrompt = null;
         });
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            // Code to show images or content only in PWA
+            document.querySelector('.logo-container').style.display = 'block';
+        } else {
+            // Code to hide images or content
+            document.querySelector('.logo-container').style.display = 'none';
+        }
     </script>
     <script src="js/install-helper.js"></script>
     <script>
