@@ -1,0 +1,26 @@
+{
+  "currentMonth": [
+    {
+      "date": "2025-04-05",
+      "amount": 14064
+    },
+    {
+      "date": "2025-04-04",
+      "amount": 17936
+    },
+    {
+      "date": "2025-04-03",
+      "amount": 12848
+    },
+    {
+      "date": "2025-04-02",
+      "amount": 11464
+    },
+    {
+      "date": "2025-04-01",
+      "amount": 15290.5
+    }
+  ],
+  "totalPoints": 5690,
+  "sha": "8049018e8f25c3adf293f10ffe24fe7bcfd8c64d"
+}
