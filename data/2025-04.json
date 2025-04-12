@@ -39,8 +39,12 @@
     {
       "date": "2025-04-01",
       "amount": 15290.5
+    },
+    {
+      "date": "2025-04-11",
+      "amount": 0.1
     }
   ],
   "totalPoints": 5690,
-  "sha": "3bfc6383d917d48119cd86dd56bf81a8b185eb3c"
+  "sha": "3bc091efc2e53ee55b06ca0440c102b042e1b755"
 }
