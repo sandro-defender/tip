@@ -2,6 +2,7 @@
   "name": "Iveria Staff Tools",
   "short_name": "Iveria Staff",
   "description": "tools for iveria staff",
+  "id": "https://staff.you.ge/",
   "start_url": "https://staff.you.ge/",
   "scope": "https://staff.you.ge/",
   "display": "standalone",
