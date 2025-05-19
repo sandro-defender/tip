@@ -67,8 +67,12 @@
     {
       "date": "2025-05-01",
       "amount": 10142
+    },
+    {
+      "date": "2025-05-18",
+      "amount": 6497
     }
   ],
   "totalPoints": 5727.4,
-  "sha": "8bec1a433c61046d4afbe1f81c8a9485ce6b0ab7"
+  "sha": "42bd7eb31e2fb361c3daee7b9bd91f08189854a9"
 }
