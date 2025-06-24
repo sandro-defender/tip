@@ -1,6 +1,10 @@
 {
   "currentMonth": [
     {
+      "date": "2025-06-23",
+      "amount": 20514
+    },
+    {
       "date": "2025-06-22",
       "amount": 6969
     },
@@ -90,5 +94,5 @@
     }
   ],
   "totalPoints": 5699,
-  "sha": "e7ab19fad8e5f244c56e260b072c3fe8f8cff2ce"
+  "sha": "dd625e048542cdcaf33c97982f3fa7fa17f53099"
 }
