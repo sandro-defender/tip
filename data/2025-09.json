@@ -87,11 +87,8 @@
     {
       "date": "2025-09-01",
       "amount": 10986
-    },
-    {
-      "date": "2025-09-23",
-      "amount": 1
     }
   ],
-  "totalPoints": 6055
+  "totalPoints": 6055,
+  "sha": "b4d7212390bebe7af3c84a0e39f75787394d789c"
 }
