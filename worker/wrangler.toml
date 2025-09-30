@@ -14,6 +14,9 @@ database_id = "dfe5ea4f-2a93-4b97-b5e5-8909a6b0a54a"
 [observability]
 enabled = true
 
+[dev]
+preview_urls = true   # or false, depending on your preference
+
 # Optional route (customize for your zone)
 # [[routes]]
 # pattern = "tips-api.you.ge/api/d1*"

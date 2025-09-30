@@ -4,7 +4,7 @@ export default {
 		const corsHeaders = {
 			"Access-Control-Allow-Origin": "https://tips.you.ge",
 			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-			"Access-Control-Allow-Headers": "Content-Type, Authorization",
+			"Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match",
 			"Access-Control-Allow-Credentials": "true",
 			"Content-Type": "application/json",
 			"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
