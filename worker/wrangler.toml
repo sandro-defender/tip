@@ -16,8 +16,5 @@ enabled = true
 
 # Optional route (customize for your zone)
 # [[routes]]
-# pattern = "staff.you.ge/api/d1*"
+# pattern = "tips-api.you.ge/api/d1*"
 # zone_id = "<your-zone-id>"
-
-# Changelog:
-# 2025-09-31 - Initial wrangler config with D1 binding (GPT-5)
