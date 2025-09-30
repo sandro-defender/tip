@@ -1,4 +1,4 @@
-name = "tips"
+name = "tips-api"
 main = "worker/index.js"
 compatibility_date = "2025-09-30"
 
