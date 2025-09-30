@@ -337,7 +337,7 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         'use strict';
         
         // Menu version
-        const MENU_VERSION = '0.0.1';
+        const MENU_VERSION = '0.0.2';
         
         class BottomNavigation {
             constructor() {
@@ -381,6 +381,10 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                     console.log('Checking home page detection...');
                 }
                 
+                // Strict path based matching: only consider path segments and common extensions
+                const escapedPage = page.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pathSegmentRegex = new RegExp(`(^|\\/)${escapedPage}(\\/|$|\\.html$|\\.php$)`);
+
                 // More robust page matching with better logic
                 const matches = [
                     // Direct path matches
@@ -389,10 +393,10 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                     currentPath.endsWith('/' + page),
                     currentPath.endsWith('/' + page + '.php'),
                     currentPath.endsWith('/' + page + '.html'),
-                    
-                    // URL contains page
-                    currentUrl.includes('/' + page),
-                    
+
+                    // Regex-based segment match (avoids matching "tips" host for "tip")
+                    pathSegmentRegex.test(currentPath),
+
                     // Home page special cases - enhanced
                     (page === 'home' && (
                         currentPath === '/' || 
@@ -409,15 +413,15 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                         (currentUrl === currentHost && href === currentHost + '/') ||
                         (currentUrl === currentHost + '/' && href === currentHost)
                     )),
-                    
+
                     // Exact href match
                     href === currentUrl,
                     href === currentHost + currentPath,
-                    
+
                     // Handle trailing slashes
                     href.replace(/\/$/, '') === currentUrl.replace(/\/$/, ''),
                     href.replace(/\/$/, '') === (currentHost + currentPath).replace(/\/$/, ''),
-                    
+
                     // Handle query parameters
                     href.split('?')[0] === currentUrl.split('?')[0],
                     href.split('?')[0] === (currentHost + currentPath).split('?')[0]
