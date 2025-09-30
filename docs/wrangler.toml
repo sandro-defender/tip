@@ -1,0 +1,23 @@
+name = "staff-you-d1-worker"
+main = "worker/index.js"
+compatibility_date = "2025-09-30"
+
+[vars]
+# API_PASSWORD is set via Wrangler secrets in production:
+# wrangler secret put API_PASSWORD
+
+[[d1_databases]]
+binding = "DB"
+database_name = "staff_you_d1"
+database_id = "<your-d1-database-id>"
+
+[observability]
+enabled = true
+
+# Optional route (customize for your zone)
+# [[routes]]
+# pattern = "staff.you.ge/api/d1*"
+# zone_id = "<your-zone-id>"
+
+# Changelog:
+# 2025-09-30 - Initial wrangler config with D1 binding (GPT-5)

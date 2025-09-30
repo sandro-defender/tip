@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<!-- 
+Changelog:
+- Modified color pattern to display working days in alternating colors: (r.r.r/g.g.g/lr.lr.lr/g.g.g/r.r.r/...)
+- Added light-red color for alternating working days
+- Updated JavaScript logic to implement 12-day cycle pattern
+- Updated work day counting to include both red and light-red days
+- Modified description to reflect new color scheme
+- Added bottom padding to avoid overlap with bottom menu
+
+Date Modified: 2025-09-19
+AI Model Used: GPT-5
+-->
+<html lang="ka" data-theme="light">
+<head>
+    <script>
+        fetch("/includes/head.html")
+            .then(response => response.text())
+            .then(data => document.head.innerHTML += data)
+            .catch(error => console.error("Ошибка загрузки head:", error));
+    </script>
+    <title>სამუშაო კალენდარი</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a86ff;
+            --accent-color: #4cc9f0;
+            --text-color: #2b2d42;
+            --text-light: #8d99ae;
+            --hover-effect: rgba(67, 97, 238, 0.1);
+            --background-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --menu-background: #ffffff;
+            --table-header: #f1f3f5;
+            --table-border: rgba(0,0,0,0.06);
+            --caption-background: linear-gradient(135deg, #4361ee, #3a86ff);
+            --caption-color: white;
+            --work-day-bg: #ffccd5;
+            --work-day-color: #e63946;
+            --rest-day-bg: #d8f3dc;
+            --rest-day-color: #2d6a4f;
+            --light-work-day-bg: #ffe4e6;
+            --light-work-day-color: #d32222;
+            --subtitle-color: #6c757d;
+            --border-radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --bottom-nav-height: 40px;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4cc9f0;
+            --secondary-color: #4895ef;
+            --accent-color: #3f37c9;
+            --text-color: #f8f9fa;
+            --text-light: #adb5bd;
+            --hover-effect: rgba(76, 201, 240, 0.2);
+            --background-color: #121212;
+            --card-bg: #1e1e1e;
+            --menu-background: #252525;
+            --table-header: #2d3436;
+            --table-border: rgba(255,255,255,0.05);
+            --caption-background: linear-gradient(135deg, #2f148d, #01060b);
+            --caption-color: #f8f9fa;
+            --work-day-bg: #660708;
+            --work-day-color: #ffccd5;
+            --rest-day-bg: #1b4332;
+            --rest-day-color: #d8f3dc;
+            --light-work-day-bg: #38081c;
+            --light-work-day-color: #fecaca;
+            --subtitle-color: #adb5bd;
+        }
+    
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--background-color);
+            transition: background-color 0.4s ease, color 0.4s ease;
+            padding: 0 1rem;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        
+        .page-container {
+            padding-top: 100px;
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding-bottom: var(--bottom-nav-height);
+        }
+    
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+    
+        .month-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--card-bg);
+            box-shadow: var(--shadow-md);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+            width: 100%;
+        }
+        
+        .month-table:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .current-month {
+            border: 2px solid var(--primary-color);
+        }
+    
+        .month-table caption {
+            background: var(--caption-background);
+            color: var(--caption-color);
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+    
+        .month-table th {
+            background: var(--table-header);
+            padding: 12px 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--table-border);
+        }
+    
+        .month-table td {
+            padding: 10px;
+            font-size: 0.95rem;
+            text-align: center;
+            min-width: 36px;
+            height: 36px;
+            border: 1px solid var(--table-border);
+            cursor: pointer;
+            position: relative;
+            transition: background-color var(--transition-fast), transform var(--transition-fast);
+        }
+        
+        .month-table td:hover {
+            background-color: var(--hover-effect);
+            transform: scale(1.05);
+            z-index: 5;
+        }
+    
+        .work-day { 
+            background-color: var(--work-day-bg) !important;
+            color: var(--work-day-color);
+            font-weight: 600;
+        }
+    
+        .rest-day { 
+            background-color: var(--rest-day-bg) !important;
+            color: var(--rest-day-color);
+            font-weight: 600;
+        }
+
+        .light-work-day { 
+            background-color: var(--light-work-day-bg) !important;
+            color: var(--light-work-day-color);
+            font-weight: 600;
+        }
+    
+        .selected-date {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .selected-date::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(67, 97, 238, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+            }
+        }
+    
+        h3 {
+            margin: 0 0 1rem;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--primary-color);
+            letter-spacing: -0.5px;
+        }
+    
+        h4 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--subtitle-color);
+            font-weight: 400;
+            font-size: 1.1rem;
+        }
+    
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--card-bg);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        .small {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--caption-color);
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .small:last-child {
+            font-weight: 600;
+        }
+    
+        @media (max-width: 1200px) {
+            .calendar {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 16px;
+            }
+            
+            .month-table td {
+                padding: 8px;
+                min-width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+            
+            h3 {
+                font-size: 1.8rem;
+            }
+        }
+    
+        @media (max-width: 768px) {
+            .page-container {
+                padding-top: 80px;
+                padding-bottom: calc(var(--bottom-nav-height) + 10px);
+            }
+            
+            .calendar {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 12px;
+            }
+            
+            h3 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            h4 {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .menu a {
+                font-size: 18px;
+                padding: 6px 12px;
+            }
+            
+            .theme-toggle {
+                width: 42px;
+                height: 42px;
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .calendar {
+                grid-template-columns: 1fr;
+            }
+            
+            body {
+                padding: 0 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-container"></div>
+    <div class="page-container">
+        <h3>მონიშნეთ პირველი სამუშაო დღე</h3>
+        <h4>წითლად და ღია წითლად იქნება მონიშნული ყველა სამუშაო დღე</h4>
+        <div id="calendarContainer" class="calendar"></div>
+    </div>
+
+    <script>
+         //---> მენიუს ჩატვირთვა
+         fetch('/includes/menu-1.2.html')
+            .then(response => response.text())
+            .then(data => {
+                console.log('Menu HTML loaded, inserting into DOM...');
+                document.getElementById('menu-container').innerHTML = data;
+                console.log('Menu HTML inserted, executing scripts...');
+                
+                // Execute any script tags that were inserted
+                const scripts = document.getElementById('menu-container').querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent) {
+                        console.log('Executing script from menu...');
+                        eval(script.textContent);
+                    }
+                });
+                
+                // Wait for the script to execute and function to be available
+                let attempts = 0;
+                const maxAttempts = 20; // Reduced to 2 seconds since we're executing scripts immediately
+                
+                const waitForInit = () => {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    
+                    if (typeof window.initBottomNav === 'function') {
+                        console.log('initBottomNav function found! Calling it...');
+                        window.initBottomNav();
+                        console.log('Bottom navigation initialized successfully');
+                    } else if (attempts < maxAttempts) {
+                        console.log('Function not found yet, retrying...');
+                        setTimeout(waitForInit, 100);
+                    } else {
+                        console.error('initBottomNav function not found after 2 seconds. Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function'));
+                    }
+                };
+                
+                // Start waiting for the function to be available
+                setTimeout(waitForInit, 50); // Reduced delay since scripts are executed immediately
+            })
+            .catch(error => console.error('Error loading menu:', error));
+
+            // <--- მენიუს ჩატვირთვა
+        // Theme toggling functionality
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        let selectedDate = new Date();
+        selectedDate.setHours(0, 0, 0, 0);
+
+        const config = {
+            workCycle: 3,
+            restCycle: 3,
+            dailyHours: 12
+        };
+
+        const calendarUtils = {
+            getStatus: (date, startDate) => {
+                const diffDays = Math.floor((date - startDate) / 86400000);
+                const totalCycle = config.workCycle + config.restCycle;
+                const cyclePosition = ((diffDays % totalCycle) + totalCycle) % totalCycle;
+                
+                // New pattern: r.r.r/g.g.g/lr.lr.lr/g.g.g/r.r.r/...
+                // This creates a 12-day cycle: 3 red, 3 green, 3 light red, 3 green
+                const patternCycle = 12;
+                const patternPosition = ((diffDays % patternCycle) + patternCycle) % patternCycle;
+                
+                if (patternPosition < 3) {
+                    return 'work'; // Red (first 3 days)
+                } else if (patternPosition < 6) {
+                    return 'rest'; // Green (next 3 days)
+                } else if (patternPosition < 9) {
+                    return 'light-work'; // Light red (next 3 days)
+                } else {
+                    return 'rest'; // Green (last 3 days)
+                }
+            },
+
+            generateMonth: (year, month, startDate) => {
+                const table = document.createElement('table');
+                table.className = `month-table ${new Date().getMonth() === month ? 'current-month' : ''}`;
+                
+                const caption = table.createCaption();
+                const monthName = new Date(year, month).toLocaleDateString('ka-GE', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+
+                const headerRow = table.insertRow();
+                ['კვ', 'ორ', 'სამ', 'ოთ', 'ხუთ', 'პარ', 'შაბ'].forEach(day => {
+                    const th = document.createElement('th');
+                    th.textContent = day;
+                    headerRow.appendChild(th);
+                });
+
+                let currentDay = new Date(year, month, 1);
+                let workDays = 0;
+
+                // Fill in any spaces before the 1st day
+                const firstDayIndex = currentDay.getDay();
+                if (firstDayIndex > 0) {
+                    const emptyRow = table.insertRow();
+                    for (let i = 0; i < firstDayIndex; i++) {
+                        emptyRow.insertCell();
+                    }
+                    
+                    // Add the remaining days of the first week
+                    for (let i = firstDayIndex; i < 7; i++) {
+                        const cell = emptyRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+                        
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
+
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
+
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
+
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                } else {
+                    // Add the first week
+                    const weekRow = table.insertRow();
+                    for (let i = 0; i < 7; i++) {
+                        const cell = weekRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+                        
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
+
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
+
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
+
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                }
+
+                // Fill the rest of the month
+                while (currentDay.getMonth() === month) {
+                    const weekRow = table.insertRow();
+                    
+                    for (let i = 0; i < 7; i++) {
+                        if (currentDay.getMonth() !== month) {
+                            weekRow.insertCell();
+                            continue;
+                        }
+                        
+                        const cell = weekRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
+
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
+
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
+
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                }
+
+                caption.innerHTML = `
+                    ${monthName}
+                    <div class="small">${workDays} დღე, ${workDays * config.dailyHours} საათი</div>
+                `;
+
+                return table;
+            }
+        };
+
+        function generateCalendar() {
+            const container = document.getElementById('calendarContainer');
+            container.innerHTML = '';
+            
+            const year = selectedDate.getFullYear();
+            const months = Array.from({length: 12}, (_, i) => 
+                calendarUtils.generateMonth(year, i, selectedDate)
+            );
+            
+            container.append(...months);
+        }
+
+        // ინიციალიზაცია
+        window.addEventListener('load', generateCalendar);
+    </script>
+</body>
+</html>

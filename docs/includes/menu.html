@@ -1,110 +1,637 @@
-<!DOCTYPE html>
-<html lang="ka">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>მენიუ</title>
-  <style>
-        .menu {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 30px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            backdrop-filter: blur(15px);
-            z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: menuSlideIn 0.5s ease-out;
-        }
+<!--
+Project: Tip Tracker
+File: includes/menu-1.2.html
+Version: 1.3.0
+Author: Cursor AI
+Model: GPT-5
+Last Modified: 2025-09-18
+Purpose: Bottom navigation component with glassmorphism (frosted glass) design and accessibility enhancements.
+-->
+<!-- Bottom Navigation Menu -->
 
-        .menu a, .theme-toggle {
-            text-decoration: none;
-            font-size: 20px;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--icon-color);
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+<style>
+    /* Glass utility for reuse */
+    .glass {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0.35) 100%
+        );
+        backdrop-filter: saturate(140%) blur(20px);
+        -webkit-backdrop-filter: saturate(140%) blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
 
-        .menu a::after {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            width: 6px;
-            height: 6px;
-            background: var(--icon-color);
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+    /* Bottom Navigation Styles */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0.35) 100%
+        );
+        backdrop-filter: saturate(140%) blur(20px);
+        -webkit-backdrop-filter: saturate(140%) blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+        z-index: 1000;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        /* Ensure minimum touch target size */
+        min-height: 60px;
+        /* Prepare for pseudo-element gloss */
+        position: fixed;
+        overflow: visible;
+    }
 
-        .menu a.active::after {
-            opacity: 1;
-        }
+    /* Subtle gloss highlight */
+    .bottom-nav::before {
+        content: '';
+        position: absolute;
+        top: -18px;
+        left: 0;
+        right: 0;
+        height: 18px;
+        pointer-events: none;
+        background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.26),
+            rgba(255, 255, 255, 0.10) 60%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
+    }
 
-        .theme-toggle {
-            margin-left: auto;
-            transition: transform 0.3s ease;
-        }
+    .bottom-nav .nav-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 0 20px;
+        /* Ensure equal distribution */
+        gap: 4px;
+    }
 
-        .menu a:hover, .theme-toggle:hover {
-            background: var(--hover-bg);
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
+    .bottom-nav .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        position: relative;
+        min-width: 60px;
+        min-height: 44px; /* Minimum touch target */
+        text-decoration: none;
+        color: inherit;
+        /* Better focus styles for accessibility */
+        outline: none;
+        /* Ensure consistent sizing */
+        flex: 1;
+        max-width: 80px;
+        box-sizing: border-box;
+        /* Glass hover surface */
+        background: rgba(255, 255, 255, 0.0);
+    }
 
-        @media (max-width: 768px) {
-            .menu {
-                top: auto;
-                bottom: 20px;
-                width: 90%;
-                justify-content: space-around;
-                padding: 6px 12px;
-                border-radius: 25px;
+    .bottom-nav .nav-item:focus-visible {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+    }
+
+    .bottom-nav .nav-item:hover {
+        background: rgba(103, 126, 234, 0.12);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(103, 126, 234, 0.15);
+    }
+
+    .bottom-nav .nav-item.active {
+        background: rgba(103, 126, 234, 0.16);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(103, 126, 234, 0.22);
+        border: 1px solid rgba(103, 126, 234, 0.25);
+    }
+
+    .bottom-nav .nav-item.active::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: #667eea;
+        border-radius: 50%;
+        animation: nav-pulse 2s infinite;
+    }
+
+    /* Notification badge */
+    .bottom-nav .nav-badge {
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        background: #ff4757;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 600;
+        min-width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: badge-pulse 2s infinite;
+        z-index: 1;
+    }
+
+    .bottom-nav .nav-badge.hidden {
+        display: none;
+    }
+
+    @keyframes badge-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    @keyframes nav-pulse {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        50% { opacity: 0.7; transform: translateX(-50%) scale(1.2); }
+    }
+
+    .bottom-nav .nav-icon {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+        transition: all 0.3s ease;
+        fill: #666;
+    }
+
+    .bottom-nav .nav-item.active .nav-icon {
+        fill: #667eea;
+        transform: scale(1.1);
+    }
+
+    .bottom-nav .nav-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #666;
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+
+    .bottom-nav .nav-item.active .nav-label {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    /* Loading state */
+    .bottom-nav .nav-item.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .bottom-nav .nav-item.loading .nav-icon {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        .bottom-nav .nav-container {
+            padding: 0 10px;
+        }
+        
+        .bottom-nav .nav-item {
+            min-width: 50px;
+            padding: 6px 8px;
+        }
+        
+        .bottom-nav .nav-icon {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .bottom-nav .nav-label {
+            font-size: 10px;
+        }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .bottom-nav {
+            background: linear-gradient(
+                180deg,
+                rgba(30, 30, 30, 0.70) 0%,
+                rgba(30, 30, 30, 0.55) 100%
+            );
+            border-top-color: rgba(255, 255, 255, 0.10);
+        }
+        
+        .bottom-nav .nav-icon {
+            fill: #bbb;
+        }
+        
+        .bottom-nav .nav-label {
+            color: #bbb;
+        }
+        
+        .bottom-nav .nav-item:hover {
+            background: rgba(103, 126, 234, 0.22);
+        }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        .bottom-nav {
+            border-top: 2px solid #000;
+        }
+        
+        .bottom-nav .nav-item:focus-visible {
+            outline: 3px solid #000;
+        }
+    }
+
+    /* Reduced motion/transparency support */
+    @media (prefers-reduced-motion: reduce) {
+        .bottom-nav .nav-item,
+        .bottom-nav .nav-icon,
+        .bottom-nav .nav-label {
+            transition: none;
+        }
+        
+        .bottom-nav .nav-item.active::before,
+        .bottom-nav .nav-badge {
+            animation: none;
+        }
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+        .bottom-nav {
+            background: #ffffff;
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+        }
+    }
+</style>
+
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+        <a href="/" class="nav-item" data-page="home" aria-label="Home page" role="tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span class="nav-label">Home</span>
+        </a>
+
+        <a href="/tip" class="nav-item" data-page="tip" aria-label="Tips and advice" role="tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+            </svg>
+            <span class="nav-label">Tips</span>
+            <span class="nav-badge hidden" aria-label="New tips available">3</span>
+        </a>
+        
+        <a href="/statistics" class="nav-item" data-page="statistic" aria-label="Statistics and analytics" role="tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            <span class="nav-label">Statistics</span>
+            <span class="nav-badge hidden" aria-label="New statistics available">1</span>
+        </a>
+        
+        <a href="/salary" class="nav-item" data-page="salary" aria-label="Salary information" role="tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+            </svg>
+            <span class="nav-label">Salary</span>
+            <span class="nav-badge hidden" aria-label="New salary updates available"></span>
+        </a>
+        
+        <a href="/shift" class="nav-item" data-page="shift" aria-label="Shift schedule" role="tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+            </svg>
+            <span class="nav-label">Shift</span>
+            <span class="nav-badge hidden" aria-label="New shift updates available"></span>
+        </a>
+    </div>
+</nav>
+
+<script>
+    // Enhanced Bottom Navigation functionality
+    (function() {
+        'use strict';
+        
+        // Menu version
+        const MENU_VERSION = '0.0.1';
+        
+        class BottomNavigation {
+            constructor() {
+                this.navItems = document.querySelectorAll('.bottom-nav .nav-item');
+                this.currentPath = window.location.pathname;
+                this.isNavigating = false;
+                this.init();
             }
             
-            .menu a, .theme-toggle {
-                font-size: 16px;
-                width: 20px;
-                height: 20px;
+            init() {
+                this.setActiveItem();
+                this.bindEvents();
+                this.checkNotifications();
+            }
+            
+            setActiveItem() {
+                this.navItems.forEach(item => {
+                    const page = item.getAttribute('data-page');
+                    const href = item.getAttribute('href');
+                    
+                    // Improved active state detection
+                    const isActive = this.isCurrentPage(page, href);
+                    
+                    if (isActive) {
+                        item.classList.add('active');
+                        item.setAttribute('aria-selected', 'true');
+                    } else {
+                        item.classList.remove('active');
+                        item.setAttribute('aria-selected', 'false');
+                    }
+                });
+            }
+            
+            isCurrentPage(page, href) {
+                const currentPath = window.location.pathname;
+                const currentUrl = window.location.href;
+                const currentHost = window.location.origin;
+                
+                // Debug logging only for home page to reduce noise
+                if (page === 'home') {
+                    console.log('Checking home page detection...');
+                }
+                
+                // More robust page matching with better logic
+                const matches = [
+                    // Direct path matches
+                    currentPath === '/' + page,
+                    currentPath === '/' + page + '/',
+                    currentPath.endsWith('/' + page),
+                    currentPath.endsWith('/' + page + '.php'),
+                    currentPath.endsWith('/' + page + '.html'),
+                    
+                    // URL contains page
+                    currentUrl.includes('/' + page),
+                    
+                    // Home page special cases - enhanced
+                    (page === 'home' && (
+                        currentPath === '/' || 
+                        currentPath === '' || 
+                        currentPath.includes('/home') ||
+                        currentUrl === currentHost + '/' ||
+                        currentUrl === currentHost ||
+                        currentUrl === currentHost + '/index.html' ||
+                        currentUrl === currentHost + '/index.php' ||
+                        currentUrl.endsWith('/') && currentPath === '/' ||
+                        currentUrl === href ||
+                        currentUrl.replace(/\/$/, '') === href.replace(/\/$/, '') ||
+                        // Handle case where URL is exactly the host without trailing slash
+                        (currentUrl === currentHost && href === currentHost + '/') ||
+                        (currentUrl === currentHost + '/' && href === currentHost)
+                    )),
+                    
+                    // Title contains page
+                    document.title.toLowerCase().includes(page),
+                    
+                    // Exact href match
+                    href === currentUrl,
+                    href === currentHost + currentPath,
+                    
+                    // Handle trailing slashes
+                    href.replace(/\/$/, '') === currentUrl.replace(/\/$/, ''),
+                    href.replace(/\/$/, '') === (currentHost + currentPath).replace(/\/$/, ''),
+                    
+                    // Handle query parameters
+                    href.split('?')[0] === currentUrl.split('?')[0],
+                    href.split('?')[0] === (currentHost + currentPath).split('?')[0]
+                ];
+                
+                const isActive = matches.some(match => match);
+                
+                // Only log for home page or if there's an issue
+                if (page === 'home') {
+                    console.log('Home page active:', isActive);
+                }
+                
+                return isActive;
+            }
+            
+            bindEvents() {
+                this.navItems.forEach(item => {
+                    // Click handling with loading state
+                    item.addEventListener('click', (e) => this.handleClick(e, item));
+                    
+                    // Touch feedback
+                    item.addEventListener('touchstart', (e) => this.handleTouchStart(e, item));
+                    item.addEventListener('touchend', (e) => this.handleTouchEnd(e, item));
+                    
+                    // Prevent default on middle click
+                    item.addEventListener('auxclick', (e) => {
+                        if (e.button === 1) e.preventDefault();
+                    });
+                });
+            }
+            
+            handleClick(e, item) {
+                if (this.isNavigating) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                // Remove active class from all items
+                this.navItems.forEach(nav => {
+                    nav.classList.remove('active');
+                    nav.setAttribute('aria-selected', 'false');
+                });
+                
+                // Add active class to clicked item
+                item.classList.add('active');
+                item.setAttribute('aria-selected', 'true');
+                
+                // Add loading state
+                this.setLoadingState(item, true);
+                
+                // Haptic feedback
+                this.vibrate();
+                
+                // Navigate after a short delay to show loading state
+                setTimeout(() => {
+                    this.isNavigating = true;
+                    window.location.href = item.getAttribute('href');
+                }, 150);
+            }
+            
+            handleTouchStart(e, item) {
+                if (!this.isNavigating) {
+                    item.style.transform = 'translateY(-1px) scale(0.98)';
+                }
+            }
+            
+            handleTouchEnd(e, item) {
+                setTimeout(() => {
+                    item.style.transform = '';
+                }, 100);
+            }
+            
+            setLoadingState(item, loading) {
+                if (loading) {
+                    item.classList.add('loading');
+                } else {
+                    item.classList.remove('loading');
+                }
+            }
+            
+            vibrate() {
+                if ('vibrate' in navigator && !this.isReducedMotion()) {
+                    navigator.vibrate(50);
+                }
+            }
+            
+            isReducedMotion() {
+                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            }
+            
+            checkNotifications() {
+                // Simulate checking for notifications
+                // In a real app, this would fetch from your API
+                // Disabled demo notifications - uncomment to enable
+                /*
+                setTimeout(() => {
+                    const tipBadge = document.querySelector('[data-page="tip"] .nav-badge');
+                    const statsBadge = document.querySelector('[data-page="statistic"] .nav-badge');
+                    
+                    // Show badges for demo purposes
+                    if (tipBadge) tipBadge.classList.remove('hidden');
+                    if (statsBadge) statsBadge.classList.remove('hidden');
+                }, 2000);
+                */
+            }
+            
+            // Public method to update notifications
+            updateNotification(page, count) {
+                const item = document.querySelector(`[data-page="${page}"]`);
+                if (item) {
+                    const badge = item.querySelector('.nav-badge');
+                    if (badge) {
+                        if (count > 0) {
+                            badge.textContent = count;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                }
+            }
+            
+            // Public method to manually set active page
+            setActivePage(page) {
+                this.navItems.forEach(item => {
+                    const itemPage = item.getAttribute('data-page');
+                    if (itemPage === page) {
+                        item.classList.add('active');
+                        item.setAttribute('aria-selected', 'true');
+                    } else {
+                        item.classList.remove('active');
+                        item.setAttribute('aria-selected', 'false');
+                    }
+                });
+            }
+            
+            // Public method to force refresh active state
+            refreshActiveState() {
+                // Only log if there's an issue or for debugging
+                // console.log('Refreshing active state...');
+                this.setActiveItem();
             }
         }
+        
+        // Initialize when DOM is ready
+        function initBottomNav(activePage = null) {
+            try {
+                const nav = new BottomNavigation();
+                
+                // Store instance globally for debugging
+                window.bottomNav = nav;
+                
+                // If a specific page is provided, set it as active
+                if (activePage) {
+                    nav.setActivePage(activePage);
+                } else {
+                    // Force refresh after a short delay to ensure everything is loaded
+                    setTimeout(() => {
+                        nav.refreshActiveState();
+                    }, 100);
+                }
+                
+                // Also refresh on window load to catch any late changes
+                window.addEventListener('load', () => {
+                    if (activePage) {
+                        nav.setActivePage(activePage);
+                    } else {
+                        nav.refreshActiveState();
+                    }
+                });
+                
+                console.log('Bottom navigation initialized successfully', activePage ? `with active page: ${activePage}` : '');
+                console.log(`Menu version: ${MENU_VERSION}`);
+                return nav;
+            } catch (error) {
+                console.error('Failed to initialize bottom navigation:', error);
+                console.log(`Menu version: ${MENU_VERSION}`);
+                // Fallback: basic functionality
+                const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+                navItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        navItems.forEach(nav => nav.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+                return null;
+            }
+        }
+        
+        let bottomNavInstance = null;
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                bottomNavInstance = initBottomNav();
+            });
+        } else {
+            bottomNavInstance = initBottomNav();
+        }
+        
+        // Expose API for external use
+        window.BottomNavigation = BottomNavigation;
+        window.bottomNav = bottomNavInstance;
+        window.initBottomNav = initBottomNav; // Expose the function globally
+        window.MENU_VERSION = MENU_VERSION; // Expose version globally
+    })();
+</script>
 
-        @keyframes menuSlideIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -20px);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
-        }
-  </style>
-</head>
-<body>
-  <header class="menu">
-    <a href="/">🏠</a>
-    <a href="/tip">💰</a>
-    <a href="/statistics">📊</a>
-    <a href="/salary">🏦</a>
-    <a href="/shift">📅</a>
-</header>
-</body>
-</html>
+<!--
+CHANGELOG
+[2025-09-18] v1.3.0 – Added frosted glass design, .glass utility, improved dark mode.
+Reason: Implement requested transparent glass design with modern UX.
+Impact: More modern look; compatible with reduced-motion/transparency user settings.
+Model: GPT-5
+-->
