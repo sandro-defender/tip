@@ -82,8 +82,9 @@ precacheAndRoute(filesToPrecache);
 
 // Обработка установки Service Worker
 self.addEventListener('install', (event) => {
-  // Пропускаем ожидание и активируем новый Service Worker немедленно
-  self.skipWaiting();
+  console.log('Service Worker installing...');
+  // Не пропускаем ожидание автоматически - ждем активации
+  // self.skipWaiting(); // Удалено для лучшего контроля обновлений
 });
 
 // Обработка активации Service Worker
@@ -267,11 +268,25 @@ self.addEventListener('message', (event) => {
         clients.forEach(client => {
           client.postMessage({ 
             type: 'UPDATE_AVAILABLE',
-            version: VERSION
+            version: VERSION,
+            message: 'განახლება მზადაა! გადატვირთეთ გვერდი.'
           });
         });
       })
       .catch(err => logError(err, 'пропуск ожидания'));
+  }
+  
+  if (event.data?.type === 'CHECK_UPDATE') {
+    // Принудительно проверяем обновления
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ 
+          type: 'UPDATE_CHECK_COMPLETE',
+          version: VERSION,
+          timestamp: Date.now()
+        });
+      });
+    });
   }
 });
 
