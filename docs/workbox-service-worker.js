@@ -7,6 +7,7 @@ const VERSION = "v0.0.2";
 // Список URL-адресов для исключения из кэша
 const EXCLUDED_URLS = [
   'https://staff.you.ge/api/db.php',
+  'https://static.cloudflareinsights.com',
   '/api/db.php',
   'db.php',
   'https://staff.you.ge/api/d1',
