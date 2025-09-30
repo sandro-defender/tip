@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <script>
+        fetch("/includes/head.html")
+            .then(response => response.text())
+            .then(data => document.head.innerHTML += data)
+            .catch(error => console.error("Ошибка загрузки head:", error));
+    </script>
+    <title>სტატისტიკა </title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    
+    <style>
+        :root {
+            /* Modern color palette */
+            --primary: #6366f1;
+            --primary-light: #a5b4fc;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --secondary-light: #38bdf8;
+            --accent: #8b5cf6;
+            --accent-light: #a78bfa;
+            --success: #10b981;
+            --success-light: #34d399;
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --error: #ef4444;
+            --error-light: #f87171;
+
+            /* Background colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-dark: #0f172a;
+            --bg-dark-secondary: #1e293b;
+            --bg-dark-tertiary: #334155;
+            
+            /* Text colors */
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --text-dark: #f1f5f9;
+            --text-dark-secondary: #cbd5e1;
+            
+            /* Border colors */
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --border-dark: #94a3b8;
+
+            /* Menu variables */
+            --bg-color: var(--bg-primary);
+            --border-color: var(--border-light);
+            --icon-color: var(--text-primary);
+            --hover-bg: rgba(99, 102, 241, 0.1);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
+            --gradient-secondary: linear-gradient(135deg, var(--secondary), var(--success));
+            --gradient-warm: linear-gradient(135deg, #f59e0b, #ef4444);
+            --gradient-cool: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .dark-theme {
+            --bg-primary: var(--bg-dark);
+            --bg-secondary: var(--bg-dark-secondary);
+            --bg-tertiary: var(--bg-dark-tertiary);
+            --text-primary: var(--text-dark);
+            --text-secondary: var(--text-dark-secondary);
+            --border-light: var(--bg-dark-tertiary);
+            --border-medium: #475569;
+            
+            /* Menu variables for dark theme */
+            --bg-color: var(--bg-dark);
+            --border-color: var(--bg-dark-tertiary);
+            --icon-color: var(--text-dark);
+            --hover-bg: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .stat-icon.primary { background: var(--gradient-primary); }
+        .stat-icon.secondary { background: var(--gradient-secondary); }
+        .stat-icon.success { background: linear-gradient(135deg, var(--success), var(--success-light)); }
+        .stat-icon.warning { background: var(--gradient-warm); }
+        .stat-icon.error { background: linear-gradient(135deg, var(--error), var(--error-light)); }
+        .stat-icon.accent { background: linear-gradient(135deg, var(--accent), var(--accent-light)); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .stat-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 0.25rem;
+            transition: width 1s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: var(--bg-primary);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+        }
+
+        .chart-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chart-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--border-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error States */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        /* Auth Overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-card {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+        }
+
+        .auth-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--error);
+        }
+
+        .auth-message {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .countdown {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .chart-section {
+                padding: 1rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .chart-tabs {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+    </style>
+</head>
+<body>
+    <!-- Auth Overlay -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-icon">🔒</div>
+            <div class="auth-title">წვდომა აკრძალულია</div>
+            <div class="auth-message">გთხოვთ დაუკავშირდეთ ადმინისტრატორს</div>
+            <div class="countdown">
+                გადამისამართება <span id="countdown">10</span> წამში
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Container -->
+    <div id="menu-container"></div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+        <!-- Header 
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="material-icons">analytics</span>
+                    სტატისტიკა
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+            </div>
+        </header>
+        -->
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Page Header -->
+            <div class="fade-in">
+                <h1 class="page-title">სტატისტიკა</h1>
+                <p class="page-subtitle">შემოსავლების ანალიზი და ტრენდები</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be loaded here -->
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section slide-up">
+                <div class="chart-header">
+                    <h2 class="chart-title">გრაფიკი</h2>
+                                    <div class="chart-tabs">
+                    <button class="chart-tab active" data-period="daily">დღე</button>
+                    <button class="chart-tab" data-period="weekly">კვირა</button>
+                    <button class="chart-tab" data-period="monthly">თვე</button>
+                    <button class="chart-tab" data-period="comparison">შედარება</button>
+                    <button class="chart-tab" data-period="trends">ტრენდები</button>
+                </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="margin-bottom: 40px;"></div>
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_BASE: 'https://tips-api.you.ge/api/d1',
+            TIMEZONE_OFFSET: 4
+        };
+
+        // Global variables
+        let allData = [];
+        let currentChart = null;
+        let currentPeriod = 'daily';
+
+        // Helper: fetch month data from D1
+        async function fetchMonthFromD1(year, month) {
+            const bust = Date.now();
+            const url = `${CONFIG.API_BASE}?action=get_month&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}&_=${bust}`;
+            const res = await fetch(url, { credentials: 'include' });
+            const text = await res.text();
+            const json = JSON.parse(text);
+            if (!json || typeof json !== 'object' || !('total' in json) || !('days' in json)) {
+                throw new Error('Invalid month payload');
+            }
+            return json;
+        }
+
+        function monthLabel(year, month) {
+            try {
+                const d = new Date(year, month - 1, 1);
+                return d.toLocaleString('ka-GE', { month: 'long' });
+            } catch { return `${month}`; }
+        }
+
+        function mapMonthPayloadToStats(year, month, payload) {
+            const days = Object.keys(payload.days || {})
+                .map(k => ({ day: parseInt(k, 10), amount: Number(payload.days[k] || 0) }))
+                .filter(d => !isNaN(d.day))
+                .sort((a, b) => a.day - b.day);
+            const totalAmount = Number(payload.total || 0);
+            const totalPoints = Number(payload.points || 0);
+            const activeDays = days.filter(d => d.amount > 0).length;
+            const forecast = totalPoints > 0 ? totalPoints : totalAmount;
+            return {
+                year,
+                month: monthLabel(year, month),
+                monthNumber: month,
+                totalAmount,
+                totalPoints,
+                activeDays,
+                forecast,
+                days
+            };
+        }
+
+        async function fetchAllMonthsData() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const previousYear = currentYear - 1;
+
+            const tasks = [];
+            // Previous year: 1..12
+            for (let m = 1; m <= 12; m++) {
+                tasks.push(
+                    fetchMonthFromD1(previousYear, m)
+                        .then(p => mapMonthPayloadToStats(previousYear, m, p))
+                        .catch(() => mapMonthPayloadToStats(previousYear, m, { total: 0, points: 0, days: {} }))
+                );
+            }
+            // Current year: 1..current month
+            const currMonth = now.getMonth() + 1;
+            for (let m = 1; m <= currMonth; m++) {
+                tasks.push(
+                    fetchMonthFromD1(currentYear, m)
+                        .then(p => mapMonthPayloadToStats(currentYear, m, p))
+                        .catch(() => mapMonthPayloadToStats(currentYear, m, { total: 0, points: 0, days: {} }))
+                );
+            }
+
+            const results = await Promise.all(tasks);
+            // Sort by year then month
+            results.sort((a, b) => (a.year - b.year) || (a.monthNumber - b.monthNumber));
+            return results;
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+        //---> მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                console.log('Menu HTML loaded, inserting into DOM...');
+                document.getElementById('menu-container').innerHTML = data;
+                console.log('Menu HTML inserted, executing scripts...');
+                
+                // Execute any script tags that were inserted
+                const scripts = document.getElementById('menu-container').querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent) {
+                        console.log('Executing script from menu...');
+                        eval(script.textContent);
+                    }
+                });
+                
+                // Wait for the script to execute and function to be available
+                let attempts = 0;
+                const maxAttempts = 20; // Reduced to 2 seconds since we're executing scripts immediately
+                
+                const waitForInit = () => {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    
+                    if (typeof window.initBottomNav === 'function') {
+                        console.log('initBottomNav function found! Calling it...');
+                        window.initBottomNav();
+                        console.log('Bottom navigation initialized successfully');
+                    } else if (attempts < maxAttempts) {
+                        console.log('Function not found yet, retrying...');
+                        setTimeout(waitForInit, 100);
+                    } else {
+                        console.error('initBottomNav function not found after 2 seconds. Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function'));
+                    }
+                };
+                
+                // Start waiting for the function to be available
+                setTimeout(waitForInit, 50); // Reduced delay since scripts are executed immediately
+            })
+            .catch(error => console.error('Error loading menu:', error));
+
+            // <--- მენიუს ჩატვირთვა
+
+
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+
+            // Check authentication
+            checkAuth();
+        });
+
+        // Authentication
+        function checkAuth() {
+            if (localStorage.getItem('tipAuth') === 'true') {
+                showMainContent();
+                loadData();
+            } else {
+                startRedirectTimer();
+            }
+        }
+
+        function showMainContent() {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        function startRedirectTimer() {
+            let timeLeft = 10;
+            const countdownElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Data loading (refactored to D1)
+        async function loadData() {
+            try {
+                showLoading();
+                allData = await fetchAllMonthsData();
+                updateStatistics();
+                updateChart('daily');
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('მონაცემების ჩატვირთვა ვერ მოხერხდა: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Statistics update
+        function updateStatistics() {
+            if (allData.length === 0) {
+                document.getElementById('statsGrid').innerHTML = '<div class="text-center">მონაცემები არ მოიძებნა</div>';
+                return;
+            }
+
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
+            const currentMonthData = allData.find(m => 
+                m.year === currentYear && m.monthNumber === currentMonth
+            );
+
+            const totalAmount = allData.reduce((sum, m) => sum + m.totalAmount, 0);
+            const averagePerMonth = allData.length > 0 ? totalAmount / allData.length : 0;
+            
+            // Filter out current month for best/worst comparison
+            const completedMonths = allData.filter(m => 
+                !(m.year === currentYear && m.monthNumber === currentMonth)
+            );
+            
+            const bestMonth = completedMonths.length > 0 ? 
+                completedMonths.reduce((max, m) => 
+                    m.totalAmount > max.totalAmount ? m : max, completedMonths[0]
+                ) : {totalAmount: 0, month: 'N/A'};
+            
+            const worstMonth = completedMonths.length > 0 ? 
+                completedMonths.reduce((min, m) => 
+                    m.totalAmount < min.totalAmount ? m : min, completedMonths[0]
+                ) : {totalAmount: 0, month: 'N/A'};
+
+            // Calculate current month progress
+            let currentProgress = 0;
+            let currentForecast = 0;
+            if (currentMonthData) {
+                currentForecast = currentMonthData.forecast;
+                currentProgress = currentForecast > 0 ? (currentMonthData.totalAmount / currentForecast) * 100 : 0;
+            }
+
+            // Calculate growth rate
+            let growthRate = 0;
+            if (allData.length >= 2) {
+                const lastMonth = allData[allData.length - 1];
+                const prevMonth = allData[allData.length - 2];
+                if (prevMonth.totalAmount > 0) {
+                    growthRate = ((lastMonth.totalAmount - prevMonth.totalAmount) / prevMonth.totalAmount) * 100;
+                }
+            }
+
+            // Calculate additional metrics
+            const totalDays = allData.reduce((sum, m) => sum + (m.activeDays || 0), 0);
+            const averagePerDay = totalDays > 0 ? totalAmount / totalDays : 0;
+            
+            // Find best and worst day across all data
+            let bestDay = { amount: 0, month: '', day: 0 };
+            let worstDay = { amount: Infinity, month: '', day: 0 };
+            
+            allData.forEach(month => {
+                if (month.days) {
+                    month.days.forEach(day => {
+                        if (day.amount > bestDay.amount) {
+                            bestDay = { amount: day.amount, month: month.month, day: day.day };
+                        }
+                        if (day.amount < worstDay.amount && day.amount > 0) {
+                            worstDay = { amount: day.amount, month: month.month, day: day.day };
+                        }
+                    });
+                }
+            });
+
+            // Calculate points changes and min/max
+            const pointsChanges = [];
+            let maxPointsChange = 0;
+            let minPointsChange = 0;
+            let maxPoints = 0;
+            let minPoints = Infinity;
+
+            for (let i = 1; i < allData.length; i++) {
+                const currentPoints = allData[i].totalPoints || 0;
+                const previousPoints = allData[i - 1].totalPoints || 0;
+                const change = currentPoints - previousPoints;
+                pointsChanges.push(change);
+                
+                maxPointsChange = Math.max(maxPointsChange, change);
+                minPointsChange = Math.min(minPointsChange, change);
+                maxPoints = Math.max(maxPoints, currentPoints);
+                minPoints = Math.min(minPoints, currentPoints);
+            }
+
+            // Calculate this year's total
+            const thisYearData = allData.filter(m => m.year === currentYear);
+            const thisYearTotal = thisYearData.reduce((sum, m) => sum + m.totalAmount, 0);
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">საერთო შემოსავალი</div>
+                        <div class="stat-icon primary">
+                            <span class="material-icons">account_balance_wallet</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(totalAmount)}</div>
+                    <div class="stat-description">${allData.length} თვის მონაცემები</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">მიმდინარე თვე</div>
+                        <div class="stat-icon secondary">
+                            <span class="material-icons">trending_up</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(currentMonthData?.totalAmount || 0)}</div>
+                    <div class="stat-change ${growthRate >= 0 ? 'positive' : 'negative'}">
+                        <span class="material-icons">${growthRate >= 0 ? 'arrow_upward' : 'arrow_downward'}</span>
+                        ${Math.abs(growthRate).toFixed(1)}%
+                    </div>
+                    <div class="stat-description">სავარაუდო: $${formatNumber(currentForecast)}</div>
+                    ${currentMonthData ? `
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${Math.min(currentProgress, 100)}%"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">საშუალო თვეში</div>
+                        <div class="stat-icon success">
+                            <span class="material-icons">analytics</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(averagePerMonth)}</div>
+                    <div class="stat-description">ყველა თვის საშუალო</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">საშუალო დღიური</div>
+                        <div class="stat-icon success">
+                            <span class="material-icons">today</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(averagePerDay)}</div>
+                    <div class="stat-description">${totalDays} დღის მონაცემები</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">საუკეთესო თვე</div>
+                        <div class="stat-icon warning">
+                            <span class="material-icons">emoji_events</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(bestMonth?.totalAmount || 0)}</div>
+                    <div class="stat-description">${bestMonth?.month || 'N/A'}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">ყველაზე ცუდი თვე</div>
+                        <div class="stat-icon error">
+                            <span class="material-icons">trending_down</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(worstMonth?.totalAmount || 0)}</div>
+                    <div class="stat-description">${worstMonth?.month || 'N/A'}</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">მიმდინარე წელი</div>
+                        <div class="stat-icon primary">
+                            <span class="material-icons">calendar_today</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(thisYearTotal)}</div>
+                    <div class="stat-description">${thisYearData.length} თვე ${currentYear} წელს</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">საუკეთესო დღე</div>
+                        <div class="stat-icon success">
+                            <span class="material-icons">emoji_events</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(bestDay.amount)}</div>
+                    <div class="stat-description">${bestDay.month} - ${bestDay.day} რიცხვი</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">ყველაზე ცუდი დღე</div>
+                        <div class="stat-icon error">
+                            <span class="material-icons">trending_down</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">$${formatNumber(worstDay.amount)}</div>
+                    <div class="stat-description">${worstDay.month} - ${worstDay.day} რიცხვი</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">ფოინტების ანალიზი</div>
+                        <div class="stat-icon accent">
+                            <span class="material-icons">star</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">${formatNumber(maxPoints, 0)}</div>
+                    <div class="stat-description">მაქს: ${formatNumber(maxPoints, 0)} | მინ: ${formatNumber(minPoints, 0)}</div>
+                    <div class="stat-description" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                        <span style="color: var(--success);">↑ +${formatNumber(maxPointsChange, 0)}</span> | 
+                        <span style="color: var(--error);">↓ ${formatNumber(minPointsChange, 0)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Chart functionality
+        function updateChart(period) {
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            currentPeriod = period;
+
+            // Update tab states
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-period="${period}"]`).classList.add('active');
+
+            let chartData, chartOptions;
+
+            if (period === 'daily') {
+                const currentMonthData = allData.find(m => 
+                    m.year === new Date().getFullYear() && 
+                    m.monthNumber === new Date().getMonth() + 1
+                );
+
+                if (!currentMonthData) {
+                    showChartMessage('მიმდინარე თვის მონაცემები არ მოიძებნა');
+                    return;
+                }
+
+                const days = currentMonthData.days || [];
+                const labels = days.map(d => `${d.day} დღე`);
+                const amounts = days.map(d => d.amount);
+
+                chartData = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'შემოსავალი',
+                        data: amounts,
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                };
+
+                chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `$${formatNumber(context.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${formatNumber(value)}`
+                            }
+                        }
+                    }
+                };
+
+            } else if (period === 'weekly') {
+                // Group daily data by weeks
+                const currentMonthData = allData.find(m => 
+                    m.year === new Date().getFullYear() && 
+                    m.monthNumber === new Date().getMonth() + 1
+                );
+
+                if (!currentMonthData) {
+                    showChartMessage('მიმდინარე თვის მონაცემები არ მოიძებნა');
+                    return;
+                }
+
+                const weeks = groupByWeek(currentMonthData.days || []);
+                const labels = weeks.map((_, i) => `კვირა ${i + 1}`);
+                const amounts = weeks.map(week => 
+                    week.reduce((sum, day) => sum + day.amount, 0)
+                );
+
+                chartData = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'კვირის შემოსავალი',
+                        data: amounts,
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        borderColor: '#0ea5e9',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                };
+
+                chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `$${formatNumber(context.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${formatNumber(value)}`
+                            }
+                        }
+                    }
+                };
+
+            } else if (period === 'monthly') {
+                const labels = allData.map(m => m.month);
+                const amounts = allData.map(m => m.totalAmount);
+                const points = allData.map(m => m.totalPoints);
+
+                chartData = {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'შემოსავალი',
+                            data: amounts,
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderColor: '#8b5cf6',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'ფოინტები',
+                            data: points,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                };
+
+                chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.datasetIndex === 0) {
+                                        return `შემოსავალი: $${formatNumber(context.parsed.y)}`;
+                                    } else {
+                                        return `ფოინტები: ${formatNumber(context.parsed.y)}`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${formatNumber(value)}`
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: (value) => formatNumber(value)
+                            }
+                        }
+                    }
+                };
+
+            } else if (period === 'comparison') {
+                // Year-over-year comparison
+                const currentYear = new Date().getFullYear();
+                const previousYear = currentYear - 1;
+                
+                const currentYearData = allData.filter(m => m.year === currentYear);
+                const previousYearData = allData.filter(m => m.year === previousYear);
+                
+                // Create month labels
+                const monthLabels = ['იან', 'თებ', 'მარ', 'აპრ', 'მაი', 'ივნ', 'ივლ', 'აგვ', 'სექ', 'ოქტ', 'ნოე', 'დეკ'];
+                
+                const currentYearAmounts = monthLabels.map((_, index) => {
+                    const monthData = currentYearData.find(m => m.monthNumber === index + 1);
+                    return monthData ? monthData.totalAmount : 0;
+                });
+                
+                const previousYearAmounts = monthLabels.map((_, index) => {
+                    const monthData = previousYearData.find(m => m.monthNumber === index + 1);
+                    return monthData ? monthData.totalAmount : 0;
+                });
+
+                chartData = {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: `${currentYear} წელი`,
+                            data: currentYearAmounts,
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            fill: false
+                        },
+                        {
+                            label: `${previousYear} წელი`,
+                            data: previousYearAmounts,
+                            backgroundColor: 'rgba(107, 114, 128, 0.1)',
+                            borderColor: '#6b7280',
+                            borderWidth: 2,
+                            fill: false,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                };
+
+                chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: $${formatNumber(context.parsed.y)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${formatNumber(value)}`
+                            }
+                        }
+                    }
+                };
+
+            } else if (period === 'trends') {
+                // Growth trends and moving averages
+                const labels = allData.map(m => m.month);
+                const amounts = allData.map(m => m.totalAmount);
+                
+                // Calculate moving average (3-month)
+                const movingAverage = [];
+                for (let i = 0; i < amounts.length; i++) {
+                    if (i < 2) {
+                        movingAverage.push(null);
+                    } else {
+                        const avg = (amounts[i] + amounts[i-1] + amounts[i-2]) / 3;
+                        movingAverage.push(avg);
+                    }
+                }
+                
+                // Calculate growth rates
+                const growthRates = amounts.map((amount, index) => {
+                    if (index === 0) return null;
+                    const previous = amounts[index - 1];
+                    return previous > 0 ? ((amount - previous) / previous) * 100 : null;
+                });
+
+                chartData = {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'შემოსავალი',
+                            data: amounts,
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '3-თვიანი საშუალო',
+                            data: movingAverage,
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'ზრდის ტემპი (%)',
+                            data: growthRates,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            pointRadius: 4
+                        }
+                    ]
+                };
+
+                chartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.datasetIndex === 0) {
+                                        return `შემოსავალი: $${formatNumber(context.parsed.y)}`;
+                                    } else if (context.datasetIndex === 1) {
+                                        return `საშუალო: $${formatNumber(context.parsed.y)}`;
+                                    } else {
+                                        return `ზრდა: ${formatNumber(context.parsed.y, 1)}%`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `$${formatNumber(value)}`
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: (value) => `${formatNumber(value, 1)}%`
+                            }
+                        }
+                    }
+                };
+            }
+
+            // Determine chart type based on period
+            let chartType = 'line';
+            if (period === 'monthly' || period === 'comparison') {
+                chartType = 'bar';
+            } else if (period === 'weekly') {
+                chartType = 'bar';
+            }
+
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: chartData,
+                options: chartOptions
+            });
+        }
+
+        // Helper functions
+        function groupByWeek(days) {
+            const weeks = [];
+            for (let i = 0; i < days.length; i += 7) {
+                weeks.push(days.slice(i, i + 7));
+            }
+            return weeks;
+        }
+
+        function formatNumber(num, decimals = 1) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(Number(num));
+        }
+
+        function showLoading() {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>მონაცემების ჩატვირთვა...</div>
+                </div>
+            `;
+        }
+
+        function hideLoading() {
+            // Loading will be replaced by actual content
+        }
+
+        function showError(message) {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="error">
+                    <span class="material-icons">error</span>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function showChartMessage(message) {
+            const canvas = document.getElementById('mainChart');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+        }
+
+        // Event listeners
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('chart-tab')) {
+                const period = e.target.dataset.period;
+                updateChart(period);
+            }
+        });
+    </script>
+<!-- AI Model: GPT-5; Modified: 2025-09-30; Change: statistics.html now uses D1 at https://tips-api.you.ge/api/d1 -->
