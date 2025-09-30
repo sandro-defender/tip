@@ -20,4 +20,4 @@ enabled = true
 # zone_id = "<your-zone-id>"
 
 # Changelog:
-# 2025-09-30 - Initial wrangler config with D1 binding (GPT-5)
+# 2025-09-31 - Initial wrangler config with D1 binding (GPT-5)
