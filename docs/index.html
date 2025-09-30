@@ -208,97 +208,79 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }, true);
         })();
 
-        // Global version check function
-        window.checkAppVersion = async function() {
-            try {
-                // Create a script element to load the version.js file
-                const script = document.createElement('script');
-                script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
-                
-                // Create a promise that resolves when the script loads
-                const scriptLoadPromise = new Promise((resolve, reject) => {
-                    script.onload = resolve;
-                    script.onerror = reject;
-                });
-                
-                // Add the script to the document
-                document.head.appendChild(script);
-                
-                // Wait for the script to load
-                await scriptLoadPromise;
-                
-                // Now we can access the version from the global variable
-                const currentVersion = window.APP_VERSION["main-version"];
-                const storedVersion = localStorage.getItem('app-version');
-                
-                // If version changed or this is first installation
-                if (storedVersion !== currentVersion) {
-                    // Update version in localStorage
-                    localStorage.setItem('app-version', currentVersion);
-                    
-                    // If this is not the first installation, show notification
-                    if (storedVersion) {
-                        if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                            // Clear cache and reload page
-                            if ('caches' in window) {
-                                const cacheNames = await caches.keys();
-                                await Promise.all(
-                                    cacheNames.map(name => caches.delete(name))
-                                );
-                            }
-                            window.location.reload(true);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking version:', error);
-                // Add delay before retry with exponential backoff
-                const retryDelay = Math.min(5000 * Math.pow(2, error.retryCount || 0), 60000);
-                setTimeout(() => {
-                    window.checkAppVersion();
-                }, retryDelay);
-            }
-        };
-
         // Early Service Worker Registration and Version Check
         if ('serviceWorker' in navigator) {
+            // Проверяем версию приложения
+            async function checkAppVersion() {
+                try {
+                    // Create a script element to load the version.js file
+                    const script = document.createElement('script');
+                    script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
+                    
+                    // Create a promise that resolves when the script loads
+                    const scriptLoadPromise = new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                    });
+                    
+                    // Add the script to the document
+                    document.head.appendChild(script);
+                    
+                    // Wait for the script to load
+                    await scriptLoadPromise;
+                    
+                    // Now we can access the version from the global variable
+                    const currentVersion = window.APP_VERSION["main-version"];
+                    const storedVersion = localStorage.getItem('app-version');
+                    
+                    // If version changed or this is first installation
+                    if (storedVersion !== currentVersion) {
+                        // Update version in localStorage
+                        localStorage.setItem('app-version', currentVersion);
+                        
+                        // If this is not the first installation, show notification
+                        if (storedVersion) {
+                            if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                                // Clear cache and reload page
+                                if ('caches' in window) {
+                                    const cacheNames = await caches.keys();
+                                    await Promise.all(
+                                        cacheNames.map(name => caches.delete(name))
+                                    );
+                                }
+                                window.location.reload(true);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking version:', error);
+                    // Add delay before retry
+                    setTimeout(checkAppVersion, 5000);
+                }
+            }
 
             window.addEventListener('load', function() {
                 // Проверяем версию при загрузке
-                window.checkAppVersion();
+                checkAppVersion();
                 
-                // Регистрируем Service Worker с принудительной проверкой обновлений
-                navigator.serviceWorker.register('/workbox-service-worker.js?v=' + Date.now())
+                // Регистрируем Service Worker
+                navigator.serviceWorker.register('/workbox-service-worker.js')
                     .then(registration => {
                         console.log('Service Worker registered:', registration);
                         
-                        // Принудительно проверяем обновления при регистрации
-                        registration.update();
-                        
                         // Проверяем обновления Service Worker
                         registration.addEventListener('updatefound', () => {
-                            console.log('Service Worker update found!');
                             const newWorker = registration.installing;
                             newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed') {
-                                    if (navigator.serviceWorker.controller) {
-                                        // Показываем уведомление об обновлении
-                                        if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                                            newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                            window.location.reload();
-                                        }
-                                    } else {
-                                        // Первая установка
-                                        console.log('Service Worker installed for the first time');
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Показываем уведомление об обновлении
+                                    if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
                                     }
                                 }
                             });
                         });
-                        
-                        // Периодически проверяем обновления (каждые 2 минуты)
-                        setInterval(() => {
-                            registration.update();
-                        }, 120000);
 
                         // Обработка версии Service Worker
                         if (navigator.serviceWorker.controller) {
@@ -324,18 +306,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 });
             });
 
-            // Периодическая проверка версии (каждые 5 минут)
-            setInterval(window.checkAppVersion, 300000);
-            
-            // Проверка при возвращении на вкладку
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    window.checkAppVersion();
-                }
-            });
-            
-            // Проверка при фокусе на окне
-            window.addEventListener('focus', window.checkAppVersion);
+            // Периодическая проверка версии (каждый час)
+            setInterval(checkAppVersion, 3600000);
         } else {
             document.getElementById('sw-version').textContent = 'Unsupported';
             document.getElementById('sw-version').classList.remove('loading');
@@ -348,7 +320,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             .catch(error => console.error("Ошибка загрузки head:", error));
     </script>
     <title>Staff Portal</title>
-    <link rel="manifest" href="/manifest/manifest.json">
+    <link rel="manifest" href="/manifest.json">
  
     <!-- Version Information -->
     <script src="/version.js"></script>
@@ -1118,8 +1090,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             <h2 id="links-heading" class="sr-only">Links</h2>
             
             <div class="links-grid">
-                <a href="/tip" class="link-item" title="Tip (Test)" style="position: relative;">
-                    <img src="/icon/tip2.png" alt="Tip" class="link-icon" style="width: 46px; height: 34px;">
+                <a href="/tip" class="link-item" title="Tips" style="position: relative;">
+                    <img src="https://git.you.ge/icon/tip2.png" alt="Tip" class="link-icon" style="width: 46px; height: 34px;">
                     <span>Tips</span>
                     <span class="tip-badge" id="tipBadge">
                         <span class="tip-badge-content" id="tipBadgeContent">0</span>
@@ -1241,7 +1213,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             <div class="status-item">
                 <span class="label">SW Version:</span>
                 <span id="sw-version" class="loading">Loading...</span>
-                <button onclick="checkForUpdates()">Check Updates</button>
                 <button onclick="clearPWA()">Clear Cache</button>
             </div>
             <div class="status-item">
@@ -1509,77 +1480,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             statusBar.classList.toggle('visible');
             infoButton.textContent = statusBar.classList.contains('visible') ? '⬇️' : 'ℹ️';
         });
-
-        // Manual Update Check Function - Global scope
-        window.checkForUpdates = async function() {
-            console.log('Manual update check triggered...');
-            try {
-                // Check app version if service worker is supported
-                if ('serviceWorker' in navigator) {
-                    // Check app version
-                    await window.checkAppVersion();
-                    
-                    // Check service worker updates
-                    const registration = await navigator.serviceWorker.getRegistration();
-                    if (registration) {
-                        await registration.update();
-                        console.log('Service worker update check completed');
-                    }
-                } else {
-                    // Fallback for browsers without service worker support
-                    console.log('Service worker not supported, checking app version only');
-                    await checkAppVersionFallback();
-                }
-                
-                // Show status
-                const statusElement = document.getElementById('online-status');
-                if (statusElement) {
-                    statusElement.textContent = 'Update check completed';
-                    statusElement.style.color = 'green';
-                    setTimeout(() => {
-                        statusElement.textContent = 'Online';
-                        statusElement.style.color = '';
-                    }, 3000);
-                }
-            } catch (error) {
-                console.error('Error during manual update check:', error);
-                const statusElement = document.getElementById('online-status');
-                if (statusElement) {
-                    statusElement.textContent = 'Update check failed';
-                    statusElement.style.color = 'red';
-                }
-            }
-        };
-        
-        // Fallback version check for browsers without service worker support
-        async function checkAppVersionFallback() {
-            try {
-                const script = document.createElement('script');
-                script.src = '/version.js?t=' + Date.now();
-                
-                const scriptLoadPromise = new Promise((resolve, reject) => {
-                    script.onload = resolve;
-                    script.onerror = reject;
-                });
-                
-                document.head.appendChild(script);
-                await scriptLoadPromise;
-                
-                const currentVersion = window.APP_VERSION["main-version"];
-                const storedVersion = localStorage.getItem('app-version');
-                
-                if (storedVersion !== currentVersion) {
-                    localStorage.setItem('app-version', currentVersion);
-                    if (storedVersion) {
-                        if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                            window.location.reload(true);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking version (fallback):', error);
-            }
-        }
 
         // Clear PWA Data
         async function clearPWA() {
