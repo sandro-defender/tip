@@ -220,7 +220,7 @@
         function loadMenu(retries = 3) {
             const menuContainer = document.getElementById('menu-container');
             
-            return fetch('/includes/menu-1.1.html')
+            return fetch('/includes/menu.html')
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to load menu');
                     return response.text();
