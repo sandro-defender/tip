@@ -2,6 +2,8 @@ name = "tips-api"
 main = "worker/index.js"
 compatibility_date = "2025-09-30"
 
+preview_urls = true   # or false, depending on your preference
+
 [vars]
 # API_PASSWORD is set via Wrangler secrets in production:
 # wrangler secret put API_PASSWORD
@@ -14,8 +16,7 @@ database_id = "dfe5ea4f-2a93-4b97-b5e5-8909a6b0a54a"
 [observability]
 enabled = true
 
-[dev]
-preview_urls = true   # or false, depending on your preference
+
 
 # Optional route (customize for your zone)
 # [[routes]]
