@@ -304,7 +304,7 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
             <span class="nav-badge hidden" aria-label="New tips available">3</span>
         </a>
         
-        <a href="/statistics" class="nav-item" data-page="statistic" aria-label="Statistics and analytics" role="tab">
+        <a href="/statistics" class="nav-item" data-page="statistics" aria-label="Statistics and analytics" role="tab">
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
             </svg>
@@ -337,7 +337,7 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         'use strict';
         
         // Menu version
-        const MENU_VERSION = '0.0.2';
+        const MENU_VERSION = '0.0.3';
         
         class BottomNavigation {
             constructor() {
@@ -519,7 +519,7 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                 /*
                 setTimeout(() => {
                     const tipBadge = document.querySelector('[data-page="tip"] .nav-badge');
-                    const statsBadge = document.querySelector('[data-page="statistic"] .nav-badge');
+                    const statsBadge = document.querySelector('[data-page="statistics"] .nav-badge');
                     
                     // Show badges for demo purposes
                     if (tipBadge) tipBadge.classList.remove('hidden');

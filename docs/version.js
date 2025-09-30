@@ -1,6 +1,6 @@
 // version.js
 window.APP_VERSION = {
-  "main-version": "0.0.2"
+  "main-version": "0.0.3"
 }; 
 
 /*
