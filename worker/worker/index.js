@@ -2,9 +2,11 @@ export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url);
 		const corsHeaders = {
-			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Origin": "https://tips.you.ge",
 			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-			"Access-Control-Allow-Headers": "Content-Type",
+			"Access-Control-Allow-Headers": "Content-Type, Authorization",
+			"Access-Control-Allow-Credentials": "true",
+			"Content-Type": "application/json",
 			"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
 			"Pragma": "no-cache",
 			"Expires": "0",
