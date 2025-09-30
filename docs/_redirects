@@ -1,6 +1,13 @@
 # API routes (if any)
 /api/*       /api/:splat    200
 
+# არ გადაამისამართო static ფაილები
+/icon/*     /icon/:splat     200
+/images/*   /images/:splat   200
+/css/*      /css/:splat      200
+/js/*       /js/:splat       200
+/json/*       /json/:splat       200
+
 # Route redirects from original Apache config
 /bar         /html/bar.html    200
 /shift       /html/shift.html    200
@@ -14,4 +21,4 @@
 /500         /html/500.html    200
 
 # Handle client-side routing (catch-all must be LAST)
-/*          /index.html   200
+#/*          /index.html   200
