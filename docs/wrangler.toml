@@ -1,4 +1,4 @@
-name = "staff-you-d1-worker"
+name = "tips"
 main = "worker/index.js"
 compatibility_date = "2025-09-30"
 
@@ -8,8 +8,8 @@ compatibility_date = "2025-09-30"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "staff_you_d1"
-database_id = "<your-d1-database-id>"
+database_name = "tip-data"
+database_id = "dfe5ea4f-2a93-4b97-b5e5-8909a6b0a54a"
 
 [observability]
 enabled = true
