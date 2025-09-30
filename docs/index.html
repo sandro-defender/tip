@@ -208,63 +208,64 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }, true);
         })();
 
-        // Early Service Worker Registration and Version Check
-        if ('serviceWorker' in navigator) {
-            // Проверяем версию приложения
-            async function checkAppVersion() {
-                try {
-                    // Create a script element to load the version.js file
-                    const script = document.createElement('script');
-                    script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
+        // Global version check function
+        window.checkAppVersion = async function() {
+            try {
+                // Create a script element to load the version.js file
+                const script = document.createElement('script');
+                script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
+                
+                // Create a promise that resolves when the script loads
+                const scriptLoadPromise = new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+                
+                // Add the script to the document
+                document.head.appendChild(script);
+                
+                // Wait for the script to load
+                await scriptLoadPromise;
+                
+                // Now we can access the version from the global variable
+                const currentVersion = window.APP_VERSION["main-version"];
+                const storedVersion = localStorage.getItem('app-version');
+                
+                // If version changed or this is first installation
+                if (storedVersion !== currentVersion) {
+                    // Update version in localStorage
+                    localStorage.setItem('app-version', currentVersion);
                     
-                    // Create a promise that resolves when the script loads
-                    const scriptLoadPromise = new Promise((resolve, reject) => {
-                        script.onload = resolve;
-                        script.onerror = reject;
-                    });
-                    
-                    // Add the script to the document
-                    document.head.appendChild(script);
-                    
-                    // Wait for the script to load
-                    await scriptLoadPromise;
-                    
-                    // Now we can access the version from the global variable
-                    const currentVersion = window.APP_VERSION["main-version"];
-                    const storedVersion = localStorage.getItem('app-version');
-                    
-                    // If version changed or this is first installation
-                    if (storedVersion !== currentVersion) {
-                        // Update version in localStorage
-                        localStorage.setItem('app-version', currentVersion);
-                        
-                        // If this is not the first installation, show notification
-                        if (storedVersion) {
-                            if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                                // Clear cache and reload page
-                                if ('caches' in window) {
-                                    const cacheNames = await caches.keys();
-                                    await Promise.all(
-                                        cacheNames.map(name => caches.delete(name))
-                                    );
-                                }
-                                window.location.reload(true);
+                    // If this is not the first installation, show notification
+                    if (storedVersion) {
+                        if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                            // Clear cache and reload page
+                            if ('caches' in window) {
+                                const cacheNames = await caches.keys();
+                                await Promise.all(
+                                    cacheNames.map(name => caches.delete(name))
+                                );
                             }
+                            window.location.reload(true);
                         }
                     }
-                } catch (error) {
-                    console.error('Error checking version:', error);
-                    // Add delay before retry with exponential backoff
-                    const retryDelay = Math.min(5000 * Math.pow(2, error.retryCount || 0), 60000);
-                    setTimeout(() => {
-                        checkAppVersion();
-                    }, retryDelay);
                 }
+            } catch (error) {
+                console.error('Error checking version:', error);
+                // Add delay before retry with exponential backoff
+                const retryDelay = Math.min(5000 * Math.pow(2, error.retryCount || 0), 60000);
+                setTimeout(() => {
+                    window.checkAppVersion();
+                }, retryDelay);
             }
+        };
+
+        // Early Service Worker Registration and Version Check
+        if ('serviceWorker' in navigator) {
 
             window.addEventListener('load', function() {
                 // Проверяем версию при загрузке
-                checkAppVersion();
+                window.checkAppVersion();
                 
                 // Регистрируем Service Worker с принудительной проверкой обновлений
                 navigator.serviceWorker.register('/workbox-service-worker.js?v=' + Date.now())
@@ -324,17 +325,17 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             });
 
             // Периодическая проверка версии (каждые 5 минут)
-            setInterval(checkAppVersion, 300000);
+            setInterval(window.checkAppVersion, 300000);
             
             // Проверка при возвращении на вкладку
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
-                    checkAppVersion();
+                    window.checkAppVersion();
                 }
             });
             
             // Проверка при фокусе на окне
-            window.addEventListener('focus', checkAppVersion);
+            window.addEventListener('focus', window.checkAppVersion);
         } else {
             document.getElementById('sw-version').textContent = 'Unsupported';
             document.getElementById('sw-version').classList.remove('loading');
@@ -1509,20 +1510,25 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             infoButton.textContent = statusBar.classList.contains('visible') ? '⬇️' : 'ℹ️';
         });
 
-        // Manual Update Check Function
-        async function checkForUpdates() {
+        // Manual Update Check Function - Global scope
+        window.checkForUpdates = async function() {
             console.log('Manual update check triggered...');
             try {
-                // Check app version
-                await checkAppVersion();
-                
-                // Check service worker updates
+                // Check app version if service worker is supported
                 if ('serviceWorker' in navigator) {
+                    // Check app version
+                    await window.checkAppVersion();
+                    
+                    // Check service worker updates
                     const registration = await navigator.serviceWorker.getRegistration();
                     if (registration) {
                         await registration.update();
                         console.log('Service worker update check completed');
                     }
+                } else {
+                    // Fallback for browsers without service worker support
+                    console.log('Service worker not supported, checking app version only');
+                    await checkAppVersionFallback();
                 }
                 
                 // Show status
@@ -1542,6 +1548,36 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     statusElement.textContent = 'Update check failed';
                     statusElement.style.color = 'red';
                 }
+            }
+        };
+        
+        // Fallback version check for browsers without service worker support
+        async function checkAppVersionFallback() {
+            try {
+                const script = document.createElement('script');
+                script.src = '/version.js?t=' + Date.now();
+                
+                const scriptLoadPromise = new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+                
+                document.head.appendChild(script);
+                await scriptLoadPromise;
+                
+                const currentVersion = window.APP_VERSION["main-version"];
+                const storedVersion = localStorage.getItem('app-version');
+                
+                if (storedVersion !== currentVersion) {
+                    localStorage.setItem('app-version', currentVersion);
+                    if (storedVersion) {
+                        if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                            window.location.reload(true);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking version (fallback):', error);
             }
         }
 
