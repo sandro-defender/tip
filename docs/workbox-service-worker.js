@@ -3,8 +3,8 @@
 
  // ვერსია კეშის მართვისთვის
  //const VERSION = "v0.0.5";
- //const VERSION = '__VERSION__';
- const VERSION = `${new Date().toISOString()}`; 
+ const VERSION = '__VERSION__';
+ //const VERSION = `${new Date().toISOString()}`; 
  //const CACHE_NAME = `my-cache-${VERSION}`;
  
  // URL-მისამართების სია კეშიდან გამორიცხვისთვის
