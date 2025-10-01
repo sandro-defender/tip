@@ -2,7 +2,7 @@ name: D1 Backup to GitHub
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # ყოველდღე 05:00 UTC = 09:00 GMT+4
+    - cron: '0 5 * * *'  # 05:00 UTC = 09:00 GMT+4
   workflow_dispatch:     # Manual run
 
 jobs:
@@ -10,16 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ ჩამოტვირთე repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ დაინსტალირე Wrangler
       - name: Install Wrangler
         run: npm install -g wrangler
 
+      # 3️⃣ Export D1 database
       - name: Export D1 database
         run: |
-          npx wrangler d1 execute ${{ secrets.D1_DB_NAME }} --command ".dump" > backup.sql
+          npx wrangler d1 execute MY_DB --config worker/wrangler.toml --command ".dump" > backup.sql
 
+      # 4️⃣ გადაანიშნე backup/d1/ ფოლდერში
       - name: Move backup to folder
         run: |
           TIMESTAMP=$(date +'%Y-%m-%d_%H-%M')
@@ -27,6 +31,7 @@ jobs:
           BACKUP_FILE="backup/d1/backup-$TIMESTAMP.sql"
           mv backup.sql $BACKUP_FILE
 
+      # 5️⃣ Commit & Push
       - name: Commit backup
         run: |
           git config --global user.name "github-actions[bot]"
