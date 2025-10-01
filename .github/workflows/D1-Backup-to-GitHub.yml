@@ -18,8 +18,8 @@ jobs:
         with:
           node-version: 20
 
-      # 3️⃣ Install D1 package
-      - run: npm install @cloudflare/d1
+      # 3️⃣ Install dependencies
+      - run: npm install
 
       # 4️⃣ Run SQL export script
       - run: node worker/export-d1-sql.js
