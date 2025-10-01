@@ -2,8 +2,9 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
 
 // Версия для управления кэшем
-const VERSION = "v0.0.4";
-
+//const VERSION = "v0.0.4";
+const VERSION = '__VERSION__';
+const CACHE_NAME = `my-cache-${VERSION}`;
 // Список URL-адресов для исключения из кэша
 const EXCLUDED_URLS = [
   'https://staff.you.ge/api/db.php',
@@ -54,7 +55,7 @@ async function cleanupOldCaches() {
 // Список файлов для предварительного кэширования
 const filesToPrecache = [
   { url: '/manifest.json', revision: VERSION },
-  { url: '/includes/menu.html', revision: '1.4' }, 
+  { url: '/includes/menu.html', revision: VERSION },
   { url: '/includes/head.html', revision: VERSION },
   { url: '/js/install-helper.js', revision: VERSION },
   { url: '/tip', revision: VERSION },
@@ -71,9 +72,9 @@ const filesToPrecache = [
   { url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', revision: null },
   { url: 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css', revision: null },
   { url: 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js', revision: null },
+  { url: 'https://cdn.jsdelivr.net/npm/chart.js', revision: null },
+  { url: 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js', rrevision: null },
   { url: 'https://git.you.ge/json/Particles-dark.json', revision: VERSION },
-  { url: 'https://cdn.jsdelivr.net/npm/chart.js', revision: VERSION },
-  { url: 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js', revision: VERSION },
   { url: 'https://git.you.ge/json/Particles-light.json', revision: VERSION }
 ];
 
