@@ -1,0 +1,8 @@
+{
+  "name": "tip-backup",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@cloudflare/d1": "^0.1.0"
+  }
+}
