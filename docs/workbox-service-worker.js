@@ -2,7 +2,7 @@
  importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
 
  // ვერსია კეშის მართვისთვის
- //const VERSION = "v0.0.4";
+ //const VERSION = "v0.0.5";
  const VERSION = '__VERSION__';
  //const CACHE_NAME = `my-cache-${VERSION}`;
  
