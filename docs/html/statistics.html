@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+Project: staff.you.ge (Statistics)
+File: html/statistics.html
+Version: 1.1
+Author: Cursor AI
+Model: GPT-5
+Last Modified: 2025-10-01
+Purpose: Interactive statistics dashboard pulling monthly data from D1 API
+-->
 <html lang="ka">
 <head>
     <script>
@@ -607,7 +616,16 @@
             const totalAmount = Number(payload.total || 0);
             const totalPoints = Number(payload.points || 0);
             const activeDays = days.filter(d => d.amount > 0).length;
-            const forecast = totalPoints > 0 ? totalPoints : totalAmount;
+            // Forecast: prefer points; otherwise project based on average so far for the month
+            let forecast = 0;
+            if (totalPoints > 0) {
+                forecast = totalPoints;
+            } else {
+                const latestDayEntered = days.length > 0 ? Math.max(...days.map(d => d.day)) : 0;
+                const totalDaysInMonth = new Date(year, month, 0).getDate();
+                const elapsed = Math.min(latestDayEntered, totalDaysInMonth);
+                forecast = elapsed > 0 ? (totalAmount / elapsed) * totalDaysInMonth : 0;
+            }
             return {
                 year,
                 month: monthLabel(year, month),
@@ -774,39 +792,46 @@
                 m.year === currentYear && m.monthNumber === currentMonth
             );
 
-            const totalAmount = allData.reduce((sum, m) => sum + m.totalAmount, 0);
-            const averagePerMonth = allData.length > 0 ? totalAmount / allData.length : 0;
+            const totalAmount = allData.reduce((sum, m) => sum + (Number(m.totalAmount) || 0), 0);
+            const monthsWithData = allData.filter(m => (Number(m.totalAmount) || 0) > 0);
+            const averagePerMonth = monthsWithData.length > 0 ? totalAmount / monthsWithData.length : 0;
             
             // Filter out current month for best/worst comparison
             const completedMonths = allData.filter(m => 
                 !(m.year === currentYear && m.monthNumber === currentMonth)
             );
+            const completedMonthsWithData = completedMonths.filter(m => (Number(m.totalAmount) || 0) > 0);
             
-            const bestMonth = completedMonths.length > 0 ? 
-                completedMonths.reduce((max, m) => 
-                    m.totalAmount > max.totalAmount ? m : max, completedMonths[0]
+            const bestMonth = completedMonthsWithData.length > 0 ? 
+                completedMonthsWithData.reduce((max, m) => 
+                    m.totalAmount > max.totalAmount ? m : max, completedMonthsWithData[0]
                 ) : {totalAmount: 0, month: 'N/A'};
             
-            const worstMonth = completedMonths.length > 0 ? 
-                completedMonths.reduce((min, m) => 
-                    m.totalAmount < min.totalAmount ? m : min, completedMonths[0]
+            const worstMonth = completedMonthsWithData.length > 0 ? 
+                completedMonthsWithData.reduce((min, m) => 
+                    m.totalAmount < min.totalAmount ? m : min, completedMonthsWithData[0]
                 ) : {totalAmount: 0, month: 'N/A'};
 
             // Calculate current month progress
             let currentProgress = 0;
             let currentForecast = 0;
             if (currentMonthData) {
-                currentForecast = currentMonthData.forecast;
-                currentProgress = currentForecast > 0 ? (currentMonthData.totalAmount / currentForecast) * 100 : 0;
+                currentForecast = Number(currentMonthData.forecast) || 0;
+                const currentTotal = Number(currentMonthData.totalAmount) || 0;
+                currentProgress = currentForecast > 0 ? (currentTotal / currentForecast) * 100 : 0;
             }
 
             // Calculate growth rate
             let growthRate = 0;
-            if (allData.length >= 2) {
-                const lastMonth = allData[allData.length - 1];
-                const prevMonth = allData[allData.length - 2];
-                if (prevMonth.totalAmount > 0) {
-                    growthRate = ((lastMonth.totalAmount - prevMonth.totalAmount) / prevMonth.totalAmount) * 100;
+            // Use two most recent completed months with data (exclude current month)
+            const monthsForGrowth = allData
+                .filter(m => !(m.year === currentYear && m.monthNumber === currentMonth))
+                .filter(m => (Number(m.totalAmount) || 0) > 0);
+            if (monthsForGrowth.length >= 2) {
+                const last = monthsForGrowth[monthsForGrowth.length - 1];
+                const prev = monthsForGrowth[monthsForGrowth.length - 2];
+                if ((Number(prev.totalAmount) || 0) > 0) {
+                    growthRate = ((Number(last.totalAmount) - Number(prev.totalAmount)) / Number(prev.totalAmount)) * 100;
                 }
             }
 
@@ -849,6 +874,16 @@
                 maxPoints = Math.max(maxPoints, currentPoints);
                 minPoints = Math.min(minPoints, currentPoints);
             }
+
+            // Guards for empty or zero-only datasets
+            if (worstDay.amount === Infinity) {
+                worstDay = { amount: 0, month: 'N/A', day: 0 };
+            }
+            if (minPoints === Infinity) {
+                minPoints = 0;
+            }
+            if (!isFinite(maxPointsChange)) maxPointsChange = 0;
+            if (!isFinite(minPointsChange)) minPointsChange = 0;
 
             // Calculate this year's total
             const thisYearData = allData.filter(m => m.year === currentYear);
