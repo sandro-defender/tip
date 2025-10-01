@@ -210,25 +210,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         // Early Service Worker Registration and Version Check
         if ('serviceWorker' in navigator) {
-            // Функция для принудительного обновления Service Worker
-            async function forceServiceWorkerUpdate() {
-                try {
-                    // Сначала отменяем регистрацию всех Service Workers
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations.map(reg => reg.unregister()));
-                    
-                    // Очищаем все кеши
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map(name => caches.delete(name)));
-                    }
-                    
-                    console.log('Service Worker forcefully updated');
-                } catch (error) {
-                    console.error('Error forcing SW update:', error);
-                }
-            }
-            
             // Проверяем версию приложения
             async function checkAppVersion() {
                 try {
@@ -260,8 +241,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         // If this is not the first installation, show notification
                         if (storedVersion) {
                             if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                                // Force service worker update and clear all caches
-                                await forceServiceWorkerUpdate();
+                                // Clear cache and reload page
+                                if ('caches' in window) {
+                                    const cacheNames = await caches.keys();
+                                    await Promise.all(
+                                        cacheNames.map(name => caches.delete(name))
+                                    );
+                                }
                                 window.location.reload(true);
                             }
                         }
@@ -277,14 +263,10 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 // Проверяем версию при загрузке
                 checkAppVersion();
                 
-                // Регистрируем Service Worker с cache-busting параметром и повторными попытками
-                async function registerServiceWorkerWithRetry(attempts = 3) {
-                    try {
-                        const registration = await navigator.serviceWorker.register('/workbox-service-worker.js?v=' + Date.now());
+                // Регистрируем Service Worker
+                navigator.serviceWorker.register('/workbox-service-worker.js?v=' + Date.now())
+                    .then(registration => {
                         console.log('Service Worker registered:', registration);
-                        
-                        // Принудительно проверяем обновления при каждой загрузке
-                        registration.update().catch(err => console.log('SW update check failed:', err));
                         
                         // Проверяем обновления Service Worker
                         registration.addEventListener('updatefound', () => {
@@ -308,26 +290,12 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                                 navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
                             });
                         }
-                        
-                        return registration;
-                    } catch (error) {
-                        console.error(`Service Worker registration failed (attempt ${4-attempts}):`, error);
-                        
-                        if (attempts > 1) {
-                            // Попробуем принудительно обновить и повторить
-                            await forceServiceWorkerUpdate();
-                            await new Promise(resolve => setTimeout(resolve, 1000)); // Ждем 1 секунду
-                            return registerServiceWorkerWithRetry(attempts - 1);
-                        } else {
-                            // Последняя попытка не удалась
-                            document.getElementById('sw-version').textContent = 'Failed';
-                            document.getElementById('sw-version').classList.remove('loading');
-                            throw error;
-                        }
-                    }
-                }
-                
-                registerServiceWorkerWithRetry();
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                        document.getElementById('sw-version').textContent = 'Failed';
+                        document.getElementById('sw-version').classList.remove('loading');
+                    });
 
                 // Обработка сообщений от Service Worker
                 navigator.serviceWorker.addEventListener('message', event => {
@@ -2122,7 +2090,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     if ('serviceWorker' in navigator) {
                         const registration = await navigator.serviceWorker.getRegistration();
                         if (registration) {
-                            // Force update the service worker with cache-busting
+                            // Force update the service worker
                             await registration.update();
                             
                             // If there's a waiting service worker, activate it
@@ -2132,21 +2100,24 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         }
                     }
 
-                    // Clear ALL caches to ensure fresh content
+                    // Clear only specific caches that might contain old files
                     if ('caches' in window) {
                         const cacheNames = await caches.keys();
-                        await Promise.all(
-                            cacheNames.map(name => caches.delete(name))
+                        // Only clear caches that contain versioned content
+                        const versionedCaches = cacheNames.filter(name => 
+                            name.includes('cache-') || 
+                            name.includes('static-') || 
+                            name.includes('pages-') ||
+                            name.includes('index-html-')
                         );
-                        console.log('All caches cleared for fresh update');
+                        
+                        await Promise.all(
+                            versionedCaches.map(name => caches.delete(name))
+                        );
                     }
 
-                    // Clear localStorage to force fresh app version check
-                    localStorage.removeItem('app-version');
-                    
-                    // Force reload with cache-busting
-                    const timestamp = Date.now();
-                    window.location.href = `${window.location.pathname}?update=${timestamp}`;
+                    // Force reload to get latest files
+                    window.location.reload(true);
                 } catch (error) {
                     console.error('Error performing update:', error);
                     alert('განახლებისას მოხდა შეცდომა. გთხოვთ გადატვირთოთ გვერდი ხელით.');
@@ -2246,14 +2217,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
   
     CHANGELOG
     ---------
-    2025-01-30: v1.9.4 – Fixed service worker caching issues
-               - Added cache-busting parameter to service worker registration
-               - Implemented retry mechanism for service worker registration failures
-               - Added forceServiceWorkerUpdate() function for complete cache clearing
-               - Enhanced update mechanism to clear all caches and localStorage
-               - Added automatic update checking on every page load
-               - Model: GPT-5
-
     2025-09-30: v1.9.3 – Switch index.html data loading to direct fetch from /api/d1
                - Replaced iframe-based loader with fetch + retry helper
                - Added API_URL constant pointing to /api/d1
