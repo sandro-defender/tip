@@ -1,8 +1,8 @@
-name: D1 Backup to GitHub
+name: D1 SQL Backup to GitHub
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 05:00 UTC = 09:00 GMT+4
+    - cron: '0 5 * * *'  # 05:00 UTC = 09:00 Georgia time
   workflow_dispatch:     # Manual run
 
 jobs:
@@ -10,36 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # 1️⃣ Checkout repository
+      - uses: actions/checkout@v3
 
-      # 2️⃣ Install Wrangler
-      - name: Install Wrangler
-        run: npm install -g wrangler
+      # 2️⃣ Setup Node.js
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
 
-      # 3️⃣ Export D1 database
-      - name: Export D1 database
-        run: |
-          npx wrangler d1 execute tip-data --config worker/wrangler.toml --command ".dump" > backup.sql
+      # 3️⃣ Install D1 package
+      - run: npm install @cloudflare/d1
 
-      # 4️⃣ Move backup to folder with timestamp
-      - name: Move backup to folder
-        run: |
-          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M')
-          mkdir -p backup/d1
-          mv backup.sql backup/d1/tip-data-$TIMESTAMP.sql
+      # 4️⃣ Run SQL export script
+      - run: node worker/export-d1-sql.js
 
       # 5️⃣ Cleanup old backups (keep last 10 days)
-      - name: Delete backups older than 10 days
-        run: |
+      - run: |
+          mkdir -p backup/d1
           find backup/d1/ -type f -name "tip-data-*.sql" -mtime +10 -exec rm {} \;
 
-      # 6️⃣ Commit & Push
-      - name: Commit backup
-        run: |
+      # 6️⃣ Commit & push
+      - run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add backup/d1/
-          git commit -m "D1 backup tip-data $TIMESTAMP" || echo "No changes to commit"
+          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M')
+          git commit -m "D1 SQL backup tip-data $TIMESTAMP" || echo "No changes to commit"
           git push
