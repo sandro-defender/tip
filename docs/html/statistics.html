@@ -840,17 +840,23 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
             const averagePerDay = totalDays > 0 ? totalAmount / totalDays : 0;
             
             // Find best and worst day across all data
-            let bestDay = { amount: 0, month: '', day: 0 };
-            let worstDay = { amount: Infinity, month: '', day: 0 };
+            let bestDay = { amount: 0, date: '' };
+            let worstDay = { amount: Infinity, date: '' };
             
             allData.forEach(month => {
                 if (month.days) {
                     month.days.forEach(day => {
                         if (day.amount > bestDay.amount) {
-                            bestDay = { amount: day.amount, month: month.month, day: day.day };
+                            const y = month.year;
+                            const m = String(month.monthNumber).padStart(2, '0');
+                            const d = String(day.day).padStart(2, '0');
+                            bestDay = { amount: day.amount, date: `${y}-${m}-${d}` };
                         }
                         if (day.amount < worstDay.amount && day.amount > 0) {
-                            worstDay = { amount: day.amount, month: month.month, day: day.day };
+                            const y = month.year;
+                            const m = String(month.monthNumber).padStart(2, '0');
+                            const d = String(day.day).padStart(2, '0');
+                            worstDay = { amount: day.amount, date: `${y}-${m}-${d}` };
                         }
                     });
                 }
@@ -877,7 +883,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
 
             // Guards for empty or zero-only datasets
             if (worstDay.amount === Infinity) {
-                worstDay = { amount: 0, month: 'N/A', day: 0 };
+                worstDay = { amount: 0, date: 'N/A' };
             }
             if (minPoints === Infinity) {
                 minPoints = 0;
@@ -953,7 +959,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
                         </div>
                     </div>
                     <div class="stat-value">$${formatNumber(bestMonth?.totalAmount || 0)}</div>
-                    <div class="stat-description">${bestMonth?.month || 'N/A'}</div>
+                    <div class="stat-description">${bestMonth && bestMonth.year ? (bestMonth.month + ' ' + bestMonth.year) : 'N/A'}</div>
                 </div>
 
                 <div class="stat-card">
@@ -964,7 +970,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
                         </div>
                     </div>
                     <div class="stat-value">$${formatNumber(worstMonth?.totalAmount || 0)}</div>
-                    <div class="stat-description">${worstMonth?.month || 'N/A'}</div>
+                    <div class="stat-description">${worstMonth && worstMonth.year ? (worstMonth.month + ' ' + worstMonth.year) : 'N/A'}</div>
                 </div>
 
                 <div class="stat-card">
@@ -986,7 +992,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
                         </div>
                     </div>
                     <div class="stat-value">$${formatNumber(bestDay.amount)}</div>
-                    <div class="stat-description">${bestDay.month} - ${bestDay.day} რიცხვი</div>
+                    <div class="stat-description">${bestDay.date || 'N/A'}</div>
                 </div>
 
                 <div class="stat-card">
@@ -997,7 +1003,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
                         </div>
                     </div>
                     <div class="stat-value">$${formatNumber(worstDay.amount)}</div>
-                    <div class="stat-description">${worstDay.month} - ${worstDay.day} რიცხვი</div>
+                    <div class="stat-description">${worstDay.date || 'N/A'}</div>
                 </div>
 
                 <div class="stat-card">
