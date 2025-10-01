@@ -3,7 +3,8 @@
 
  // ვერსია კეშის მართვისთვის
  //const VERSION = "v0.0.5";
- const VERSION = '__VERSION__';
+ //const VERSION = '__VERSION__';
+ const VERSION = `${new Date().toISOString()}`; 
  //const CACHE_NAME = `my-cache-${VERSION}`;
  
  // URL-მისამართების სია კეშიდან გამორიცხვისთვის
@@ -67,14 +68,14 @@
  
  
    // CDN-ფაილები
-   { url: 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', revision: null },
-   { url: 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', revision: null },
-   { url: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css', revision: null },
-   { url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', revision: null },
-   { url: 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css', revision: null },
-   { url: 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js', revision: null },
-   { url: 'https://cdn.jsdelivr.net/npm/chart.js', revision: null },
-   { url: 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js', rrevision: null },
+   { url: 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', revision: '5.1.3' },
+   { url: 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', revision: '5.1.3' },
+   { url: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css', revision: '1.10.0' },
+   { url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', revision: '6.0.0' },
+   { url: 'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css', revision: '1.9.3' },
+   { url: 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js', revision: '2.0.0' },
+   { url: 'https://cdn.jsdelivr.net/npm/chart.js', revision: '1.0' },
+   { url: 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js', revision: '3.9.1' },
    { url: 'https://git.you.ge/json/Particles-dark.json', revision: VERSION },
    { url: 'https://git.you.ge/json/Particles-light.json', revision: VERSION }
  ];
