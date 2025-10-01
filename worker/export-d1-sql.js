@@ -4,8 +4,8 @@ import { D1Database } from "@cloudflare/d1";
 // D1 binding name
 const db = new D1Database({ binding: "tip-data" });
 
-// შეცვალე table_name შენს ცხრილზე
-const TABLES = ["table_name"]; // თუ რამდენიმე table გაქვს, დააყენე აქ
+// ჩაწერე შენი ყველა table აქ
+const TABLES = ["table_name"]; // შეცვალე შენს ცხრილზე
 
 async function backup() {
   const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
