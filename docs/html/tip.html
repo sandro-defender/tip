@@ -4997,7 +4997,7 @@
                 </div>
              </div>` :
             `<p class="error-message">ბარათი ვერ მოიძებნა</p>`
-            );
+            ); ge
 //--------------------------------------------------------------------------
             // გრაფიკის განახლება - ensure it happens after UI is updated
             UISynchronizer.queueUpdate(() => {
@@ -5435,7 +5435,7 @@
 
         function calculateSalary(amount, position) {
             const tipAmount = parseFloat(amount);
-            const baseUrl = '/html/allowed/salary.html';
+            const baseUrl = '/html/salary.html';
             const url = `${baseUrl}?tipAmount=${tipAmount}&position=${position}`;
             window.location.href = url;
         }
