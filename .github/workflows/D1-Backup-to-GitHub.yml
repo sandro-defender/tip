@@ -1,0 +1,36 @@
+name: D1 Backup to GitHub
+
+on:
+  schedule:
+    - cron: '0 5 * * *'  # ყოველდღე 05:00 UTC = 09:00 GMT+4
+  workflow_dispatch:     # Manual run
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Export D1 database
+        run: |
+          npx wrangler d1 execute ${{ secrets.D1_DB_NAME }} --command ".dump" > backup.sql
+
+      - name: Move backup to folder
+        run: |
+          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M')
+          mkdir -p backup/d1
+          BACKUP_FILE="backup/d1/backup-$TIMESTAMP.sql"
+          mv backup.sql $BACKUP_FILE
+
+      - name: Commit backup
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add backup/d1/*
+          git commit -m "D1 backup $TIMESTAMP" || echo "No changes to commit"
+          git push
