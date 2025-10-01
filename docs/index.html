@@ -264,7 +264,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 checkAppVersion();
                 
                 // Регистрируем Service Worker
-                navigator.serviceWorker.register('/workbox-service-worker.js?v=' + Date.now())
+                navigator.serviceWorker.register('/workbox-service-worker.js')
                     .then(registration => {
                         console.log('Service Worker registered:', registration);
                         
