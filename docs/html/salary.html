@@ -1,3 +1,12 @@
+<!--
+Project: Staff You - Salary & Tips Calculator
+File: html/salary.html
+Version: 0.9
+Author: Cursor AI
+Model: GPT-5
+Last Modified: 2025-10-03
+Purpose: Frontend page for salary and tips calculation with shifts and absences
+-->
 <!DOCTYPE html>
 <html lang="ka">
 <head>
@@ -684,7 +693,10 @@
 
             <!-- დამატებითი სმენები და გაცდენები მოდალით -->
             <div class="section">
-                 <button id="openShiftModal" class="toggle-btn" style="width:100%;font-size:1.1rem;">➕  სმენები / გაცდენები ➖</button>
+                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                   <button id="openShiftModal" class="toggle-btn" style="width:100%;font-size:1.1rem;">➕ დამატებითი სმენები</button>
+                   <button id="openMissedModal" class="toggle-btn" style="width:100%;font-size:1.1rem;">➖ გაცდენები</button>
+                 </div>
                  <div style="margin-top:10px;text-align:center;">
                    <span id="shiftSummary">დამატებითი სმენები: 0 | გაცდენები: 0</span>
                 </div>
@@ -810,12 +822,12 @@
     <button class="debug-toggle" onclick="toggleDebug()">🐞</button>
     <div class="debug-window" id="debugWindow"></div>
 
-    <!-- Shift/Missed Modal -->
+    <!-- Shift Modal (only shifts) -->
     <div id="shiftModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
       <div class="shift-modal-content">
         <button id="closeShiftModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
         <h2 style="margin-bottom:10px;font-size:1.2rem;color:var(--primary);">➕ დამატებითი სმენები</h2>
-        <div class="button-grid" id="modalShiftsGrid" style="margin-bottom:18px;">
+        <div class="button-grid" id="modalShiftsGrid" style="margin-bottom:6px;">
           <button class="toggle-btn" data-shifts="0">0</button>
           <button class="toggle-btn" data-shifts="1">1</button>
           <button class="toggle-btn" data-shifts="2">2</button>
@@ -824,14 +836,90 @@
           <button class="toggle-btn" data-shifts="5">5</button>
           <button class="toggle-btn" data-shifts="6">6</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Missed Modal (reasons, each with day select) -->
+    <div id="missedModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
+      <div class="shift-modal-content">
+        <button id="closeMissedModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
         <h2 style="margin-bottom:10px;font-size:1.2rem;color:var(--primary);">➖ გაცდენები</h2>
-        <div class="button-grid" id="modalMissedGrid">
-          <button class="toggle-btn" data-missed="0">0</button>
-          <button class="toggle-btn" data-missed="1">1</button>
-          <button class="toggle-btn" data-missed="2">2</button>
-          <button class="toggle-btn" data-missed="3">3</button>
-          <button class="toggle-btn" data-missed="4">4</button>
-          <button class="toggle-btn" data-missed="5">5</button>
+        <div id="missedOptionsContainer" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="absence-row" data-type="unpaid">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">Unpaid</span>
+              <small style="opacity:0.8;">(30/2%, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="buleteni">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">ბიულეტენი</span>
+              <small style="opacity:0.8;">(30/2%, -0h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="buleteni" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="sikoli">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">სიქოლი</span>
+              <small style="opacity:0.8;">(30/2.5%, -18h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="sikoli" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="nocall">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">NoCall</span>
+              <small style="opacity:0.8;">(30/3%, -24h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="nocall" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="suspend">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">Suspend</span>
+              <small style="opacity:0.8;">(30/4%, -36h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="suspend" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="6">6</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -845,11 +933,20 @@
         align-items: center;
         justify-content: center;
       }
+      #missedModal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.35);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
       .shift-modal-content {
-        background: rgba(255, 255, 255, 0.2); /* Glass effect */
+        background: rgba(255, 255, 255, 0.2);
         color: var(--text);
-        max-width: 340px;
-        width: 90vw;
+        max-width: 360px;
+        width: 92vw;
         padding: 24px 18px 18px 18px;
         border-radius: 16px;
         box-shadow: 0 4px 30px rgba(0,0,0,0.1);
@@ -858,24 +955,28 @@
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.3);
       }
-      #shiftModal .toggle-btn.selected {
+      #shiftModal .toggle-btn.selected,
+      #missedModal .toggle-btn.selected {
         background: var(--primary);
         color: white;
         border-color: var(--primary);
       }
-      #shiftModal .toggle-btn {
+      #shiftModal .toggle-btn,
+      #missedModal .toggle-btn {
         background: var(--toggle-bg);
         color: var(--text);
         border: 1px solid var(--border-color);
       }
-      #shiftModal #closeShiftModal {
+      #shiftModal #closeShiftModal,
+      #missedModal #closeMissedModal {
         color: var(--text);
       }
-      [data-theme="dark"] #shiftModal {
+      [data-theme="dark"] #shiftModal,
+      [data-theme="dark"] #missedModal {
         background: rgba(0,0,0,0.65);
       }
       [data-theme="dark"] .shift-modal-content {
-        background: rgba(20, 30, 45, 0.25); /* Dark glass effect */
+        background: rgba(20, 30, 45, 0.25);
         border-color: rgba(255, 255, 255, 0.18);
       }
     </style>
@@ -1002,6 +1103,19 @@
             DEBUG_MODE: false
         };
 
+        // Absence types configuration
+        const ABSENCE_TYPES = [
+          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyPercent: 30/2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
+          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyPercent: 30/2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
+          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyPercent: 30/2.5, salaryHoursDeducted: 18, description: 'Sick (no-doc?)' },
+          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyPercent: 30/3,   salaryHoursDeducted: 24, description: 'No call / no show' },
+          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyPercent: 30/4,   salaryHoursDeducted: 36, description: 'Suspension' },
+        ];
+
+        function getAbsenceTypeById(id) {
+          return ABSENCE_TYPES.find(t => t.id === id) || ABSENCE_TYPES[0];
+        }
+
         // Функция для получения курса USD/GEL из API
         async function getRateFromNBG() {
             try {
@@ -1047,6 +1161,7 @@
             rate: CONFIG.getRatePerHour('i2'), // Default to i2 position
             shifts: 0,
             missedDays: 0,
+            absenceTypeId: 'unpaid',
             options: new Set(['pension']),
             exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
             tipPoints: parseFloat(localStorage.getItem('tipPoints')) || 0,
@@ -1203,14 +1318,13 @@
                     netTips = 0
                 } = calculations || {};
 
-                // Format money with colors
                 const formatMoney = (amount, symbol = '$') => 
                     `${amount >= 0 ? '💵' : '💸'} ${symbol}${Math.abs(amount).toFixed(2)}`;
-                
                 const formatPercent = (amount, total) => 
                     total ? ` (${((amount/total)*100).toFixed(1)}%)` : '';
 
                 const insuranceUSD = this.insuranceAmount / this.exchangeRate;
+                const absenceType = getAbsenceTypeById(this.absenceTypeId);
 
                 let debugText = `
 🔍 Debug Information
@@ -1231,6 +1345,7 @@ Ti	1050	1029	5.9138
 📅 Working Days: ${this.days}
 ➕ Extra Shifts: ${this.shifts}
 ➖ Missed Days: ${this.missedDays}
+⚠️ Missed Type: ${absenceType.label_en} (${absenceType.id})
 💱 Exchange Rate: ${this.exchangeRate} GEL
 🎯 Tip Points: ${this.tipPoints}
 ⚙️ Options: ${Array.from(this.options).join(', ')}
@@ -1239,7 +1354,7 @@ Ti	1050	1029	5.9138
 ──────────────────
 📊 Base Hours: ${baseHours} (${this.days} days × ${CONFIG.REGULAR_HOURS}hrs)
 📈 Extra Hours: ${extraHours} (${this.shifts} shifts × ${CONFIG.EXTRA_SHIFT_HOURS}hrs)
-📉 Missed Hours: ${missedHours}
+📉 Missed Hours: ${missedHours} (${this.missedDays} × ${absenceType.salaryHoursDeducted}hrs)
 📋 Total Hours: ${hours}
 
 💰 Salary Details
@@ -1251,17 +1366,23 @@ ${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(
 
 🎁 Tips Calculation
 ──────────────────
-💰 Base Tips: ${formatMoney(grossTips)}
+ℹ️ Absence penalty per day: ${(absenceType.tipPenaltyPercent).toFixed(2)}%
+ℹ️ Total absence penalty: ${((absenceType.tipPenaltyPercent * this.missedDays)).toFixed(2)}%
+💰 Base Tips (with position, after shift bonus, after absence penalty): ${formatMoney(grossTips)}
 ${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
 ${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
 ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
 💵 Net Tips: ${formatMoney(netTips)} / ${formatMoney(netTips * this.exchangeRate, '₾')}
 
-💵 Final Summary
+📚 Variables Used
 ──────────────────
-Total Take Home: ${formatMoney(netTips + (totalSalary - (this.options.has('tax') ? totalSalary * CONFIG.TAX_RATE : 0) - (this.options.has('pension') ? totalSalary * CONFIG.PENSION_RATE : 0) - insuranceUSD))}
-In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? totalSalary * CONFIG.TAX_RATE : 0) - (this.options.has('pension') ? totalSalary * CONFIG.PENSION_RATE : 0) - insuranceUSD)) * this.exchangeRate, '₾')}
-💊 Insurance: ₾${this.insuranceAmount.toFixed(2)} / $${insuranceUSD.toFixed(2)}
+- days, shifts, missedDays
+- position, rate
+- absenceTypeId => divisor=${absenceType.divisor}, tipPenaltyPercent=${absenceType.tipPenaltyPercent}%, salaryHoursDeducted=${absenceType.salaryHoursDeducted}
+- tipPoints, exchangeRate, options
+- baseHours, extraHours, missedHours, hours
+- baseSalary, extraSalary, missedSalary, totalSalary
+- grossTips, tipDiff, tipTax, tipPension, netTips
 `;
 
                 debugWindow.style.whiteSpace = 'pre-wrap';
@@ -1277,20 +1398,21 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
                         throw new Error('Position or rate not set');
                     }
 
-                    // Get hourly rate for position
+                    // Update hourly rate
                     this.rate = CONFIG.getRatePerHour(this.position);
 
-                    // Calculate the effective difference between missed days and extra shifts
-                    const effectiveMissedDays = Math.max(0, this.missedDays - this.shifts);
-                    const effectiveShifts = Math.max(0, this.shifts - this.missedDays);
-
-                    // Rest of calculation logic
+                    // Base hours
                     const baseHours = this.options.has('vacation') ? 
                         CONFIG.VACATION_BASE_DAYS * CONFIG.REGULAR_HOURS :
                         this.days * CONFIG.REGULAR_HOURS;
-                    
-                    const extraHours = effectiveShifts * CONFIG.EXTRA_SHIFT_HOURS;
-                    const missedHours = effectiveMissedDays * CONFIG.REGULAR_HOURS;
+
+                    // Extra shifts add hours directly (no offset with missed)
+                    const extraHours = this.shifts * CONFIG.EXTRA_SHIFT_HOURS;
+
+                    // Absence hours depend on selected reason
+                    const absenceType = getAbsenceTypeById(this.absenceTypeId);
+                    const missedHours = (this.missedDays || 0) * (absenceType.salaryHoursDeducted || 0);
+
                     const totalHours = baseHours + extraHours - missedHours;
 
                     // Salary calculations
@@ -1300,32 +1422,30 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
                     const totalSalary = baseSalary + extraSalary - missedSalary;
 
                     // Tips calculation
-                    let baseTipAmount = this.tipPoints;
-                    let positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
+                    const baseTipAmount = this.tipPoints;
+                    const positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
                     let grossTips = baseTipAmount * positionMultiplier;
-                    let tipDiff = 0;
 
-                    // Only calculate tip adjustments based on effective differences
-                    if (effectiveShifts > 0) {
-                        const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * effectiveShifts;
-                        grossTips += shiftBonus;
-                        tipDiff = shiftBonus;
-                    } else if (effectiveMissedDays > 0) {
-                        const missedAmount = (grossTips / this.days) * (effectiveMissedDays * 1.5);
-                        grossTips -= missedAmount;
-                        tipDiff = -missedAmount;
-                    }
+                    // Shift bonus (positive)
+                    const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * (this.shifts || 0);
+                    grossTips += shiftBonus;
 
-                    // Calculate tax amount that was originally deducted (20%)
+                    // Absence penalty (negative) applied after position and shift bonus
+                    const perDayPenaltyPct = (absenceType.tipPenaltyPercent || 0) / 100; // convert to 0..1
+                    const totalPenaltyPct = perDayPenaltyPct * (this.missedDays || 0);
+                    const absencePenalty = grossTips * totalPenaltyPct;
+                    grossTips -= absencePenalty;
+
+                    // tipDiff shows net change vs base position-only tips
+                    const positionOnlyTips = baseTipAmount * positionMultiplier;
+                    const tipDiff = (grossTips - positionOnlyTips);
+
+                    // Original tax amount on tips (info only)
                     const originalTaxAmount = grossTips * CONFIG.TAX_RATE;
-                    
-                    // Calculate pension on the original amount
                     const pensionAmount = grossTips * CONFIG.PENSION_RATE;
 
-                    // Calculate final tips
+                    // Final tips (only pension affects take-home here)
                     let finalTips = grossTips;
-                    
-                    // Only handle pension deduction
                     if (this.options.has('pension')) {
                         finalTips -= pensionAmount;
                     }
@@ -1343,7 +1463,7 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
                         tipDiff,
                         tipTax: originalTaxAmount,
                         tipPension: this.options.has('pension') ? pensionAmount : 0,
-                        netTips: finalTips  // Remove the extra pension deduction here
+                        netTips: finalTips
                     });
 
                 } catch (error) {
@@ -1482,25 +1602,18 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
         // Initialize theme on page load
         initTheme();
 
-        // Add modal logic for shifts/missed
+        // Add modal logic for shifts
         document.getElementById('openShiftModal').onclick = function() {
           document.getElementById('shiftModal').style.display = 'flex';
-          // Highlight current selection
           Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
             btn.classList.toggle('selected', parseInt(btn.dataset.shifts) === calculator.shifts);
-          });
-          Array.from(document.querySelectorAll('#modalMissedGrid .toggle-btn')).forEach(btn => {
-            btn.classList.toggle('selected', parseInt(btn.dataset.missed) === calculator.missedDays);
           });
         };
         document.getElementById('closeShiftModal').onclick = function() {
           document.getElementById('shiftModal').style.display = 'none';
         };
-        // Close modal when clicking outside the modal content
         document.getElementById('shiftModal').addEventListener('mousedown', function(e) {
-          if (e.target === this) {
-            this.style.display = 'none';
-          }
+          if (e.target === this) this.style.display = 'none';
         });
         Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
           btn.onclick = function() {
@@ -1509,15 +1622,42 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
             updateShiftSummary();
           };
         });
-        Array.from(document.querySelectorAll('#modalMissedGrid .toggle-btn')).forEach(btn => {
+
+        // Missed modal logic
+        document.getElementById('openMissedModal').onclick = function() {
+          document.getElementById('missedModal').style.display = 'flex';
+          const typeId = calculator.absenceTypeId;
+          const days = calculator.missedDays;
+          // Highlight currently selected type+days
+          Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.dataset.missed) === days);
+          });
+        };
+        document.getElementById('closeMissedModal').onclick = function() {
+          document.getElementById('missedModal').style.display = 'none';
+        };
+        document.getElementById('missedModal').addEventListener('mousedown', function(e) {
+          if (e.target === this) this.style.display = 'none';
+        });
+        Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(btn => {
           btn.onclick = function() {
-            calculator.missedDays = parseInt(btn.dataset.missed);
+            const type = String(btn.dataset.absence);
+            const days = parseInt(btn.dataset.missed);
+            // Clear row selection visual
+            const row = btn.closest('.absence-row');
+            if (row) Array.from(row.querySelectorAll('.toggle-btn')).forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            calculator.absenceTypeId = type;
+            calculator.missedDays = days;
             calculator.calculate();
             updateShiftSummary();
           };
         });
+
         function updateShiftSummary() {
-          document.getElementById('shiftSummary').textContent = `დამატებითი სმენები: ${calculator.shifts} | გაცდენები: ${calculator.missedDays}`;
+          const type = getAbsenceTypeById(calculator.absenceTypeId);
+          document.getElementById('shiftSummary').textContent = `დამატებითი სმენები: ${calculator.shifts} | გაცდენები: ${calculator.missedDays} (${type.label_en})`;
         }
         updateShiftSummary();
     </script>
@@ -1530,6 +1670,14 @@ In GEL: ${formatMoney((netTips + (totalSalary - (this.options.has('tax') ? total
     დოპის და სიქოლის გაბათილება
     // v0.6 -> 0.7:
     removed notice baner
+    // [2025-10-03] v0.7 -> v0.8 – Added Absence Types and Missed Reason popup; separated shifts vs absences in calculations; added variables summary; expanded missed days to 0–6.
+    Reason: To support granular absence penalties and clearer calculations.
+    Thoughts: Future improvement: persist chosen absence type in localStorage.
+    Model: GPT-5
+    // [2025-10-03] v0.8 -> v0.9 – Split combined modal into two popups (Shifts and Missed). In Missed, each option now has its own 0–6 day selector. Updated wiring and UI; kept calculations.
+    Reason: Improve UX and make missed selection per-option clear.
+    Thoughts: Could persist per-option last chosen day; currently single active option.
+    Model: GPT-5
     -->
 </body>
 </html>
