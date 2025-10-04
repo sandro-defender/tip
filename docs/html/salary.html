@@ -1,7 +1,7 @@
 <!--
 Project: Staff You - Salary & Tips Calculator
 File: html/salary.html
-Version: 0.9
+Version: 1.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-10-03
@@ -1162,6 +1162,8 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
             shifts: 0,
             missedDays: 0,
             absenceTypeId: 'unpaid',
+            // New: support multiple absence types
+            selectedAbsences: new Map(), // Map of {typeId: days}
             options: new Set(['pension']),
             exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
             tipPoints: parseFloat(localStorage.getItem('tipPoints')) || 0,
@@ -1324,7 +1326,19 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                     total ? ` (${((amount/total)*100).toFixed(1)}%)` : '';
 
                 const insuranceUSD = this.insuranceAmount / this.exchangeRate;
-                const absenceType = getAbsenceTypeById(this.absenceTypeId);
+
+                // Build absence summary
+                let absenceSummary = '';
+                let totalAbsencePenalty = 0;
+                for (const [typeId, days] of this.selectedAbsences) {
+                    if (days > 0) {
+                        const absenceType = getAbsenceTypeById(typeId);
+                        const penaltyPct = absenceType.tipPenaltyPercent;
+                        const penaltyAmount = grossTips * (penaltyPct / 100) * days;
+                        totalAbsencePenalty += penaltyAmount;
+                        absenceSummary += `\n  - ${absenceType.label_en}: ${days} days (${penaltyPct}% × ${days} = ${(penaltyPct * days).toFixed(1)}%)`;
+                    }
+                }
 
                 let debugText = `
 🔍 Debug Information
@@ -1344,8 +1358,7 @@ Ti	1050	1029	5.9138
 💰 Rate: ${formatMoney(this.rate)}/hr
 📅 Working Days: ${this.days}
 ➕ Extra Shifts: ${this.shifts}
-➖ Missed Days: ${this.missedDays}
-⚠️ Missed Type: ${absenceType.label_en} (${absenceType.id})
+➖ Selected Absences:${absenceSummary || ' None'}
 💱 Exchange Rate: ${this.exchangeRate} GEL
 🎯 Tip Points: ${this.tipPoints}
 ⚙️ Options: ${Array.from(this.options).join(', ')}
@@ -1354,7 +1367,7 @@ Ti	1050	1029	5.9138
 ──────────────────
 📊 Base Hours: ${baseHours} (${this.days} days × ${CONFIG.REGULAR_HOURS}hrs)
 📈 Extra Hours: ${extraHours} (${this.shifts} shifts × ${CONFIG.EXTRA_SHIFT_HOURS}hrs)
-📉 Missed Hours: ${missedHours} (${this.missedDays} × ${absenceType.salaryHoursDeducted}hrs)
+📉 Missed Hours: ${missedHours} (from all selected absences)
 📋 Total Hours: ${hours}
 
 💰 Salary Details
@@ -1366,8 +1379,7 @@ ${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(
 
 🎁 Tips Calculation
 ──────────────────
-ℹ️ Absence penalty per day: ${(absenceType.tipPenaltyPercent).toFixed(2)}%
-ℹ️ Total absence penalty: ${((absenceType.tipPenaltyPercent * this.missedDays)).toFixed(2)}%
+ℹ️ Total absence penalty: ${totalAbsencePenalty.toFixed(2)}% of base tips
 💰 Base Tips (with position, after shift bonus, after absence penalty): ${formatMoney(grossTips)}
 ${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
 ${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
@@ -1376,9 +1388,8 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
 
 📚 Variables Used
 ──────────────────
-- days, shifts, missedDays
+- days, shifts, selectedAbsences (Map of typeId -> days)
 - position, rate
-- absenceTypeId => divisor=${absenceType.divisor}, tipPenaltyPercent=${absenceType.tipPenaltyPercent}%, salaryHoursDeducted=${absenceType.salaryHoursDeducted}
 - tipPoints, exchangeRate, options
 - baseHours, extraHours, missedHours, hours
 - baseSalary, extraSalary, missedSalary, totalSalary
@@ -1409,17 +1420,25 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     // Extra shifts add hours directly (no offset with missed)
                     const extraHours = this.shifts * CONFIG.EXTRA_SHIFT_HOURS;
 
-                    // Absence hours depend on selected reason
-                    const absenceType = getAbsenceTypeById(this.absenceTypeId);
-                    const missedHours = (this.missedDays || 0) * (absenceType.salaryHoursDeducted || 0);
+                    // Calculate total missed hours and salary deductions from all selected absences
+                    let totalMissedHours = 0;
+                    let totalMissedSalary = 0;
+                    
+                    for (const [typeId, days] of this.selectedAbsences) {
+                        if (days > 0) {
+                            const absenceType = getAbsenceTypeById(typeId);
+                            const missedHours = days * absenceType.salaryHoursDeducted;
+                            totalMissedHours += missedHours;
+                            totalMissedSalary += missedHours * this.rate;
+                        }
+                    }
 
-                    const totalHours = baseHours + extraHours - missedHours;
+                    const totalHours = baseHours + extraHours - totalMissedHours;
 
                     // Salary calculations
                     const baseSalary = baseHours * this.rate;
                     const extraSalary = extraHours * this.rate;
-                    const missedSalary = missedHours * this.rate;
-                    const totalSalary = baseSalary + extraSalary - missedSalary;
+                    const totalSalary = baseSalary + extraSalary - totalMissedSalary;
 
                     // Tips calculation
                     const baseTipAmount = this.tipPoints;
@@ -1430,11 +1449,17 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * (this.shifts || 0);
                     grossTips += shiftBonus;
 
-                    // Absence penalty (negative) applied after position and shift bonus
-                    const perDayPenaltyPct = (absenceType.tipPenaltyPercent || 0) / 100; // convert to 0..1
-                    const totalPenaltyPct = perDayPenaltyPct * (this.missedDays || 0);
-                    const absencePenalty = grossTips * totalPenaltyPct;
-                    grossTips -= absencePenalty;
+                    // Calculate total absence penalty from all selected absences
+                    let totalAbsencePenalty = 0;
+                    for (const [typeId, days] of this.selectedAbsences) {
+                        if (days > 0) {
+                            const absenceType = getAbsenceTypeById(typeId);
+                            const perDayPenaltyPct = absenceType.tipPenaltyPercent / 100; // convert to 0..1
+                            const penaltyForThisType = grossTips * perDayPenaltyPct * days;
+                            totalAbsencePenalty += penaltyForThisType;
+                        }
+                    }
+                    grossTips -= totalAbsencePenalty;
 
                     // tipDiff shows net change vs base position-only tips
                     const positionOnlyTips = baseTipAmount * positionMultiplier;
@@ -1454,10 +1479,10 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                         hours: totalHours,
                         baseHours,
                         extraHours,
-                        missedHours,
+                        missedHours: totalMissedHours,
                         baseSalary,
                         extraSalary,
-                        missedSalary,
+                        missedSalary: totalMissedSalary,
                         totalSalary,
                         grossTips: finalTips,
                         tipDiff,
@@ -1623,16 +1648,16 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
           };
         });
 
-        // Missed modal logic
+        // Missed modal logic - updated for multiple selection
         document.getElementById('openMissedModal').onclick = function() {
           document.getElementById('missedModal').style.display = 'flex';
-          const typeId = calculator.absenceTypeId;
-          const days = calculator.missedDays;
-          // Highlight currently selected type+days
+          // Highlight currently selected absences
           Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
-          Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
-            btn.classList.toggle('selected', parseInt(btn.dataset.missed) === days);
-          });
+          for (const [typeId, days] of calculator.selectedAbsences) {
+            Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
+              btn.classList.toggle('selected', parseInt(btn.dataset.missed) === days);
+            });
+          }
         };
         document.getElementById('closeMissedModal').onclick = function() {
           document.getElementById('missedModal').style.display = 'none';
@@ -1644,20 +1669,41 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
           btn.onclick = function() {
             const type = String(btn.dataset.absence);
             const days = parseInt(btn.dataset.missed);
-            // Clear row selection visual
+            
+            // Toggle selection: if 0 days, remove from map; otherwise add/update
+            if (days === 0) {
+              calculator.selectedAbsences.delete(type);
+            } else {
+              calculator.selectedAbsences.set(type, days);
+            }
+            
+            // Update visual selection for this row
             const row = btn.closest('.absence-row');
-            if (row) Array.from(row.querySelectorAll('.toggle-btn')).forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            calculator.absenceTypeId = type;
-            calculator.missedDays = days;
+            if (row) {
+              Array.from(row.querySelectorAll('.toggle-btn')).forEach(b => b.classList.remove('selected'));
+              if (days > 0) {
+                btn.classList.add('selected');
+              }
+            }
+            
             calculator.calculate();
             updateShiftSummary();
           };
         });
 
         function updateShiftSummary() {
-          const type = getAbsenceTypeById(calculator.absenceTypeId);
-          document.getElementById('shiftSummary').textContent = `დამატებითი სმენები: ${calculator.shifts} | გაცდენები: ${calculator.missedDays} (${type.label_en})`;
+          let summary = `დამატებითი სმენები: ${calculator.shifts}`;
+          if (calculator.selectedAbsences.size > 0) {
+            const absenceParts = [];
+            for (const [typeId, days] of calculator.selectedAbsences) {
+              const type = getAbsenceTypeById(typeId);
+              absenceParts.push(`${type.label_en}: ${days}`);
+            }
+            summary += ` | გაცდენები: ${absenceParts.join(', ')}`;
+          } else {
+            summary += ` | გაცდენები: 0`;
+          }
+          document.getElementById('shiftSummary').textContent = summary;
         }
         updateShiftSummary();
     </script>
@@ -1677,6 +1723,10 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
     // [2025-10-03] v0.8 -> v0.9 – Split combined modal into two popups (Shifts and Missed). In Missed, each option now has its own 0–6 day selector. Updated wiring and UI; kept calculations.
     Reason: Improve UX and make missed selection per-option clear.
     Thoughts: Could persist per-option last chosen day; currently single active option.
+    Model: GPT-5
+    // [2025-10-03] v0.9 -> v1.0 – Fixed tip penalty calculation (30/3 = 10%, not 3.33%); enabled multiple absence type selection; updated UI to show combined absences; improved debug output.
+    Reason: Correct calculation errors and support complex absence scenarios like "nocall+sikoli".
+    Thoughts: Multiple absence types now properly accumulate penalties and salary deductions.
     Model: GPT-5
     -->
 </body>
