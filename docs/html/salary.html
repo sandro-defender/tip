@@ -1,7 +1,7 @@
 <!--
 Project: Staff You - Salary & Tips Calculator
 File: html/salary.html
-Version: 1.0
+Version: 1.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-10-03
@@ -1651,11 +1651,14 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
         // Missed modal logic - updated for multiple selection
         document.getElementById('openMissedModal').onclick = function() {
           document.getElementById('missedModal').style.display = 'flex';
-          // Highlight currently selected absences
+          // Clear all selections first
           Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          // Then highlight currently selected absences
           for (const [typeId, days] of calculator.selectedAbsences) {
             Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
-              btn.classList.toggle('selected', parseInt(btn.dataset.missed) === days);
+              if (parseInt(btn.dataset.missed) === days) {
+                btn.classList.add('selected');
+              }
             });
           }
         };
@@ -1677,7 +1680,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
               calculator.selectedAbsences.set(type, days);
             }
             
-            // Update visual selection for this row
+            // Update visual selection for this row only (don't affect other rows)
             const row = btn.closest('.absence-row');
             if (row) {
               Array.from(row.querySelectorAll('.toggle-btn')).forEach(b => b.classList.remove('selected'));
@@ -1727,6 +1730,10 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
     // [2025-10-03] v0.9 -> v1.0 – Fixed tip penalty calculation (30/3 = 10%, not 3.33%); enabled multiple absence type selection; updated UI to show combined absences; improved debug output.
     Reason: Correct calculation errors and support complex absence scenarios like "nocall+sikoli".
     Thoughts: Multiple absence types now properly accumulate penalties and salary deductions.
+    Model: GPT-5
+    // [2025-10-03] v1.0 -> v1.1 – Fixed multiple absence selection UI bug where clicking different rows would clear previous selections.
+    Reason: UI was clearing all selections when switching between absence types instead of preserving multiple selections.
+    Thoughts: Now properly supports "unpaid+nocall" type combinations as intended.
     Model: GPT-5
     -->
 </body>
