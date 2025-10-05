@@ -5435,7 +5435,7 @@
 
         function calculateSalary(amount, position) {
             const tipAmount = parseFloat(amount);
-            const baseUrl = '/html/salary.html';
+            const baseUrl = '/salary';
             const url = `${baseUrl}?tipAmount=${tipAmount}&position=${position}`;
             window.location.href = url;
         }
