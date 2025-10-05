@@ -719,8 +719,9 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                     <input type="number" class="currency-input" id="insuranceAmount" value="0" step="1" min="0" style="text-align: center; width: 130px;" placeholder="დაზღვევის თანხა">
                 </div>
                 <!-- Add tip amount input -->
-                <div class="rate-control" style="margin-bottom: 15px; justify-content: space-between;">
+                <div class="rate-control" style="margin-bottom: 15px; justify-content: space-between; align-items:center; gap:8px;">
                     <span style="padding: 10px;">🎁 Tip ფოინტზე:</span>
+                    <button id="openTipImport" class="rate-btn" title="იმპორტი tip გვერდიდან" style="width:40px;min-width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">📥</button>
                     <input type="number" class="currency-input" id="tipAmount" value="0" step="0.1" min="0" style="text-align: center; width: 130px;" placeholder="ჩაის რაოდენობა">
                 </div>
                 <div class="rate-control">
@@ -937,6 +938,23 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
               <button class="toggle-btn" data-absence="suspend" data-missed="5">5</button>
               <button class="toggle-btn" data-absence="suspend" data-missed="6">6</button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tip Import Modal -->
+    <div id="tipImportModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
+      <div class="shift-modal-content" style="max-width: 820px; width: 95vw; height: 85vh; display:flex; flex-direction:column; gap:8px;">
+        <button id="closeTipImport" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
+        <h2 style="margin-bottom:6px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
+        <div style="flex:1; border:1px solid var(--border-color); border-radius:10px; overflow:hidden; background:var(--card-bg);">
+          <iframe id="tipImportFrame" src="https://tips.you.ge/html/tip" style="width:100%; height:100%; border:0; background:transparent;"></iframe>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:space-between; align-items:center;">
+          <div id="tipImportPreview" style="font-size:0.95rem; opacity:0.9; padding:6px 8px;">აღმოჩენილი ფოინტები: —</div>
+          <div>
+            <button id="fetchTipFromIframe" class="toggle-btn" style="font-size:1rem;">📤 აიღე ფოინტები</button>
           </div>
         </div>
       </div>
@@ -1711,6 +1729,76 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             updatePopupButtonStates();
           };
         });
+
+        // Tip import modal logic
+        const openTipImport = document.getElementById('openTipImport');
+        const tipImportModal = document.getElementById('tipImportModal');
+        const closeTipImport = document.getElementById('closeTipImport');
+        const fetchTipFromIframe = document.getElementById('fetchTipFromIframe');
+        const tipImportFrame = document.getElementById('tipImportFrame');
+        if (openTipImport && tipImportModal && closeTipImport && fetchTipFromIframe && tipImportFrame) {
+          openTipImport.onclick = function() {
+            tipImportModal.style.display = 'flex';
+          };
+          closeTipImport.onclick = function() {
+            tipImportModal.style.display = 'none';
+          };
+          tipImportModal.addEventListener('mousedown', function(e) {
+            if (e.target === this) this.style.display = 'none';
+          });
+
+          fetchTipFromIframe.onclick = function() {
+            try {
+              const iframeDoc = tipImportFrame.contentDocument || tipImportFrame.contentWindow?.document;
+              if (!iframeDoc) throw new Error('iframe not ready');
+
+              // Preferred: points aggregation UI
+              const pointsInput = iframeDoc.querySelector('#points-input');
+              if (pointsInput && pointsInput.value) {
+                const val = parseFloat(pointsInput.value);
+                if (!isNaN(val)) {
+                  document.getElementById('tipAmount').value = val;
+                  calculator.tipPoints = val;
+                  localStorage.setItem('tipPoints', val);
+                  calculator.calculate();
+                  tipImportModal.style.display = 'none';
+                  return;
+                }
+              }
+
+              // Fallback: try amount input or computed points result
+              const pointsResult = iframeDoc.querySelector('#points-result');
+              const amountInput = iframeDoc.querySelector('#amountInput');
+              if (pointsResult && pointsResult.textContent) {
+                const val = parseFloat(pointsResult.textContent);
+                if (!isNaN(val)) {
+                  document.getElementById('tipAmount').value = val;
+                  calculator.tipPoints = val;
+                  localStorage.setItem('tipPoints', val);
+                  calculator.calculate();
+                  tipImportModal.style.display = 'none';
+                  return;
+                }
+              }
+              if (amountInput && amountInput.value) {
+                const val = parseFloat(amountInput.value);
+                if (!isNaN(val)) {
+                  document.getElementById('tipAmount').value = val;
+                  calculator.tipPoints = val;
+                  localStorage.setItem('tipPoints', val);
+                  calculator.calculate();
+                  tipImportModal.style.display = 'none';
+                  return;
+                }
+              }
+
+              calculator.showError('ვერ ვიპოვე ფოინტების ველი tip.html-ზე');
+            } catch (err) {
+              console.error('Tip import failed:', err);
+              calculator.showError('იმპორტის შეცდომა');
+            }
+          };
+        }
 
         // Missed modal logic - updated for multiple selection
         document.getElementById('openMissedModal').onclick = function() {
