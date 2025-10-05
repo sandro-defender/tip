@@ -271,6 +271,12 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
             flex: 1;
             text-align: center;
         }
+        .result-item.muted-row span:not(:first-child) {
+            color: rgba(255,255,255,0.65);
+            text-shadow: none;
+        }
+        .value-pos { color: #22c55e !important; text-shadow: 0 0 10px rgba(34,197,94,0.25) !important; }
+        .value-neg { color: #ef4444 !important; text-shadow: 0 0 10px rgba(239,68,68,0.25) !important; }
 
         .result-item:hover {
             background: var(--table-hover);
@@ -754,22 +760,30 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                         <span id="totalDays">0</span>
                         <span id="totalHours">0 სთ</span>
                     </div>
+                    <div class="result-item muted-row">
+                        <span>დღგ:</span>
+                        <span id="taxAmount">$0.00</span>
+                        <span id="taxAmountGel">₾0.00</span>
+                    </div>
                     <div class="result-item">
-                        <span>ჯამი:</span>
+                        <span>ხელფასი:</span>
+                        <span id="salaryOriginalUSD">$0.00</span>
+                        <span id="salaryOriginalGel">₾0.00</span>
+                    </div>
+                    <!--
+                    <div class="result-item">
+                        <span>ჯამი (Total):</span>
                         <span id="totalSalary">$0.00</span>
                         <span id="totalGelSalary">₾0.00</span>
                     </div>
+                    -->
                     <!-- ახალი გრაფა ცვლილებისთვის -->
                     <div id="salaryDiffRow" style="display: none;" class="result-item">
                         <span>ცვლილება:</span>
                         <span id="salaryDiffUSD">$0.00</span>
                         <span id="salaryDiffGEL">₾0.00</span>
                     </div>
-                    <div class="result-item">
-                        <span>დღგ:</span>
-                        <span id="taxAmount">$0.00</span>
-                        <span id="taxAmountGel">₾0.00</span>
-                    </div>
+
                     <div class="result-item">
                         <span>პენსია:</span>
                         <span id="PensionAmount">$0.00</span>
@@ -784,10 +798,22 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 
                 <div class="result-section">
                     <h3>🎁 ჩაი</h3>
+                    <!--
                     <div class="result-item">
                         <span>ჯამი:</span>
                         <span id="tipAmountUSD">$0.00</span>
                         <span id="tipAmountGel">₾0.00</span>
+                    </div>
+                    -->
+                    <div class="result-item muted-row">
+                        <span>დღგ:</span>
+                        <span id="tipTaxUSD">$0.00</span>
+                        <span id="tipTaxGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ჯამი (Total):</span>
+                        <span id="tipOriginalUSD">$0.00</span>
+                        <span id="tipOriginalGel">₾0.00</span>
                     </div>
                     <!-- ახალი გრაფა ცვლილებისთვის -->
                     <div id="tipDiffRow" style="display: none;" class="result-item">
@@ -795,11 +821,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                         <span id="tipDiffUSD">$0.00</span>
                         <span id="tipDiffGEL">₾0.00</span>
                     </div>
-                    <div class="result-item">
-                        <span>დღგ:</span>
-                        <span id="tipTaxUSD">$0.00</span>
-                        <span id="tipTaxGel">₾0.00</span>
-                    </div>
+
                     <div class="result-item">
                         <span>პენსია:</span>
                         <span id="tipPensionUSD">$0.00</span>
@@ -949,7 +971,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
         <button id="closeTipImport" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
         <h2 style="margin-bottom:6px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
         <div style="flex:1; border:1px solid var(--border-color); border-radius:10px; overflow:hidden; background:var(--card-bg);">
-          <iframe id="tipImportFrame" src="https://tips.you.ge/html/tip" style="width:100%; height:100%; border:0; background:transparent;"></iframe>
+          <iframe id="tipImportFrame" src="/tip" style="width:100%; height:100%; border:0; background:transparent;"></iframe>
         </div>
         <div style="display:flex; gap:8px; justify-content:space-between; align-items:center;">
           <div id="tipImportPreview" style="font-size:0.95rem; opacity:0.9; padding:6px 8px;">აღმოჩენილი ფოინტები: —</div>
@@ -1568,7 +1590,8 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                         tipDiff,
                         tipTax: originalTaxAmount,
                         tipPension: this.options.has('pension') ? pensionAmount : 0,
-                        netTips: finalTips
+                        netTips: finalTips,
+                        positionOnlyTips
                     });
 
                 } catch (error) {
@@ -1586,23 +1609,31 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             },
 
             updateUI(calculations) {
+                // Safe helpers
+                const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+                const setClass = (id, add, remove) => { const el = document.getElementById(id); if (!el) return; if (remove && remove.length) el.classList.remove(...remove); if (add && add.length) el.classList.add(...add); };
                 // Destructure all needed values
                 const { 
                     hours, baseHours, extraHours, missedHours,
                     baseSalary, extraSalary, missedSalary, totalSalary,
-                    grossTips, tipDiff, tipTax, tipPension, netTips 
+                    grossTips, tipDiff, tipTax, tipPension, netTips,
+                    positionOnlyTips 
                 } = calculations;
 
                 // Update debug info first to ensure all values are passed correctly
                 this.updateDebug(calculations);
 
                 // Update hours display
-                document.getElementById('totalHours').textContent = hours;
-                document.getElementById('totalDays').textContent = (hours / CONFIG.REGULAR_HOURS).toFixed(1);
+                setText('totalHours', hours);
+                setText('totalDays', (hours / CONFIG.REGULAR_HOURS).toFixed(1));
 
                 // Update base amounts
-                document.getElementById('totalSalary').textContent = `$${totalSalary.toFixed(1)}`;
-                document.getElementById('totalGelSalary').textContent = `₾${(totalSalary * this.exchangeRate).toFixed(1)}`;
+                setText('totalSalary', `$${totalSalary.toFixed(1)}`);
+                setText('totalGelSalary', `₾${(totalSalary * this.exchangeRate).toFixed(1)}`);
+                // Original salary before extra shifts and missed deductions
+                const salaryOriginalUSD = baseHours * this.rate;
+                setText('salaryOriginalUSD', `$${salaryOriginalUSD.toFixed(1)}`);
+                setText('salaryOriginalGel', `₾${(salaryOriginalUSD * this.exchangeRate).toFixed(1)}`);
 
                 // Update salary section with 20% already deducted tax
                 const baseTax = totalSalary * 0.2; // Changed from CONFIG.TAX_RATE to direct 0.2 for 20%
@@ -1612,54 +1643,79 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                 const netSalaryUSD = totalSalary - deductions - insuranceUSD;
                 const netSalaryGEL = netSalaryUSD * this.exchangeRate;
 
-                document.getElementById('netSalaryUSD').textContent = `$${netSalaryUSD.toFixed(1)}`;
-                document.getElementById('netSalary').textContent = `₾${netSalaryGEL.toFixed(1)}`;
-                document.getElementById('taxAmount').textContent = `-$${(totalSalary * CONFIG.TAX_RATE).toFixed(1)}`; // Show original deducted amount
-                document.getElementById('taxAmountGel').textContent = `-₾${(totalSalary * CONFIG.TAX_RATE * this.exchangeRate).toFixed(1)}`;
-                document.getElementById('PensionAmount').textContent = `-$${this.options.has('pension') ? salaryPension.toFixed(1) : '0.0'}`;
-                document.getElementById('PensionAmountGel').textContent = `-₾${this.options.has('pension') ? (salaryPension * this.exchangeRate).toFixed(1) : '0.0'}`;
+                setText('netSalaryUSD', `$${netSalaryUSD.toFixed(1)}`);
+                setText('netSalary', `₾${netSalaryGEL.toFixed(1)}`);
+                setText('taxAmount', `-$${(totalSalary * CONFIG.TAX_RATE).toFixed(1)}`);
+                setText('taxAmountGel', `-₾${(totalSalary * CONFIG.TAX_RATE * this.exchangeRate).toFixed(1)}`);
+                setText('PensionAmount', `-$${this.options.has('pension') ? salaryPension.toFixed(1) : '0.0'}`);
+                setText('PensionAmountGel', `-₾${this.options.has('pension') ? (salaryPension * this.exchangeRate).toFixed(1) : '0.0'}`);
 
                 // Update tips section - show original 20% tax that was deducted
                 const originalTipTax = (grossTips + tipPension) * CONFIG.TAX_RATE; // 20% of gross tip amount
-                document.getElementById('tipAmountUSD').textContent = `$${(grossTips + tipPension).toFixed(1)}`;
-                document.getElementById('tipAmountGel').textContent = `₾${((grossTips + tipPension) * this.tipExchangeRate).toFixed(1)}`;
+                setText('tipAmountUSD', `$${(grossTips + tipPension).toFixed(1)}`);
+                setText('tipAmountGel', `₾${((grossTips + tipPension) * this.tipExchangeRate).toFixed(1)}`);
+
+                // Base tips before shifts and missed: position-only tips
+                const originalBaseUSD = positionOnlyTips;
+                setText('tipOriginalUSD', `$${originalBaseUSD.toFixed(1)}`);
+                setText('tipOriginalGel', `₾${(originalBaseUSD * this.tipExchangeRate).toFixed(1)}`);
                 
-                document.getElementById('tipTaxUSD').textContent = `-$${originalTipTax.toFixed(1)}`;
-                document.getElementById('tipTaxGel').textContent = `-₾${(originalTipTax * this.tipExchangeRate).toFixed(1)}`;
+                setText('tipTaxUSD', `-$${originalTipTax.toFixed(1)}`);
+                setText('tipTaxGel', `-₾${(originalTipTax * this.tipExchangeRate).toFixed(1)}`);
                 
-                document.getElementById('tipPensionUSD').textContent = `-$${tipPension.toFixed(1)}`;
-                document.getElementById('tipPensionGel').textContent = `-₾${(tipPension * this.tipExchangeRate).toFixed(1)}`;
+                setText('tipPensionUSD', `-$${tipPension.toFixed(1)}`);
+                setText('tipPensionGel', `-₾${(tipPension * this.tipExchangeRate).toFixed(1)}`);
                 
                 // Show net tips (after pension deduction) in the grand total
-                document.getElementById('grandTotalUSD').textContent = `$${grossTips.toFixed(1)}`;
-                document.getElementById('grandTotalGel').textContent = `₾${(grossTips * this.tipExchangeRate).toFixed(1)}`;
+                setText('grandTotalUSD', `$${grossTips.toFixed(1)}`);
+                setText('grandTotalGel', `₾${(grossTips * this.tipExchangeRate).toFixed(1)}`);
 
                 // Calculate final total with gross tips but net salary
-                document.getElementById('BothTotalUSD').textContent = `$${(grossTips + netSalaryUSD).toFixed(1)}`;
-                document.getElementById('BothTotalGel').textContent = `₾${((grossTips * this.tipExchangeRate) + netSalaryGEL).toFixed(1)}`;
+                setText('BothTotalUSD', `$${(grossTips + netSalaryUSD).toFixed(1)}`);
+                setText('BothTotalGel', `₾${((grossTips * this.tipExchangeRate) + netSalaryGEL).toFixed(1)}`);
 
                 // Update bottom results bar (split exchange rates)
-                document.getElementById('bottom-salary-gel').textContent = `₾${netSalaryGEL.toFixed(1)}`;
+                setText('bottom-salary-gel', `₾${netSalaryGEL.toFixed(1)}`);
                 const tipTotalGEL = (grossTips * this.tipExchangeRate);
-                document.getElementById('bottom-tip-gel').textContent = `₾${tipTotalGEL.toFixed(1)}`;
-                document.getElementById('bottom-total-gel').textContent = `₾${(tipTotalGEL + netSalaryGEL).toFixed(1)}`;
+                setText('bottom-tip-gel', `₾${tipTotalGEL.toFixed(1)}`);
+                setText('bottom-total-gel', `₾${(tipTotalGEL + netSalaryGEL).toFixed(1)}`);
 
                 // Update differences display
                 const salaryDiffRow = document.getElementById('salaryDiffRow');
                 const tipDiffRow = document.getElementById('tipDiffRow');
 
                 if (this.shifts > 0 || this.missedDays > 0) {
-                    if (tipDiff !== 0) {
+                    // Salary difference vs base salary
+                    const salaryDiff = totalSalary - baseSalary;
+                    if (salaryDiff !== 0 && salaryDiffRow) {
+                        salaryDiffRow.style.display = 'flex';
+                        const signS = salaryDiff > 0 ? '+' : '-';
+                        const usdS = document.getElementById('salaryDiffUSD');
+                        const gelS = document.getElementById('salaryDiffGEL');
+                        if (usdS) usdS.textContent = `${signS}$${Math.abs(salaryDiff).toFixed(1)}`;
+                        if (gelS) gelS.textContent = `${signS}₾${Math.abs(salaryDiff * this.exchangeRate).toFixed(1)}`;
+                        if (usdS) { usdS.classList.remove('value-pos','value-neg'); usdS.classList.add(salaryDiff > 0 ? 'value-pos' : 'value-neg'); }
+                        if (gelS) { gelS.classList.remove('value-pos','value-neg'); gelS.classList.add(salaryDiff > 0 ? 'value-pos' : 'value-neg'); }
+                    } else if (salaryDiffRow) {
+                        salaryDiffRow.style.display = 'none';
+                    }
+
+                    // Tip difference vs position-only tips
+                    if (tipDiff !== 0 && tipDiffRow) {
                         tipDiffRow.style.display = 'flex';
                         const sign = tipDiff > 0 ? '+' : '-';
-                        document.getElementById('tipDiffUSD').textContent = `${sign}$${Math.abs(tipDiff).toFixed(1)}`;
-                        document.getElementById('tipDiffGEL').textContent = `${sign}₾${Math.abs(tipDiff * this.exchangeRate).toFixed(1)}`;
-                    } else {
+                        const usdEl = document.getElementById('tipDiffUSD');
+                        const gelEl = document.getElementById('tipDiffGEL');
+                        if (usdEl) usdEl.textContent = `${sign}$${Math.abs(tipDiff).toFixed(1)}`;
+                        if (gelEl) gelEl.textContent = `${sign}₾${Math.abs(tipDiff * this.tipExchangeRate).toFixed(1)}`;
+                        if (usdEl) { usdEl.classList.remove('value-pos','value-neg'); usdEl.classList.add(tipDiff > 0 ? 'value-pos' : 'value-neg'); }
+                        if (gelEl) { gelEl.classList.remove('value-pos','value-neg'); gelEl.classList.add(tipDiff > 0 ? 'value-pos' : 'value-neg'); }
+                    } else if (tipDiffRow) {
                         tipDiffRow.style.display = 'none';
                     }
                 } else {
-                    salaryDiffRow.style.display = 'none';
-                    tipDiffRow.style.display = 'none';
+                    if (salaryDiffRow) salaryDiffRow.style.display = 'none';
+                    if (tipDiffRow) tipDiffRow.style.display = 'none';
                 }
             }
         };
@@ -1798,6 +1854,36 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
               calculator.showError('იმპორტის შეცდომა');
             }
           };
+          // live preview polling while modal open
+          const updatePreview = () => {
+            try {
+              const iframeDoc = tipImportFrame.contentDocument || tipImportFrame.contentWindow?.document;
+              const preview = document.getElementById('tipImportPreview');
+              if (!iframeDoc || !preview) return;
+              let val = NaN;
+              const pointsInput = iframeDoc.querySelector('#points-input');
+              if (pointsInput && pointsInput.value) val = parseFloat(pointsInput.value);
+              if (isNaN(val)) {
+                const pointsResult = iframeDoc.querySelector('#points-result');
+                if (pointsResult && pointsResult.textContent) val = parseFloat(pointsResult.textContent);
+              }
+              if (isNaN(val)) {
+                const amountInput = iframeDoc.querySelector('#amountInput');
+                if (amountInput && amountInput.value) val = parseFloat(amountInput.value);
+              }
+              preview.textContent = `აღმოჩენილი ფოინტები: ${isNaN(val) ? '—' : val.toFixed(1)}`;
+            } catch {}
+          };
+          let previewTimer;
+          openTipImport.addEventListener('click', () => {
+            previewTimer = setInterval(updatePreview, 600);
+          });
+          closeTipImport.addEventListener('click', () => {
+            if (previewTimer) clearInterval(previewTimer);
+          });
+          tipImportModal.addEventListener('mousedown', function(e) {
+            if (e.target === this && previewTimer) clearInterval(previewTimer);
+          });
         }
 
         // Missed modal logic - updated for multiple selection
