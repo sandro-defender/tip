@@ -1091,18 +1091,18 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             
             <div class="links-grid">
                 <a href="/tip" class="link-item" title="Tips" style="position: relative;">
-                    <img src="https://git.you.ge/icon/tip2.png" alt="Tip" class="link-icon" style="width: 46px; height: 34px;">
+                    <img src="/icon/link-img/tip.png" alt="Tip" class="link-icon" style="width: 56px; height: 46px;">
                     <span>Tips</span>
                     <span class="tip-badge" id="tipBadge">
                         <span class="tip-badge-content" id="tipBadgeContent">0</span>
                     </span>
                 </a>
                 <a href="/statistics" class="link-item" title="View Statistics">
-                    <span class="link-icon">📊</span>
+                    <img src="/icon/link-img/stat.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>სტატისტიკა</span>
                 </a>
                 <a href="/shift" class="link-item" title="Manage Shifts">
-                    <span class="link-icon">📅</span>
+                    <img src="/icon/link-img/shift.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>ცვლა</span>
                 </a>
                 <a href="/galery" class="link-item" title="View Gallery">
@@ -1110,7 +1110,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <span>გალერეა</span>
                 </a>
                 <a href="/bar" class="link-item" title="Manage Inventory">
-                    <span class="link-icon">🚬</span>
+                    <img src="/icon/link-img/inventory-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>ინვენტარი</span>
                 </a>
                 <a href="/instructions" class="link-item" title="instructions">
@@ -1118,11 +1118,11 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <span>ინსტრუქცია</span>
                 </a>
                 <a href="/salary" class="link-item" title="Salary">
-                    <span class="link-icon">🏦</span>
+                    <img src="/icon/link-img/salary-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>ხელფასი</span>
                 </a>
                 <a href="javascript:void(0)" id="qrLink" class="link-item" title="Share with QR code">
-                    <span class="link-icon">🔗</span>
+                    <img src="/icon/link-img/share.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>გაზიარება</span>
                 </a>
 
@@ -1154,7 +1154,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             <div class="modal-content">
                 <span class="modal-close">&times;</span>
                 <h3>გააზიარე QR კოდით</h3>
-                <img src="/img/qr_img/tips_qr.png" alt="QR Code" style="width:100%; max-width:250px; margin-top: 15px; border-radius: 8px;">
+                <img src="/qr.png" alt="QR Code" style="width:100%; max-width:250px; margin-top: 15px; border-radius: 8px;">
                 <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: center;">
                     <button id="shareBtn" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; cursor: pointer;">გაზიარება</button>
                     <button id="copyBtn" style="background: var(--secondary); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; cursor: pointer;">კოპირება</button>
@@ -1175,7 +1175,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <div id="updateInfo" style="display: none;">
                         <div style="margin: 10px 0; padding: 10px; background: var(--info-bg); border-radius: 8px;">
                             <div><strong>App Version:</strong> <span id="currentAppVersion">-</span></div>
-                            <div><strong>SW Build:</strong> <span id="currentSWVersion">-</span></div>
+                            <div><strong>SW Version:</strong> <span id="currentSWVersion">-</span></div>
                             <div><strong>Latest Version:</strong> <span id="latestVersion">-</span></div>
                         </div>
                         <div id="updateMessage" style="margin: 15px 0; padding: 10px; border-radius: 8px; text-align: center;"></div>
