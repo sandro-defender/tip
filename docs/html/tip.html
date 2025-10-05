@@ -4950,6 +4950,14 @@
 
 // ... წინათ არსებული კოდი, რომელიც აკლებს total, totalPoints, daysInMonth, CONFIG.FORECAST_FACTOR და ა.შ.
 
+            // Persist TipsPerPoint to localStorage for reuse across the app
+            try {
+                if (typeof localStorage !== 'undefined' && isFinite(totalPoints) && totalPoints > 0) {
+                    const tipsPerPoint = (total / totalPoints).toFixed(2);
+                    localStorage.setItem('TipsPerPoint', tipsPerPoint);
+                }
+            } catch (_) {}
+
             document.getElementById('results').innerHTML = (currentCard === 'total') ?
             `<div class="result-card">
                 <div class="result-card-flex">
