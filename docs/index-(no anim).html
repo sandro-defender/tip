@@ -539,39 +539,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             height: 100%;
             width: 100%;
             box-sizing: border-box;
-            position: relative; /* for shine overlay */
-            overflow: hidden;
-            animation: menuFloat 3.6s ease-in-out infinite; /* enable by default */
         }
-        @keyframes menuFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-        /* Shine sweep similar to mini jar shimmer */
-        .link-item::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -120%;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
-            animation: itemShine 6s infinite;
-            pointer-events: none;
-        }
-        @keyframes itemShine {
-            0% { transform: translateX(0); opacity: 0; }
-            10% { opacity: 1; }
-            30% { transform: translateX(260%); opacity: 0; }
-            100% { opacity: 0; }
-        }
-        /* Staggered delays so items aren't perfectly in sync */
-        .links-grid .link-item:nth-child(2n) { animation-delay: 0.2s; }
-        .links-grid .link-item:nth-child(3n) { animation-delay: 0.4s; }
-        .links-grid .link-item:nth-child(4n) { animation-delay: 0.6s; }
-        .links-grid .link-item:nth-child(2n)::after { animation-delay: 1s; }
-        .links-grid .link-item:nth-child(3n)::after { animation-delay: 1.5s; }
-        .links-grid .link-item:nth-child(4n)::after { animation-delay: 2s; }
 
         .link-item:hover {
             transform: translateY(-5px);
@@ -1315,7 +1283,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             <div class="modal-content">
                 <span class="modal-close">&times;</span>
                 <h3>გააზიარე QR კოდით</h3>
-                <img src="/img/qr_img/tips_qr.png" alt="QR Code" style="width:100%; max-width:250px; margin-top: 15px; border-radius: 8px;">
+                <img src="/qr.png" alt="QR Code" style="width:100%; max-width:250px; margin-top: 15px; border-radius: 8px;">
                 <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: center;">
                     <button id="shareBtn" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; cursor: pointer;">გაზიარება</button>
                     <button id="copyBtn" style="background: var(--secondary); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 1rem; cursor: pointer;">კოპირება</button>
@@ -2581,16 +2549,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     2025-10-05: v1.9.11 – Make mini jar taller and adapt coin drop
               - Increased mini jar height to 64px
               - Coin drop animation now ends relative to jar height
-              - Model: GPT-5
-
-    2025-10-05: v1.9.12 – Animate all menu items subtly
-              - Added float and shine animations for .link-item
-              - Enabled via JS on all menu items
-              - Model: GPT-5
-
-    2025-10-05: v1.9.13 – Fix static menu animations
-              - Enabled float/shine via CSS by default (no JS dependency)
-              - Increased float amplitude and added staggered delays
               - Model: GPT-5
 
     -->
