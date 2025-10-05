@@ -981,6 +981,10 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div id="tipSavedList" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow:auto;border:1px dashed var(--border-color);padding:6px;border-radius:8px;">
             <!-- rendered saved values -->
           </div>
+          <div style="margin-top:6px;font-weight:600;">Forecasts</div>
+          <div id="tipForecastList" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow:auto;border:1px dashed var(--border-color);padding:6px;border-radius:8px;">
+            <!-- rendered forecast values -->
+          </div>
           <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button id="saveTipLocal" class="toggle-btn" style="font-size:0.95rem;">💾 Save</button>
             <button id="importTipLocal" class="toggle-btn" style="font-size:0.95rem;">📤 Import</button>
@@ -1232,7 +1236,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
             options: new Set(['pension']),
             exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
             tipExchangeRate: parseFloat(localStorage.getItem('tipExchangeRate')) || (parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE),
-            TipsPerPoint: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('TipsPerPoint')) || 0,
+            tipPoints: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0,
             position: 'i2', // Default position
             insuranceAmount: parseFloat(localStorage.getItem('insuranceAmount')) || CONFIG.INSURANCE_DEFAULT,
             
@@ -1267,7 +1271,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 
                 // Set default values
                 document.getElementById('insuranceAmount').value = this.insuranceAmount;
-                document.getElementById('tipAmount').value = this.TipsPerPoint;
+                document.getElementById('tipAmount').value = this.tipPoints;
                 // ensure inputs reflect persisted tip exchange
                 if (document.getElementById('tipExchangeRate').value === '') {
                     document.getElementById('tipExchangeRate').value = this.tipExchangeRate.toFixed(2);
@@ -1280,12 +1284,12 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                     if (CONFIG.RATES[position]) {
                         this.position = position;
                         this.rate = CONFIG.getRatePerHour(position);
-                        this.TipsPerPoint = parseFloat(params.get('tipAmount')) || 0;
-                        document.getElementById('tipAmount').value = this.TipsPerPoint;
+                        this.tipPoints = parseFloat(params.get('tipAmount')) || 0;
+                        document.getElementById('tipAmount').value = this.tipPoints;
                         
                         // Select position button
                         this.selectPositionButton(position);
-                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.TipsPerPoint}`);
+                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.tipPoints}`);
                     }
                 }
 
@@ -1349,9 +1353,10 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 // Add event listener for tip amount input
                 const tipAmountInput = document.getElementById('tipAmount');
                 tipAmountInput.addEventListener('input', (e) => {
-                    this.TipsPerPoint = parseFloat(e.target.value) || 0;
+                    this.tipPoints = parseFloat(e.target.value) || 0;
                     // Persist under new key; keep legacy for backward compat
-                    localStorage.setItem('TipsPerPoint', this.TipsPerPoint);
+                    localStorage.setItem('TipsPerPoint', this.tipPoints);
+                    localStorage.setItem('tipPoints', this.tipPoints);
                     this.calculate();
                 });
             },
@@ -1470,7 +1475,7 @@ Ti	1050	1029	5.9138
 ➕ Extra Shifts: ${this.shifts}
 ➖ Selected Absences:${absenceSummary || ' None'}
 💱 Exchange Rate: ${this.exchangeRate} GEL
-🎯 Tip Points: ${this.TipsPerPoint}
+🎯 Tip Points: ${this.tipPoints}
 ⚙️ Options: ${Array.from(this.options).join(', ')}
 
 ⏰ Hours Breakdown
@@ -1500,7 +1505,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
 ──────────────────
 - days, shifts, selectedAbsences (Map of typeId -> days)
 - position, rate
-- TipsPerPoint, exchangeRate, options
+- tipPoints, exchangeRate, options
 - baseHours, extraHours, missedHours, hours
 - baseSalary, extraSalary, missedSalary, totalSalary
 - grossTips, tipDiff, tipTax, tipPension, netTips
@@ -1551,7 +1556,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     const totalSalary = baseSalary + extraSalary - totalMissedSalary;
 
                     // Tips calculation
-                    const baseTipAmount = this.TipsPerPoint;
+                    const baseTipAmount = this.tipPoints;
                     const positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
                     let grossTips = baseTipAmount * positionMultiplier;
 
@@ -1800,6 +1805,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
         const closeTipImport = document.getElementById('closeTipImport');
         const tipLocalInput = document.getElementById('tipLocalInput');
         const tipSavedList = document.getElementById('tipSavedList');
+        const tipForecastList = document.getElementById('tipForecastList');
         const saveTipLocal = document.getElementById('saveTipLocal');
         const importTipLocal = document.getElementById('importTipLocal');
         function getSavedTipHistory() {
@@ -1808,6 +1814,13 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const arr = raw ? JSON.parse(raw) : [];
             return Array.isArray(arr) ? arr : [];
           } catch { return []; }
+        }
+        function getSavedTipForecasts() {
+          try {
+            const raw = localStorage.getItem('TipsPerPoint-FORECAST');
+            const arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? arr : [];
+          } catch { const single = localStorage.getItem('TipsPerPoint-FORECAST'); return single ? [parseFloat(single)] : []; }
         }
         function setSavedTipHistory(arr) {
           localStorage.setItem('tipHistory', JSON.stringify(arr.slice(-50)));
@@ -1835,11 +1848,36 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             tipSavedList.appendChild(btn);
           });
         }
+        function renderTipForecasts() {
+          if (!tipForecastList) return;
+          const items = getSavedTipForecasts();
+          tipForecastList.innerHTML = '';
+          if (!items.length) {
+            const empty = document.createElement('div');
+            empty.style.opacity = '0.7';
+            empty.textContent = 'არ არის პროგნოზირებული მნიშვნელობები';
+            tipForecastList.appendChild(empty);
+            return;
+          }
+          items.slice().reverse().forEach((v) => {
+            const btn = document.createElement('button');
+            btn.className = 'toggle-btn';
+            btn.style.padding = '6px 10px';
+            btn.style.fontSize = '0.9rem';
+            btn.textContent = parseFloat(v).toFixed(1);
+            btn.title = 'FORECAST';
+            btn.onclick = () => {
+              tipLocalInput.value = parseFloat(v).toFixed(1);
+            };
+            tipForecastList.appendChild(btn);
+          });
+        }
         if (openTipImport && tipImportModal && closeTipImport && tipLocalInput && saveTipLocal && importTipLocal) {
           openTipImport.onclick = function() {
-            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('TipsPerPoint')) || 0;
+            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
             tipLocalInput.value = saved ? saved.toFixed(1) : '';
             renderTipHistory();
+            renderTipForecasts();
             tipImportModal.style.display = 'flex';
           };
           closeTipImport.onclick = function() {
@@ -1853,11 +1891,12 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const val = parseFloat(tipLocalInput.value);
             if (!isNaN(val)) {
               localStorage.setItem('TipsPerPoint', val);
+              localStorage.setItem('tipPoints', val);
               const hist = getSavedTipHistory();
               hist.push(val);
               setSavedTipHistory(hist);
               renderTipHistory();
-              calculator.TipsPerPoint = val;
+              calculator.tipPoints = val;
               document.getElementById('tipAmount').value = val;
               calculator.calculate();
             } else {
@@ -1869,10 +1908,11 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const val = parseFloat(tipLocalInput.value);
             if (!isNaN(val)) {
               localStorage.setItem('TipsPerPoint', val);
+              localStorage.setItem('tipPoints', val);
               const hist = getSavedTipHistory();
               hist.push(val);
               setSavedTipHistory(hist);
-              calculator.TipsPerPoint = val;
+              calculator.tipPoints = val;
               document.getElementById('tipAmount').value = val;
               calculator.calculate();
               tipImportModal.style.display = 'none';
