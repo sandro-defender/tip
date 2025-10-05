@@ -6421,11 +6421,47 @@
         }
     }
 
-    window.addEventListener('load', function() {
+    function trySaveNow() {
         var val = getTipsPerPoint();
         var totalPts = getTotalPoints();
         saveTipsPerPoint(val, totalPts);
+    }
+
+    // Save once on load (if elements ready)
+    window.addEventListener('load', function() {
+        // Try immediately, then after a short delay to allow dynamic UI render
+        trySaveNow();
+        setTimeout(trySaveNow, 500);
+        setTimeout(trySaveNow, 1500);
     });
+
+    // Hook into updateUI so every UI refresh persists values
+    (function hookUpdateUIWithSaver(){
+        var hooked = false;
+        var iv = setInterval(function(){
+            if (hooked) { clearInterval(iv); return; }
+            if (typeof window.updateUI === 'function') {
+                var original = window.updateUI;
+                window.updateUI = function() {
+                    var r = original.apply(this, arguments);
+                    trySaveNow();
+                    return r;
+                };
+                hooked = true;
+                clearInterval(iv);
+            }
+        }, 300);
+    })();
+
+    // Observe changes in the results area to persist when values change
+    (function observeResults(){
+        var target = document.getElementById('results');
+        if (!target) return;
+        var obs = new MutationObserver(function(){
+            trySaveNow();
+        });
+        obs.observe(target, { childList: true, subtree: true, characterData: true });
+    })();
     })();
     </script>
 </body>
