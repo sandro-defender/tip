@@ -479,34 +479,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             display: none; /* Скрываем по умолчанию */
         }
 
-        /* Masked bright shine only over visible parts of active image */
-        .logo-shine {
-            position: absolute;
-            pointer-events: none;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0) 100%);
-            mix-blend-mode: screen; /* brightens over image */
-            animation: logoShineMasked 6.5s infinite;
-            /* Mask the shine to the active image's alpha */
-            -webkit-mask-image: none; /* set via JS to active image src */
-            mask-image: none; /* set via JS to active image src */
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-size: 100% 100%;
-            mask-size: 100% 100%;
-            opacity: 0.95; /* bright shine */
-            border-radius: 10px; /* follow container rounding */
-        }
-        @keyframes logoShineMasked {
-            0% { transform: translateX(-120%); opacity: 0; }
-            10% { opacity: 1; }
-            35% { transform: translateX(220%); opacity: 0; }
-            100% { opacity: 0; }
-        }
-
         /* Показываем логотип только в PWA режиме */
         @media all and (display-mode: standalone) {
             .logo-container {
@@ -2619,16 +2591,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     2025-10-05: v1.9.13 – Fix static menu animations
               - Enabled float/shine via CSS by default (no JS dependency)
               - Increased float amplitude and added staggered delays
-              - Model: GPT-5
-
-    2025-10-05: v1.9.14 – Add shine animation to logo container
-              - Added shimmering sweep overlay on .logo-container
-              - Model: GPT-5
-
-    2025-10-05: v1.9.15 – Masked bright logo shine on visible image parts
-              - Replaced container-wide shine with masked overlay bound to active image
-              - Uses CSS mask-image to limit shine to non-transparent pixels
-              - Increased shine brightness using screen blend
               - Model: GPT-5
 
     -->
