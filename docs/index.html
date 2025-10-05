@@ -479,22 +479,31 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             display: none; /* Скрываем по умолчанию */
         }
 
-        /* Shining sweep over the logo container */
-        .logo-container::after {
-            content: '';
+        /* Masked bright shine only over visible parts of active image */
+        .logo-shine {
             position: absolute;
-            top: 0;
-            left: -140%;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
-            animation: logoShine 6.5s infinite;
             pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0) 100%);
+            mix-blend-mode: screen; /* brightens over image */
+            animation: logoShineMasked 6.5s infinite;
+            /* Mask the shine to the active image's alpha */
+            -webkit-mask-image: none; /* set via JS to active image src */
+            mask-image: none; /* set via JS to active image src */
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            opacity: 0.95; /* bright shine */
+            border-radius: 10px; /* follow container rounding */
         }
-        @keyframes logoShine {
-            0% { transform: translateX(0); opacity: 0; }
-            12% { opacity: 1; }
-            36% { transform: translateX(300%); opacity: 0; }
+        @keyframes logoShineMasked {
+            0% { transform: translateX(-120%); opacity: 0; }
+            10% { opacity: 1; }
+            35% { transform: translateX(220%); opacity: 0; }
             100% { opacity: 0; }
         }
 
@@ -2614,6 +2623,12 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
     2025-10-05: v1.9.14 – Add shine animation to logo container
               - Added shimmering sweep overlay on .logo-container
+              - Model: GPT-5
+
+    2025-10-05: v1.9.15 – Masked bright logo shine on visible image parts
+              - Replaced container-wide shine with masked overlay bound to active image
+              - Uses CSS mask-image to limit shine to non-transparent pixels
+              - Increased shine brightness using screen blend
               - Model: GPT-5
 
     -->
