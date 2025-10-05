@@ -972,22 +972,18 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
       <div class="shift-modal-content" style="max-width: 420px; width: 92vw; display:flex; flex-direction:column; gap:10px;">
         <button id="closeTipImport" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
         <h2 style="margin-bottom:2px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-            <span style="font-weight:600;">ფოინტების რაოდენობა (saved):</span>
-            <input type="number" id="tipLocalInput" class="currency-input" step="0.1" min="0" style="width:140px;" placeholder="0.0">
-          </div>
-          <small style="opacity:0.8;">ეს მნიშვნელობა იტვირთება localStorage-დან (TipsPerPoint). საჭიროების შემთხვევაში შეგიძლიათ შეცვალოთ და შეინახოთ.</small>
-          <div id="tipSavedList" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow:auto;border:1px dashed var(--border-color);padding:6px;border-radius:8px;">
-            <!-- rendered saved values -->
-          </div>
-          <div style="margin-top:6px;font-weight:600;">Forecasts</div>
-          <div id="tipForecastList" style="display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow:auto;border:1px dashed var(--border-color);padding:6px;border-radius:8px;">
-            <!-- rendered forecast values -->
-          </div>
-          <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button id="saveTipLocal" class="toggle-btn" style="font-size:0.95rem;">💾 Save</button>
-            <button id="importTipLocal" class="toggle-btn" style="font-size:0.95rem;">📤 Import</button>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:600;">აირჩიეთ წყარო:</div>
+            <div style="display:flex;gap:8px;">
+              <button id="tipLoadCurrent" class="toggle-btn" style="flex:1;">
+                მიმდინარე: <span id="tipLoadCurrentVal">—</span>
+              </button>
+              <button id="tipLoadForecast" class="toggle-btn" style="flex:1;">
+                პროგნოზი: <span id="tipLoadForecastVal">—</span>
+              </button>
+            </div>
+            <small style="opacity:0.8;">მონაცემები იტვირთება localStorage-დან. აირჩიეთ რომელი მნიშვნელობა ჩატვირთოს.</small>
           </div>
         </div>
       </div>
@@ -1047,6 +1043,11 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
       [data-theme="dark"] .shift-modal-content {
         background: rgba(20, 30, 45, 0.25);
         border-color: rgba(255, 255, 255, 0.18);
+      }
+      #tipImportModal .toggle-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
       }
     </style>
 
@@ -1799,125 +1800,68 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
           };
         });
 
-        // Tip import modal logic (localStorage)
+        // Tip import modal logic (simplified)
         const openTipImport = document.getElementById('openTipImport');
         const tipImportModal = document.getElementById('tipImportModal');
         const closeTipImport = document.getElementById('closeTipImport');
-        const tipLocalInput = document.getElementById('tipLocalInput');
-        const tipSavedList = document.getElementById('tipSavedList');
-        const tipForecastList = document.getElementById('tipForecastList');
-        const saveTipLocal = document.getElementById('saveTipLocal');
-        const importTipLocal = document.getElementById('importTipLocal');
-        function getSavedTipHistory() {
-          try {
-            const raw = localStorage.getItem('tipHistory');
-            const arr = raw ? JSON.parse(raw) : [];
-            return Array.isArray(arr) ? arr : [];
-          } catch { return []; }
-        }
-        function getSavedTipForecasts() {
-          try {
-            const raw = localStorage.getItem('TipsPerPoint-FORECAST');
-            const arr = raw ? JSON.parse(raw) : [];
-            return Array.isArray(arr) ? arr : [];
-          } catch { const single = localStorage.getItem('TipsPerPoint-FORECAST'); return single ? [parseFloat(single)] : []; }
-        }
-        function setSavedTipHistory(arr) {
-          localStorage.setItem('tipHistory', JSON.stringify(arr.slice(-50)));
-        }
-        function renderTipHistory() {
-          if (!tipSavedList) return;
-          const items = getSavedTipHistory();
-          tipSavedList.innerHTML = '';
-          if (!items.length) {
-            const empty = document.createElement('div');
-            empty.style.opacity = '0.7';
-            empty.textContent = 'არ არის შენახული მნიშვნელობები';
-            tipSavedList.appendChild(empty);
-            return;
-          }
-          items.slice().reverse().forEach((v) => {
-            const btn = document.createElement('button');
-            btn.className = 'toggle-btn';
-            btn.style.padding = '6px 10px';
-            btn.style.fontSize = '0.9rem';
-            btn.textContent = parseFloat(v).toFixed(1);
-            btn.onclick = () => {
-              tipLocalInput.value = parseFloat(v).toFixed(1);
-            };
-            tipSavedList.appendChild(btn);
-          });
-        }
-        function renderTipForecasts() {
-          if (!tipForecastList) return;
-          const items = getSavedTipForecasts();
-          tipForecastList.innerHTML = '';
-          if (!items.length) {
-            const empty = document.createElement('div');
-            empty.style.opacity = '0.7';
-            empty.textContent = 'არ არის პროგნოზირებული მნიშვნელობები';
-            tipForecastList.appendChild(empty);
-            return;
-          }
-          items.slice().reverse().forEach((v) => {
-            const btn = document.createElement('button');
-            btn.className = 'toggle-btn';
-            btn.style.padding = '6px 10px';
-            btn.style.fontSize = '0.9rem';
-            btn.textContent = parseFloat(v).toFixed(1);
-            btn.title = 'FORECAST';
-            btn.onclick = () => {
-              tipLocalInput.value = parseFloat(v).toFixed(1);
-            };
-            tipForecastList.appendChild(btn);
-          });
-        }
-        if (openTipImport && tipImportModal && closeTipImport && tipLocalInput && saveTipLocal && importTipLocal) {
+        const tipLoadCurrent = document.getElementById('tipLoadCurrent');
+        const tipLoadForecast = document.getElementById('tipLoadForecast');
+        const tipLoadCurrentVal = document.getElementById('tipLoadCurrentVal');
+        const tipLoadForecastVal = document.getElementById('tipLoadForecastVal');
+        
+        if (openTipImport && tipImportModal && closeTipImport && tipLoadCurrent && tipLoadForecast) {
           openTipImport.onclick = function() {
-            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
-            tipLocalInput.value = saved ? saved.toFixed(1) : '';
-            renderTipHistory();
-            renderTipForecasts();
+            // Load current values from localStorage
+            const current = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            const forecast = parseFloat(localStorage.getItem('TipsPerPoint-FORECAST')) || 0;
+            
+            tipLoadCurrentVal.textContent = current ? current.toFixed(1) : '—';
+            tipLoadForecastVal.textContent = forecast ? forecast.toFixed(1) : '—';
+            
+            // Clear previous selection
+            tipLoadCurrent.classList.remove('selected');
+            tipLoadForecast.classList.remove('selected');
+            
             tipImportModal.style.display = 'flex';
           };
+          
           closeTipImport.onclick = function() {
             tipImportModal.style.display = 'none';
           };
+          
           tipImportModal.addEventListener('mousedown', function(e) {
             if (e.target === this) this.style.display = 'none';
           });
 
-          saveTipLocal.onclick = function() {
-            const val = parseFloat(tipLocalInput.value);
-            if (!isNaN(val)) {
-              localStorage.setItem('TipsPerPoint', val);
-              localStorage.setItem('tipPoints', val);
-              const hist = getSavedTipHistory();
-              hist.push(val);
-              setSavedTipHistory(hist);
-              renderTipHistory();
-              calculator.tipPoints = val;
-              document.getElementById('tipAmount').value = val;
-              calculator.calculate();
-            } else {
-              calculator.showError('არასწორი მნიშვნელობა');
-            }
-          };
-
-          importTipLocal.onclick = function() {
-            const val = parseFloat(tipLocalInput.value);
-            if (!isNaN(val)) {
-              localStorage.setItem('TipsPerPoint', val);
-              localStorage.setItem('tipPoints', val);
-              const hist = getSavedTipHistory();
-              hist.push(val);
-              setSavedTipHistory(hist);
-              calculator.tipPoints = val;
-              document.getElementById('tipAmount').value = val;
+          tipLoadCurrent.onclick = function() {
+            tipLoadCurrent.classList.add('selected');
+            tipLoadForecast.classList.remove('selected');
+            
+            // Auto-import current value
+            const value = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            if (value > 0) {
+              calculator.tipPoints = value;
+              document.getElementById('tipAmount').value = value;
               calculator.calculate();
               tipImportModal.style.display = 'none';
             } else {
-              calculator.showError('ჩაი შეიყვანეთ რიცხვით');
+              calculator.showError('მიმდინარე მნიშვნელობა არ არის ხელმისაწვდომი');
+            }
+          };
+
+          tipLoadForecast.onclick = function() {
+            tipLoadForecast.classList.add('selected');
+            tipLoadCurrent.classList.remove('selected');
+            
+            // Auto-import forecast value
+            const value = parseFloat(localStorage.getItem('TipsPerPoint-FORECAST')) || 0;
+            if (value > 0) {
+              calculator.tipPoints = value;
+              document.getElementById('tipAmount').value = value;
+              calculator.calculate();
+              tipImportModal.style.display = 'none';
+            } else {
+              calculator.showError('პროგნოზირებული მნიშვნელობა არ არის ხელმისაწვდომი');
             }
           };
         }
