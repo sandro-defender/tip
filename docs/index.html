@@ -4,7 +4,7 @@ File: index.html
 Version: 1.7
 Author: Cursor AI
 Model: GPT-5
-Last Modified: 2025-09-30
+Last Modified: 2025-10-05
 Purpose: Main portal page with device theme detection and automatic theme switching
 -->
 <!DOCTYPE html>
@@ -1059,6 +1059,123 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             text-decoration: none;
             color: white;
         }
+
+        /* Mini Tip Jar Icon (from tip_icon.html adapted for compact size) */
+        .mini-jar {
+            position: relative;
+            width: 56px; /* match previous image width */
+            height: 46px; /* match previous image height */
+            margin-bottom: 8px; /* mimic .link-icon spacing */
+        }
+        .mini-jar-jar {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.18);
+            border: 2px solid #fff;
+            border-radius: 10px 10px 14px 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+        .mini-jar-lid {
+            position: absolute;
+            top: -6px;
+            left: 5px;  /* align with jar inner edge (2px border) */
+            right: 1px; /* align with jar inner edge (2px border) */
+            transform: none;
+            height: 12px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            z-index: 2;
+        }
+        .mini-jar-lid::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 4px;
+            background: #667eea;
+            border-radius: 3px;
+        }
+        .mini-jar-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, #ffd700, #ffed4e);
+            transition: height 0.4s ease-out;
+        }
+        .mini-jar-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            z-index: 3;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+        /* Subtle shimmer to feel alive */
+        .mini-jar-jar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -60%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+            animation: miniShine 2.8s infinite;
+            pointer-events: none;
+        }
+        @keyframes miniShine {
+            0% { transform: translateX(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateX(250%); opacity: 0; }
+        }
+        /* Hide old badge visually but keep in DOM for JS */
+        .link-item #tipBadge {
+            display: none;
+        }
+
+        /* Mini coins */
+        .mini-coin {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #daa520);
+            border-radius: 50%;
+            border: 1px solid #b8860b;
+            opacity: 0;
+            top: -12px; /* start above jar */
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            animation: miniCoinDrop 1.4s ease-in forwards;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .mini-coin::before {
+            content: '$';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #8b6b00;
+            font-weight: 700;
+            font-size: 8px;
+        }
+        @keyframes miniCoinDrop {
+            0% { top: -12px; opacity: 0; transform: translateX(-50%) rotateY(0deg); }
+            15% { opacity: 1; }
+            100% { top: 44px; opacity: 0; transform: translateX(-50%) rotateY(720deg); }
+        }
     </style>
 </head>
 <body data-page="Home">
@@ -1091,7 +1208,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             
             <div class="links-grid">
                 <a href="/tip" class="link-item" title="Tips" style="position: relative;">
-                    <img src="/icon/link-img/tip.png" alt="Tip" class="link-icon" style="width: 56px; height: 46px;">
+                    <div class="mini-jar" aria-hidden="true">
+                        <div class="mini-jar-lid"></div>
+                        <div class="mini-jar-jar">
+                            <div class="mini-jar-fill" id="miniJarFill"></div>
+                            <div class="mini-jar-percentage" id="miniJarValue">0</div>
+                        </div>
+                    </div>
                     <span>Tips</span>
                     <span class="tip-badge" id="tipBadge">
                         <span class="tip-badge-content" id="tipBadgeContent">0</span>
@@ -2124,6 +2247,64 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
         });
 
+        // Mirror badge value into mini jar and animate fill
+        document.addEventListener('DOMContentLoaded', () => {
+            const tipBadgeContent = document.getElementById('tipBadgeContent');
+            const miniJarValue = document.getElementById('miniJarValue');
+            const miniJarFill = document.getElementById('miniJarFill');
+            const miniJar = document.querySelector('.mini-jar-jar');
+
+            function updateMiniJarFromBadge() {
+                if (!tipBadgeContent || !miniJarValue || !miniJarFill) return;
+                const raw = (tipBadgeContent.textContent || '').trim();
+                miniJarValue.textContent = raw || '0';
+                // Derive a simple fill level based on digits length, keeping it subtle
+                const digits = (raw.replace(/\D/g, '') || '').slice(0, 6);
+                const base = 20; // minimum visible fill
+                const level = Math.max(base, Math.min(100, base + digits.length * 12));
+                miniJarFill.style.height = level + '%';
+                // Spawn a coin on value change
+                spawnMiniCoin();
+            }
+
+            function spawnMiniCoin() {
+                if (!miniJar) return;
+                const coin = document.createElement('div');
+                coin.className = 'mini-coin';
+                // slight horizontal jitter
+                const jitter = (Math.random() * 14) - 7; // -7px..7px
+                coin.style.left = `calc(50% + ${jitter}px)`;
+                // randomize duration slightly
+                const duration = 1.2 + Math.random() * 0.6;
+                coin.style.animationDuration = `${duration}s`;
+                // random small delay so multiple coins look natural
+                coin.style.animationDelay = `${Math.random() * 0.2}s`;
+                miniJar.appendChild(coin);
+                // cleanup after animation ends
+                setTimeout(() => coin.remove(), duration * 1000 + 200);
+            }
+
+            // Initial sync
+            updateMiniJarFromBadge();
+
+            // Observe changes to the badge content (existing logic updates it)
+            if (tipBadgeContent) {
+                const observer = new MutationObserver(updateMiniJarFromBadge);
+                observer.observe(tipBadgeContent, { childList: true, characterData: true, subtree: true });
+            }
+
+            // Also resync periodically as a fallback
+            setInterval(updateMiniJarFromBadge, 3000);
+
+            // Periodic coin for liveliness
+            setInterval(() => {
+                // only spawn when element is in DOM
+                if (document.body.contains(miniJar)) {
+                    spawnMiniCoin();
+                }
+            }, 4000);
+        });
+
     </script>
     <script>
         // Generate or retrieve a persistent device ID
@@ -2286,6 +2467,27 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     2025-09-18: v1.7 – Removed underline from header quick link icons
                 - Added CSS to disable text-decoration for anchor-based header buttons
                 - Model: GPT-5
+
+    2025-10-05: v1.9.4 – Embed compact animated Tip Jar icon in Tips link
+              - Added mini jar HTML/CSS and shimmer animation
+              - Mirrored badge digits inside icon and animated fill
+              - Old badge hidden visually but remains for JS compatibility
+              - Model: GPT-5
+
+    2025-10-05: v1.9.5 – Adjust mini Tip Jar positioning in Tips link
+              - Matched previous icon footprint (56x46) and spacing
+              - Fine-tuned lid size/offset and text size for centering
+              - Model: GPT-5
+
+    2025-10-05: v1.9.6 – Add coin-drop animation to mini Tip Jar
+              - Added .mini-coin CSS and keyframes
+              - Spawn coins on value changes and periodically
+              - Model: GPT-5
+
+    2025-10-05: v1.9.7 – Fix mini jar lid centering
+              - Lid spans inner jar width using left/right offsets
+              - Removed translate centering to avoid sub-pixel shift
+              - Model: GPT-5
 
     -->
 </body>
