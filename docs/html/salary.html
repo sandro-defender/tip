@@ -700,6 +700,9 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                  <div style="margin-top:10px;text-align:center;">
                    <span id="shiftSummary">დამატებითი სმენები: 0 | გაცდენები: 0</span>
                 </div>
+                <div style="margin-top:10px;text-align:center;">
+                   <button id="clearAllSelections" style="background:var(--primary);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:none;">🗑️ Clear All</button>
+                </div>
             </div>
 
             <!-- დამატებითი პარამეტრები -->
@@ -848,7 +851,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="unpaid">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">Unpaid</span>
-              <small style="opacity:0.8;">(30/2%, -12h/day)</small>
+              <small style="opacity:0.8;">(tip/30*2, -12h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
@@ -863,7 +866,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="buleteni">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">ბიულეტენი</span>
-              <small style="opacity:0.8;">(30/2%, -0h/day)</small>
+              <small style="opacity:0.8;">(tip/30*2, -0h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="buleteni" data-missed="0">0</button>
@@ -878,7 +881,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="sikoli">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">სიქოლი</span>
-              <small style="opacity:0.8;">(30/2.5%, -18h/day)</small>
+              <small style="opacity:0.8;">(tip/30*2.5, -18h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="sikoli" data-missed="0">0</button>
@@ -893,7 +896,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="nocall">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">NoCall</span>
-              <small style="opacity:0.8;">(30/3%, -24h/day)</small>
+              <small style="opacity:0.8;">(tip/30*3, -24h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="nocall" data-missed="0">0</button>
@@ -908,7 +911,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="suspend">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">Suspend</span>
-              <small style="opacity:0.8;">(30/4%, -36h/day)</small>
+              <small style="opacity:0.8;">(tip/30*4, -36h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="suspend" data-missed="0">0</button>
@@ -1105,11 +1108,11 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
 
         // Absence types configuration
         const ABSENCE_TYPES = [
-          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyPercent: 30/2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
-          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyPercent: 30/2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
-          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyPercent: 30/2.5, salaryHoursDeducted: 18, description: 'Sick (no-doc?)' },
-          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyPercent: 30/3,   salaryHoursDeducted: 24, description: 'No call / no show' },
-          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyPercent: 30/4,   salaryHoursDeducted: 36, description: 'Suspension' },
+          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
+          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
+          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyMultiplier: 2.5, salaryHoursDeducted: 18, description: 'Sick (no-doc?)' },
+          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyMultiplier: 3,   salaryHoursDeducted: 24, description: 'No call / no show' },
+          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyMultiplier: 4,   salaryHoursDeducted: 36, description: 'Suspension' },
         ];
 
         function getAbsenceTypeById(id) {
@@ -1333,10 +1336,10 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 for (const [typeId, days] of this.selectedAbsences) {
                     if (days > 0) {
                         const absenceType = getAbsenceTypeById(typeId);
-                        const penaltyPct = absenceType.tipPenaltyPercent;
-                        const penaltyAmount = grossTips * (penaltyPct / 100) * days;
+                        const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
+                        const penaltyAmount = (grossTips / 30) * penaltyMultiplier * days;
                         totalAbsencePenalty += penaltyAmount;
-                        absenceSummary += `\n  - ${absenceType.label_en}: ${days} days (${penaltyPct}% × ${days} = ${(penaltyPct * days).toFixed(1)}%)`;
+                        absenceSummary += `\n  - ${absenceType.label_en}: ${days} days (tip/30*${penaltyMultiplier} × ${days})`;
                     }
                 }
 
@@ -1379,7 +1382,7 @@ ${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(
 
 🎁 Tips Calculation
 ──────────────────
-ℹ️ Total absence penalty: ${totalAbsencePenalty.toFixed(2)}% of base tips
+ℹ️ Total absence penalty: ${totalAbsencePenalty.toFixed(2)} (calculated as tip/30*multiplier*days)
 💰 Base Tips (with position, after shift bonus, after absence penalty): ${formatMoney(grossTips)}
 ${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
 ${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
@@ -1454,8 +1457,8 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     for (const [typeId, days] of this.selectedAbsences) {
                         if (days > 0) {
                             const absenceType = getAbsenceTypeById(typeId);
-                            const perDayPenaltyPct = absenceType.tipPenaltyPercent / 100; // convert to 0..1
-                            const penaltyForThisType = grossTips * perDayPenaltyPct * days;
+                            const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
+                            const penaltyForThisType = (grossTips / 30) * penaltyMultiplier * days;
                             totalAbsencePenalty += penaltyForThisType;
                         }
                     }
@@ -1645,25 +1648,57 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             calculator.shifts = parseInt(btn.dataset.shifts);
             calculator.calculate();
             updateShiftSummary();
+            updateClearButtonVisibility();
+            updatePopupButtonStates();
           };
         });
 
         // Missed modal logic - updated for multiple selection
         document.getElementById('openMissedModal').onclick = function() {
           document.getElementById('missedModal').style.display = 'flex';
-          // Clear all selections first
-          Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
-          // Then highlight currently selected absences
-          for (const [typeId, days] of calculator.selectedAbsences) {
-            Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
-              if (parseInt(btn.dataset.missed) === days) {
-                btn.classList.add('selected');
-              }
-            });
-          }
+          
+          // Use setTimeout to ensure the modal is fully rendered before updating selections
+          setTimeout(() => {
+            // Clear all selections first
+            Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+            
+            // Then highlight currently selected absences
+            console.log('Restoring selections:', calculator.selectedAbsences);
+            for (const [typeId, days] of calculator.selectedAbsences) {
+              console.log(`Restoring ${typeId}: ${days} days`);
+              Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
+                if (parseInt(btn.dataset.missed) === days) {
+                  btn.classList.add('selected');
+                  console.log(`Selected button for ${typeId}: ${days} days`);
+                }
+              });
+            }
+          }, 10);
         };
         document.getElementById('closeMissedModal').onclick = function() {
           document.getElementById('missedModal').style.display = 'none';
+        };
+        
+        // Clear All button functionality
+        document.getElementById('clearAllSelections').onclick = function() {
+          // Clear all absence data
+          calculator.selectedAbsences.clear();
+          
+          // Clear all shift data
+          calculator.shifts = 0;
+          
+          // Clear all visual selections in missed modal
+          Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          
+          // Clear all visual selections in shift modal
+          Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          
+          console.log('Cleared all selections (shifts and absences)');
+          
+          calculator.calculate();
+          updateShiftSummary();
+          updateClearButtonVisibility();
+          updatePopupButtonStates();
         };
         document.getElementById('missedModal').addEventListener('mousedown', function(e) {
           if (e.target === this) this.style.display = 'none';
@@ -1673,24 +1708,55 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const type = String(btn.dataset.absence);
             const days = parseInt(btn.dataset.missed);
             
-            // Toggle selection: if 0 days, remove from map; otherwise add/update
+            console.log(`Clicked: ${type} - ${days} days`);
+            console.log('Current selections before:', calculator.selectedAbsences);
+            
+            // Update the data first
             if (days === 0) {
               calculator.selectedAbsences.delete(type);
             } else {
               calculator.selectedAbsences.set(type, days);
             }
             
-            // Update visual selection for this row only (don't affect other rows)
-            const row = btn.closest('.absence-row');
-            if (row) {
-              Array.from(row.querySelectorAll('.toggle-btn')).forEach(b => b.classList.remove('selected'));
-              if (days > 0) {
-                btn.classList.add('selected');
+            // Now update ALL visual states based on current data
+            // Use setTimeout to ensure DOM updates are processed
+            setTimeout(() => {
+              // Clear all selections first
+              Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+              
+              console.log('Cleared all selections, now restoring...');
+              console.log('Current data to restore:', calculator.selectedAbsences);
+              
+              // Then restore all selections from the data
+              for (const [typeId, selectedDays] of calculator.selectedAbsences) {
+                if (selectedDays > 0) {
+                  const buttons = document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`);
+                  console.log(`Looking for buttons for ${typeId} with ${selectedDays} days, found ${buttons.length} buttons`);
+                  
+                  Array.from(buttons).forEach(b => {
+                    if (parseInt(b.dataset.missed) === selectedDays) {
+                      b.classList.add('selected');
+                      console.log(`✅ Restored visual selection: ${typeId} - ${selectedDays} days`);
+                    } else {
+                      console.log(`❌ Button ${b.dataset.missed} doesn't match ${selectedDays} for ${typeId}`);
+                    }
+                  });
+                }
               }
-            }
+              
+              // Double-check by logging all selected buttons
+              const selectedButtons = document.querySelectorAll('#missedModal .toggle-btn.selected');
+              console.log(`Total selected buttons after restoration: ${selectedButtons.length}`);
+              selectedButtons.forEach(btn => {
+                console.log(`Selected: ${btn.dataset.absence} - ${btn.dataset.missed} days`);
+              });
+            }, 10);
+            
+            console.log('Current selections after:', calculator.selectedAbsences);
             
             calculator.calculate();
             updateShiftSummary();
+            updatePopupButtonStates();
           };
         });
 
@@ -1707,8 +1773,40 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             summary += ` | გაცდენები: 0`;
           }
           document.getElementById('shiftSummary').textContent = summary;
+          updateClearButtonVisibility();
+        }
+
+        function updateClearButtonVisibility() {
+          const clearButton = document.getElementById('clearAllSelections');
+          const hasShifts = calculator.shifts > 0;
+          const hasAbsences = calculator.selectedAbsences.size > 0;
+          
+          if (hasShifts || hasAbsences) {
+            clearButton.style.display = 'inline-block';
+          } else {
+            clearButton.style.display = 'none';
+          }
+        }
+
+        function updatePopupButtonStates() {
+          // Update shift modal button state
+          const shiftButton = document.getElementById('openShiftModal');
+          if (calculator.shifts > 0) {
+            shiftButton.classList.add('selected');
+          } else {
+            shiftButton.classList.remove('selected');
+          }
+
+          // Update missed modal button state
+          const missedButton = document.getElementById('openMissedModal');
+          if (calculator.selectedAbsences.size > 0) {
+            missedButton.classList.add('selected');
+          } else {
+            missedButton.classList.remove('selected');
+          }
         }
         updateShiftSummary();
+        updatePopupButtonStates();
     </script>
     <!-- 
      changelog:
