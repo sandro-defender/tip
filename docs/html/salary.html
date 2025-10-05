@@ -1232,7 +1232,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
             options: new Set(['pension']),
             exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
             tipExchangeRate: parseFloat(localStorage.getItem('tipExchangeRate')) || (parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE),
-            tipPoints: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0,
+            TipsPerPoint: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('TipsPerPoint')) || 0,
             position: 'i2', // Default position
             insuranceAmount: parseFloat(localStorage.getItem('insuranceAmount')) || CONFIG.INSURANCE_DEFAULT,
             
@@ -1267,7 +1267,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 
                 // Set default values
                 document.getElementById('insuranceAmount').value = this.insuranceAmount;
-                document.getElementById('tipAmount').value = this.tipPoints;
+                document.getElementById('tipAmount').value = this.TipsPerPoint;
                 // ensure inputs reflect persisted tip exchange
                 if (document.getElementById('tipExchangeRate').value === '') {
                     document.getElementById('tipExchangeRate').value = this.tipExchangeRate.toFixed(2);
@@ -1280,12 +1280,12 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                     if (CONFIG.RATES[position]) {
                         this.position = position;
                         this.rate = CONFIG.getRatePerHour(position);
-                        this.tipPoints = parseFloat(params.get('tipAmount')) || 0;
-                        document.getElementById('tipAmount').value = this.tipPoints;
+                        this.TipsPerPoint = parseFloat(params.get('tipAmount')) || 0;
+                        document.getElementById('tipAmount').value = this.TipsPerPoint;
                         
                         // Select position button
                         this.selectPositionButton(position);
-                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.tipPoints}`);
+                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.TipsPerPoint}`);
                     }
                 }
 
@@ -1349,10 +1349,9 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 // Add event listener for tip amount input
                 const tipAmountInput = document.getElementById('tipAmount');
                 tipAmountInput.addEventListener('input', (e) => {
-                    this.tipPoints = parseFloat(e.target.value) || 0;
+                    this.TipsPerPoint = parseFloat(e.target.value) || 0;
                     // Persist under new key; keep legacy for backward compat
-                    localStorage.setItem('TipsPerPoint', this.tipPoints);
-                    localStorage.setItem('tipPoints', this.tipPoints);
+                    localStorage.setItem('TipsPerPoint', this.TipsPerPoint);
                     this.calculate();
                 });
             },
@@ -1471,7 +1470,7 @@ Ti	1050	1029	5.9138
 ➕ Extra Shifts: ${this.shifts}
 ➖ Selected Absences:${absenceSummary || ' None'}
 💱 Exchange Rate: ${this.exchangeRate} GEL
-🎯 Tip Points: ${this.tipPoints}
+🎯 Tip Points: ${this.TipsPerPoint}
 ⚙️ Options: ${Array.from(this.options).join(', ')}
 
 ⏰ Hours Breakdown
@@ -1501,7 +1500,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
 ──────────────────
 - days, shifts, selectedAbsences (Map of typeId -> days)
 - position, rate
-- tipPoints, exchangeRate, options
+- TipsPerPoint, exchangeRate, options
 - baseHours, extraHours, missedHours, hours
 - baseSalary, extraSalary, missedSalary, totalSalary
 - grossTips, tipDiff, tipTax, tipPension, netTips
@@ -1552,7 +1551,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     const totalSalary = baseSalary + extraSalary - totalMissedSalary;
 
                     // Tips calculation
-                    const baseTipAmount = this.tipPoints;
+                    const baseTipAmount = this.TipsPerPoint;
                     const positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
                     let grossTips = baseTipAmount * positionMultiplier;
 
@@ -1838,7 +1837,7 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
         }
         if (openTipImport && tipImportModal && closeTipImport && tipLocalInput && saveTipLocal && importTipLocal) {
           openTipImport.onclick = function() {
-            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('TipsPerPoint')) || 0;
             tipLocalInput.value = saved ? saved.toFixed(1) : '';
             renderTipHistory();
             tipImportModal.style.display = 'flex';
@@ -1854,12 +1853,11 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const val = parseFloat(tipLocalInput.value);
             if (!isNaN(val)) {
               localStorage.setItem('TipsPerPoint', val);
-              localStorage.setItem('tipPoints', val);
               const hist = getSavedTipHistory();
               hist.push(val);
               setSavedTipHistory(hist);
               renderTipHistory();
-              calculator.tipPoints = val;
+              calculator.TipsPerPoint = val;
               document.getElementById('tipAmount').value = val;
               calculator.calculate();
             } else {
@@ -1871,11 +1869,10 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             const val = parseFloat(tipLocalInput.value);
             if (!isNaN(val)) {
               localStorage.setItem('TipsPerPoint', val);
-              localStorage.setItem('tipPoints', val);
               const hist = getSavedTipHistory();
               hist.push(val);
               setSavedTipHistory(hist);
-              calculator.tipPoints = val;
+              calculator.TipsPerPoint = val;
               document.getElementById('tipAmount').value = val;
               calculator.calculate();
               tipImportModal.style.display = 'none';
