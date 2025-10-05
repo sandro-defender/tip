@@ -1106,8 +1106,15 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             left: 0;
             width: 100%;
             height: 0%;
-            background: linear-gradient(to top, #ffd700, #ffed4e);
+            background: linear-gradient(to top, #ffd700, #ffed4e); /* default */
             transition: height 0.4s ease-out;
+        }
+        /* Color the mini jar based on same recency logic as badge */
+        .mini-jar.recent-data .mini-jar-fill {
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+        }
+        .mini-jar.old-data .mini-jar-fill {
+            background: linear-gradient(to top, #ef4444, #f87171);
         }
         .mini-jar-percentage {
             position: absolute;
@@ -2253,15 +2260,27 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             const miniJarValue = document.getElementById('miniJarValue');
             const miniJarFill = document.getElementById('miniJarFill');
             const miniJar = document.querySelector('.mini-jar-jar');
+            const miniJarRoot = document.querySelector('.mini-jar');
+
+            // Month progress calculation (as in original tip icon)
+            function getMonthProgress() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth();
+                const startOfMonth = new Date(year, month, 1);
+                const startOfNextMonth = new Date(year, month + 1, 1);
+                const totalMonthDuration = startOfNextMonth - startOfMonth;
+                const elapsedInMonth = now - startOfMonth;
+                const percent = (elapsedInMonth / totalMonthDuration) * 100;
+                return Math.min(Math.max(Math.floor(percent), 0), 100);
+            }
 
             function updateMiniJarFromBadge() {
                 if (!tipBadgeContent || !miniJarValue || !miniJarFill) return;
                 const raw = (tipBadgeContent.textContent || '').trim();
                 miniJarValue.textContent = raw || '0';
-                // Derive a simple fill level based on digits length, keeping it subtle
-                const digits = (raw.replace(/\D/g, '') || '').slice(0, 6);
-                const base = 20; // minimum visible fill
-                const level = Math.max(base, Math.min(100, base + digits.length * 12));
+                // Fill level based on month progress
+                const level = getMonthProgress();
                 miniJarFill.style.height = level + '%';
                 // Spawn a coin on value change
                 spawnMiniCoin();
@@ -2303,6 +2322,30 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     spawnMiniCoin();
                 }
             }, 4000);
+
+            // Continuous date-based fill updates (once per second)
+            setInterval(() => {
+                if (!miniJarFill) return;
+                const level = getMonthProgress();
+                miniJarFill.style.height = level + '%';
+            }, 1000);
+
+            // Hook into existing badge color logic by mirroring classes
+            // Whenever the badge color classes change, apply the same to the mini jar
+            const tipBadge = document.getElementById('tipBadge');
+            if (tipBadge && miniJarRoot) {
+                const mirrorClasses = () => {
+                    miniJarRoot.classList.remove('recent-data', 'old-data');
+                    if (tipBadge.classList.contains('recent-data')) {
+                        miniJarRoot.classList.add('recent-data');
+                    } else if (tipBadge.classList.contains('old-data')) {
+                        miniJarRoot.classList.add('old-data');
+                    }
+                };
+                mirrorClasses();
+                const classObserver = new MutationObserver(mirrorClasses);
+                classObserver.observe(tipBadge, { attributes: true, attributeFilter: ['class'] });
+            }
         });
 
     </script>
@@ -2487,6 +2530,12 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     2025-10-05: v1.9.7 – Fix mini jar lid centering
               - Lid spans inner jar width using left/right offsets
               - Removed translate centering to avoid sub-pixel shift
+              - Model: GPT-5
+
+    2025-10-05: v1.9.8 – Mini jar fill based on month progress; color mirrors badge
+              - Fill now uses current month progress percent (like original)
+              - Mini jar receives recent/old classes synced with tip badge
+              - Added CSS overrides to color fill blue/red per recency
               - Model: GPT-5
 
     -->
