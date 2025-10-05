@@ -597,8 +597,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         /* Color coding based on data age */
         .tip-badge.recent-data {
-            background: #3b82f6; /* Blue for yesterday */
-            animation: pulseBlue 2s infinite;
+            background: #16a34a; /* Green for yesterday */
+            animation: pulseGreen 2s infinite;
         }
 
         .tip-badge.old-data {
@@ -606,9 +606,9 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             animation: pulseRed 2s infinite;
         }
 
-        @keyframes pulseBlue {
-            0%, 100% { box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6); }
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3); }
+            50% { box-shadow: 0 4px 12px rgba(22, 163, 74, 0.6); }
         }
 
         @keyframes pulseRed {
@@ -1064,7 +1064,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         .mini-jar {
             position: relative;
             width: 56px; /* match previous image width */
-            height: 46px; /* match previous image height */
+            height: 64px; /* taller jar */
             margin-bottom: 8px; /* mimic .link-icon spacing */
         }
         .mini-jar-jar {
@@ -1111,7 +1111,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         }
         /* Color the mini jar based on same recency logic as badge */
         .mini-jar.recent-data .mini-jar-fill {
-            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            background: linear-gradient(to top, #16a34a, #22c55e);
         }
         .mini-jar.old-data .mini-jar-fill {
             background: linear-gradient(to top, #ef4444, #f87171);
@@ -1181,7 +1181,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         @keyframes miniCoinDrop {
             0% { top: -12px; opacity: 0; transform: translateX(-50%) rotateY(0deg); }
             15% { opacity: 1; }
-            100% { top: 44px; opacity: 0; transform: translateX(-50%) rotateY(720deg); }
+            100% { top: calc(100% - 2px); opacity: 0; transform: translateX(-50%) rotateY(720deg); }
         }
     </style>
 </head>
@@ -1222,7 +1222,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                             <div class="mini-jar-percentage" id="miniJarValue">0</div>
                         </div>
                     </div>
-                    <span>Tips</span>
                     <span class="tip-badge" id="tipBadge">
                         <span class="tip-badge-content" id="tipBadgeContent">0</span>
                     </span>
@@ -2536,6 +2535,20 @@ Purpose: Main portal page with device theme detection and automatic theme switch
               - Fill now uses current month progress percent (like original)
               - Mini jar receives recent/old classes synced with tip badge
               - Added CSS overrides to color fill blue/red per recency
+              - Model: GPT-5
+
+    2025-10-05: v1.9.9 – Remove title/label from Tips link
+              - Removed anchor title attribute and visible "Tips" text
+              - Model: GPT-5
+
+    2025-10-05: v1.9.10 – Switch recent-data color from blue to green
+              - Tip badge recent state now green with pulseGreen animation
+              - Mini jar recent state uses green gradient fill
+              - Model: GPT-5
+
+    2025-10-05: v1.9.11 – Make mini jar taller and adapt coin drop
+              - Increased mini jar height to 64px
+              - Coin drop animation now ends relative to jar height
               - Model: GPT-5
 
     -->
