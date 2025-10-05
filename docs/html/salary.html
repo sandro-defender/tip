@@ -969,16 +969,21 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
 
     <!-- Tip Import Modal -->
     <div id="tipImportModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
-      <div class="shift-modal-content" style="max-width: 820px; width: 95vw; height: 85vh; display:flex; flex-direction:column; gap:8px;">
+      <div class="shift-modal-content" style="max-width: 420px; width: 92vw; display:flex; flex-direction:column; gap:10px;">
         <button id="closeTipImport" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
-        <h2 style="margin-bottom:6px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
-        <div style="flex:1; border:1px solid var(--border-color); border-radius:10px; overflow:hidden; background:var(--card-bg);">
-          <iframe id="tipImportFrame" src="/tip" style="width:100%; height:100%; border:0; background:transparent;"></iframe>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:space-between; align-items:center;">
-          <div id="tipImportPreview" style="font-size:0.95rem; opacity:0.9; padding:6px 8px;">აღმოჩენილი ფოინტები: —</div>
-          <div>
-            <button id="fetchTipFromIframe" class="toggle-btn" style="font-size:1rem;">📤 აიღე ფოინტები</button>
+        <h2 style="margin-bottom:2px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span style="font-weight:600;">ფოინტების რაოდენობა (saved):</span>
+            <input type="number" id="tipLocalInput" class="currency-input" step="0.1" min="0" style="width:140px;" placeholder="0.0">
+          </div>
+          <small style="opacity:0.8;">ეს მნიშვნელობა იტვირთება localStorage-დან (TipsPerPoint). საჭიროების შემთხვევაში შეგიძლიათ შეცვალოთ და შეინახოთ.</small>
+          <div id="tipSavedList" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow:auto;border:1px dashed var(--border-color);padding:6px;border-radius:8px;">
+            <!-- rendered saved values -->
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button id="saveTipLocal" class="toggle-btn" style="font-size:0.95rem;">💾 Save</button>
+            <button id="importTipLocal" class="toggle-btn" style="font-size:0.95rem;">📤 Import</button>
           </div>
         </div>
       </div>
@@ -1227,7 +1232,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
             options: new Set(['pension']),
             exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
             tipExchangeRate: parseFloat(localStorage.getItem('tipExchangeRate')) || (parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE),
-            tipPoints: parseFloat(localStorage.getItem('tipPoints')) || 0,
+            tipPoints: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0,
             position: 'i2', // Default position
             insuranceAmount: parseFloat(localStorage.getItem('insuranceAmount')) || CONFIG.INSURANCE_DEFAULT,
             
@@ -1345,6 +1350,8 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
                 const tipAmountInput = document.getElementById('tipAmount');
                 tipAmountInput.addEventListener('input', (e) => {
                     this.tipPoints = parseFloat(e.target.value) || 0;
+                    // Persist under new key; keep legacy for backward compat
+                    localStorage.setItem('TipsPerPoint', this.tipPoints);
                     localStorage.setItem('tipPoints', this.tipPoints);
                     this.calculate();
                 });
@@ -1788,14 +1795,52 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
           };
         });
 
-        // Tip import modal logic
+        // Tip import modal logic (localStorage)
         const openTipImport = document.getElementById('openTipImport');
         const tipImportModal = document.getElementById('tipImportModal');
         const closeTipImport = document.getElementById('closeTipImport');
-        const fetchTipFromIframe = document.getElementById('fetchTipFromIframe');
-        const tipImportFrame = document.getElementById('tipImportFrame');
-        if (openTipImport && tipImportModal && closeTipImport && fetchTipFromIframe && tipImportFrame) {
+        const tipLocalInput = document.getElementById('tipLocalInput');
+        const tipSavedList = document.getElementById('tipSavedList');
+        const saveTipLocal = document.getElementById('saveTipLocal');
+        const importTipLocal = document.getElementById('importTipLocal');
+        function getSavedTipHistory() {
+          try {
+            const raw = localStorage.getItem('tipHistory');
+            const arr = raw ? JSON.parse(raw) : [];
+            return Array.isArray(arr) ? arr : [];
+          } catch { return []; }
+        }
+        function setSavedTipHistory(arr) {
+          localStorage.setItem('tipHistory', JSON.stringify(arr.slice(-50)));
+        }
+        function renderTipHistory() {
+          if (!tipSavedList) return;
+          const items = getSavedTipHistory();
+          tipSavedList.innerHTML = '';
+          if (!items.length) {
+            const empty = document.createElement('div');
+            empty.style.opacity = '0.7';
+            empty.textContent = 'არ არის შენახული მნიშვნელობები';
+            tipSavedList.appendChild(empty);
+            return;
+          }
+          items.slice().reverse().forEach((v) => {
+            const btn = document.createElement('button');
+            btn.className = 'toggle-btn';
+            btn.style.padding = '6px 10px';
+            btn.style.fontSize = '0.9rem';
+            btn.textContent = parseFloat(v).toFixed(1);
+            btn.onclick = () => {
+              tipLocalInput.value = parseFloat(v).toFixed(1);
+            };
+            tipSavedList.appendChild(btn);
+          });
+        }
+        if (openTipImport && tipImportModal && closeTipImport && tipLocalInput && saveTipLocal && importTipLocal) {
           openTipImport.onclick = function() {
+            const saved = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            tipLocalInput.value = saved ? saved.toFixed(1) : '';
+            renderTipHistory();
             tipImportModal.style.display = 'flex';
           };
           closeTipImport.onclick = function() {
@@ -1805,87 +1850,39 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             if (e.target === this) this.style.display = 'none';
           });
 
-          fetchTipFromIframe.onclick = function() {
-            try {
-              const iframeDoc = tipImportFrame.contentDocument || tipImportFrame.contentWindow?.document;
-              if (!iframeDoc) throw new Error('iframe not ready');
-
-              // Preferred: points aggregation UI
-              const pointsInput = iframeDoc.querySelector('#points-input');
-              if (pointsInput && pointsInput.value) {
-                const val = parseFloat(pointsInput.value);
-                if (!isNaN(val)) {
-                  document.getElementById('tipAmount').value = val;
-                  calculator.tipPoints = val;
-                  localStorage.setItem('tipPoints', val);
-                  calculator.calculate();
-                  tipImportModal.style.display = 'none';
-                  return;
-                }
-              }
-
-              // Fallback: try amount input or computed points result
-              const pointsResult = iframeDoc.querySelector('#points-result');
-              const amountInput = iframeDoc.querySelector('#amountInput');
-              if (pointsResult && pointsResult.textContent) {
-                const val = parseFloat(pointsResult.textContent);
-                if (!isNaN(val)) {
-                  document.getElementById('tipAmount').value = val;
-                  calculator.tipPoints = val;
-                  localStorage.setItem('tipPoints', val);
-                  calculator.calculate();
-                  tipImportModal.style.display = 'none';
-                  return;
-                }
-              }
-              if (amountInput && amountInput.value) {
-                const val = parseFloat(amountInput.value);
-                if (!isNaN(val)) {
-                  document.getElementById('tipAmount').value = val;
-                  calculator.tipPoints = val;
-                  localStorage.setItem('tipPoints', val);
-                  calculator.calculate();
-                  tipImportModal.style.display = 'none';
-                  return;
-                }
-              }
-
-              calculator.showError('ვერ ვიპოვე ფოინტების ველი tip.html-ზე');
-            } catch (err) {
-              console.error('Tip import failed:', err);
-              calculator.showError('იმპორტის შეცდომა');
+          saveTipLocal.onclick = function() {
+            const val = parseFloat(tipLocalInput.value);
+            if (!isNaN(val)) {
+              localStorage.setItem('TipsPerPoint', val);
+              localStorage.setItem('tipPoints', val);
+              const hist = getSavedTipHistory();
+              hist.push(val);
+              setSavedTipHistory(hist);
+              renderTipHistory();
+              calculator.tipPoints = val;
+              document.getElementById('tipAmount').value = val;
+              calculator.calculate();
+            } else {
+              calculator.showError('არასწორი მნიშვნელობა');
             }
           };
-          // live preview polling while modal open
-          const updatePreview = () => {
-            try {
-              const iframeDoc = tipImportFrame.contentDocument || tipImportFrame.contentWindow?.document;
-              const preview = document.getElementById('tipImportPreview');
-              if (!iframeDoc || !preview) return;
-              let val = NaN;
-              const pointsInput = iframeDoc.querySelector('#points-input');
-              if (pointsInput && pointsInput.value) val = parseFloat(pointsInput.value);
-              if (isNaN(val)) {
-                const pointsResult = iframeDoc.querySelector('#points-result');
-                if (pointsResult && pointsResult.textContent) val = parseFloat(pointsResult.textContent);
-              }
-              if (isNaN(val)) {
-                const amountInput = iframeDoc.querySelector('#amountInput');
-                if (amountInput && amountInput.value) val = parseFloat(amountInput.value);
-              }
-              preview.textContent = `აღმოჩენილი ფოინტები: ${isNaN(val) ? '—' : val.toFixed(1)}`;
-            } catch {}
+
+          importTipLocal.onclick = function() {
+            const val = parseFloat(tipLocalInput.value);
+            if (!isNaN(val)) {
+              localStorage.setItem('TipsPerPoint', val);
+              localStorage.setItem('tipPoints', val);
+              const hist = getSavedTipHistory();
+              hist.push(val);
+              setSavedTipHistory(hist);
+              calculator.tipPoints = val;
+              document.getElementById('tipAmount').value = val;
+              calculator.calculate();
+              tipImportModal.style.display = 'none';
+            } else {
+              calculator.showError('ჩაი შეიყვანეთ რიცხვით');
+            }
           };
-          let previewTimer;
-          openTipImport.addEventListener('click', () => {
-            previewTimer = setInterval(updatePreview, 600);
-          });
-          closeTipImport.addEventListener('click', () => {
-            if (previewTimer) clearInterval(previewTimer);
-          });
-          tipImportModal.addEventListener('mousedown', function(e) {
-            if (e.target === this && previewTimer) clearInterval(previewTimer);
-          });
         }
 
         // Missed modal logic - updated for multiple selection

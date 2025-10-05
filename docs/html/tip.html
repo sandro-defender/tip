@@ -6337,6 +6337,51 @@
     }
 
     </script>
+    <script>
+    (function() {
+    function getTipsPerPoint() {
+        var input = document.getElementById('points-input');
+        if (input && input.value) {
+        var v = parseFloat(input.value);
+        if (!isNaN(v)) return v;
+        }
+        var result = document.getElementById('points-result');
+        if (result && result.textContent) {
+        var r = parseFloat(result.textContent);
+        if (!isNaN(r)) return r;
+        }
+        return NaN;
+    }
 
+    function saveTipsPerPoint(val) {
+        if (isNaN(val) || val <= 0) return;
+        try {
+        localStorage.setItem('TipsPerPoint', String(val));
+        var key = 'TipsPerPointHistory';
+        var raw = localStorage.getItem(key);
+        var arr = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(arr)) arr = [];
+        var nowIso = new Date().toISOString();
+        var last = arr.length ? arr[arr.length - 1] : null;
+        if (!last || parseFloat(last.v) !== val) {
+            arr.push({ v: val, d: nowIso });
+        } else {
+            // If same as last, update modified date
+            arr[arr.length - 1].d = nowIso;
+        }
+        // Keep only last 10
+        arr = arr.slice(-10);
+        localStorage.setItem(key, JSON.stringify(arr));
+        } catch (e) {
+        // ignore storage errors
+        }
+    }
+
+    window.addEventListener('load', function() {
+        var val = getTipsPerPoint();
+        saveTipsPerPoint(val);
+    });
+    })();
+    </script>
 </body>
 </html>
