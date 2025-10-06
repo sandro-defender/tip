@@ -5065,6 +5065,7 @@
             `<div class="result-card result-summary">
                 <div class="result-header">
                     <div class="result-title">ჯამი</div>
+                    <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
                     <div class="result-meta">
                         <span class="chip accuracy-chip ${forecastAccuracy >= 80 ? 'chip-success' : forecastAccuracy >= 60 ? 'chip-warn' : 'chip-danger'}">სიზუსტე: ${forecastAccuracy.toFixed(1)}%</span>
                         ${appData.currentMonth.length >= 3 ? `<button class="chip chip-action" onclick=\"showForecastDetails()\">📊 დეტალები</button>` : ''}
@@ -5085,14 +5086,12 @@
                             <div class="stat-label">საერთო პროგნოზი</div>
                             <div class="stat-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸</div>
                             <div class="stat-sub">📆 ${daysInMonth} დღე</div>
-                            <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
                         </div>
                         <div class="stat">
                             <div class="stat-label">1 ფოინტი</div>
                             <div class="stat-value">
                                 <div class="stat-sub">${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
                             </div>
-                            <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
                         </div>
                     </div>
                 </div>
