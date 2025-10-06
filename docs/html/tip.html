@@ -3043,20 +3043,6 @@
             padding: 0;
         }
 
-        .result-card-forecast-details-button {
-            margin-top: 10px;
-        }
-
-        .result-card-forecast-details-button button {
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
         /* Error message styling */
         .error-message {
             color: red;
@@ -3231,6 +3217,7 @@
             API_URL: 'https://tips-api.you.ge/api/d1', // 🔗 D1 Worker endpoint — API მისამართი (migrated from /api/db.php)
             API_PASSWORD: 'your_secret_key', // 🔑 API password for POST requests — API პაროლი POST მოთხოვნებისთვის
             TIMEZONE_OFFSET: 4, // 🕒 Offset in hours from UTC — დროის ზონის გამოტანა UTC-დან საათებში
+            DEV_MODE: false, // 🧪 If true, do not call API. Return mock data for offline work
             PASSWORD: '4545', // 🔑 შეცვალეთ პაროლი — მთავარი პაროლი
             PASSWORD2: 'Sandro4545', // 🔑 შეცვალეთ პაროლი — მეორე დონის პაროლი
             FEATURES: {
@@ -3268,6 +3255,79 @@
                 HIDE_TYPES: { success: false, error: false, info: false } // 🙈 დამალვა კონკრეტული ტიპების (true = არ აჩვენოს)
             }
         };
+
+        // 🧪 DEV MODE: Intercept API calls and return mock data to work fully offline
+        (function setupDevModeMock() {
+            if (!CONFIG.DEV_MODE) return;
+            const realFetch = window.fetch.bind(window);
+
+            function makeResponse(bodyObj, init = { status: 200, headers: { 'Content-Type': 'application/json' } }) {
+                const body = typeof bodyObj === 'string' ? bodyObj : JSON.stringify(bodyObj);
+                return new Response(body, init);
+            }
+
+            function mockMonthPayload(year, month) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const days = {};
+                let total = 0;
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const val = (d % 3 === 0) ? 0 : Math.floor(50 + (d * 7) % 250); // deterministic-ish numbers
+                    days[d] = val;
+                    total += val;
+                }
+                return { year, month, total, days };
+            }
+
+            function mockYearPayload(year) {
+                // Provide months that have data (current year: up to current month; past years: 12)
+                const now = new Date();
+                const maxMonth = year === now.getFullYear() ? (now.getMonth() + 1) : 12;
+                const months = [];
+                for (let m = 1; m <= maxMonth; m++) {
+                    const mp = mockMonthPayload(year, m);
+                    months.push({ month: m, total: mp.total });
+                }
+                return { year, months };
+            }
+
+            window.fetch = async function(url, options = {}) {
+                const target = typeof url === 'string' ? url : (url && url.url) || '';
+                try {
+                    // Only intercept API calls to CONFIG.API_URL
+                    if (typeof target === 'string' && target.startsWith(CONFIG.API_URL)) {
+                        const u = new URL(target);
+                        const params = u.searchParams;
+                        const action = params.get('action');
+                        const method = (options && options.method) ? String(options.method).toUpperCase() : 'GET';
+
+                        // GET handlers
+                        if (method === 'GET') {
+                            if (action === 'get_month') {
+                                const year = parseInt(params.get('year') || String(new Date().getFullYear()), 10);
+                                const month = parseInt(params.get('month') || String(new Date().getMonth() + 1), 10);
+                                return makeResponse(mockMonthPayload(year, month));
+                            }
+                            if (action === 'get_year') {
+                                const year = parseInt(params.get('year') || String(new Date().getFullYear()), 10);
+                                return makeResponse(mockYearPayload(year));
+                            }
+                            // Fallback generic payload
+                            return makeResponse({ ok: true, dev: true });
+                        }
+
+                        // POST/PUT/DELETE handlers -> pretend success
+                        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+                            return makeResponse({ success: true, dev: true });
+                        }
+                    }
+                } catch (e) {
+                    // If anything goes wrong in mock, fall back to real fetch to avoid breaking
+                    return realFetch(url, options);
+                }
+                // Non-API calls proceed normally (menu, assets, etc.)
+                return realFetch(url, options);
+            };
+        })();
 
         // Responsive layout: move containers into #tablesGrid on large screens
         (function() {
@@ -4968,15 +5028,18 @@
             `<div class="result-card">
                 <div class="result-card-flex">
                     <div class="result-card-total">
-                        <div class="result-card-total-label">ჯამი</div>
-                        <div class="result-card-total-value">${total.toLocaleString('en-US', { minimumFractionDigits: 1 })} 💸 <span class="result-card-vat-badge">დღგ: -${(total * 0.20).toLocaleString('en-US', { maximumFractionDigits: 1 })}$</span></div>
-                        <div class="result-card-total-details">1 ფოინტი: ${(total / totalPoints).toFixed(2)}$</div>
+                        <div class="result-card-total-label">მიმდინარე</div>
+                        <div class="result-card-total-value">${total.toLocaleString('en-US', { minimumFractionDigits: 1 })} 💸  ${(total / totalPoints).toFixed(2)}$</div>
+                        <!--
+                        <div class="result-card-total-details">დღგ: -${(total * 0.20).toLocaleString('en-US', { maximumFractionDigits: 1 })}$</div>
+                        -->
+                        <span class="result-card-vat-badge">დღგ: -${(total * 0.20).toLocaleString('en-US', { maximumFractionDigits: 1 })}$</span>
                         </div>
                     <div class="result-card-forecast">
                         <div class="result-card-forecast-header">
                             <div>
-                                <div class="result-card-forecast-label">საერთო პროგნოზი</div>
-                                <div class="result-card-forecast-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸</div>
+                                <div class="result-card-forecast-label">პროგნოზი</div>
+                                <div class="result-card-forecast-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸 ${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
                             </div>
                             <div class="result-card-forecast-accuracy">
                                 <div class="result-card-forecast-accuracy-label">სიზუსტე</div>
@@ -4985,10 +5048,9 @@
                         </div>
                         <div class="result-card-forecast-details">
                             <div>📆 ${daysInMonth} დღე</div>
-                            <div>👨‍👩‍👧‍👦 <button onclick="editTotalPoints()" class="result-card-forecast-button">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button></div>
-                            <div>1 ფოინტი (პროგნოზი): ${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
+							<div>👨‍👩‍👧‍👦 <button onclick="editTotalPoints()" class="result-card-forecast-button">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>${appData.currentMonth.length >= 3 ? `<span onclick="showForecastDetails()" style="margin-left:8px; cursor:pointer;">📊 დეტალები</span>` : ''}</div>
                         </div>
-                        ${appData.currentMonth.length >= 3 ? `<div class="result-card-forecast-details-button"><button onclick="showForecastDetails()">📊 დეტალები</button></div>` : ''}
+						${''}
                     </div>
                 </div>
             </div>` :
