@@ -2,10 +2,10 @@
 <!--
 Project: staff.you.ge (Statistics)
 File: html/statistics.html
-Version: 1.1
+Version: 1.2
 Author: Cursor AI
 Model: GPT-5
-Last Modified: 2025-10-01
+Last Modified: 2025-10-06
 Purpose: Interactive statistics dashboard pulling monthly data from D1 API
 -->
 <html lang="ka">
@@ -549,7 +549,7 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
             <!-- Page Header -->
             <div class="fade-in">
                 <h1 class="page-title">სტატისტიკა</h1>
-                <p class="page-subtitle">შემოსავლების ანალიზი და ტრენდები</p>
+                <p class="page-subtitle">ბოლო 2 წლის მონაცემების შემოსავლების ანალიზი </p>
             </div>
 
             <!-- Stats Grid -->
@@ -903,8 +903,8 @@ Purpose: Interactive statistics dashboard pulling monthly data from D1 API
                             <span class="material-icons">account_balance_wallet</span>
                         </div>
                     </div>
-                    <div class="stat-value">$${formatNumber(totalAmount)}</div>
-                    <div class="stat-description">${allData.length} თვის მონაცემები</div>
+                    <div class="stat-value">$${formatNumber(thisYearTotal)}</div>
+                    <div class="stat-description">${thisYearData.length} თვე ${currentYear} წელს</div>
                 </div>
 
                 <div class="stat-card">
