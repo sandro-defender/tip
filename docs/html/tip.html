@@ -5065,7 +5065,9 @@
             `<div class="result-card result-summary">
                 <div class="result-header">
                     <div class="result-title">ჯამი</div>
-                    <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
+                        <div class="result-meta">
+                            <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
+                        </div>
                     <div class="result-meta">
                         <span class="chip accuracy-chip ${forecastAccuracy >= 80 ? 'chip-success' : forecastAccuracy >= 60 ? 'chip-warn' : 'chip-danger'}">სიზუსტე: ${forecastAccuracy.toFixed(1)}%</span>
                         ${appData.currentMonth.length >= 3 ? `<button class="chip chip-action" onclick=\"showForecastDetails()\">📊 დეტალები</button>` : ''}
@@ -5089,9 +5091,7 @@
                         </div>
                         <div class="stat">
                             <div class="stat-label">1 ფოინტი</div>
-                            <div class="stat-value">
-                                <div class="stat-sub">${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
-                            </div>
+                            <div class="stat-value">${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
                         </div>
                     </div>
                 </div>
