@@ -77,28 +77,85 @@
         .result-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 24px;
             margin: 20px 0;
+            align-items: stretch;
         }
 
         .result-card {
+            position: relative;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
                 var(--card-bg);
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 14px;
             box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-            transition: var(--transition);
             border: 1px solid rgba(255,255,255,0.08);
             font-size: 1em;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            will-change: transform, box-shadow, border-color;
+            transition:
+                transform 300ms cubic-bezier(.2,.8,.2,1),
+                box-shadow 300ms cubic-bezier(.2,.8,.2,1),
+                border-color 300ms ease;
         }
 
         .result-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.28);
             border-color: rgba(255,255,255,0.16);
+        }
+
+        /* Subtle animated gradient sheen on hover */
+        .result-card::after {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            pointer-events: none;
+            background: radial-gradient(1200px 1200px at var(--mx, 0%) var(--my, 0%), rgba(255,255,255,0.08), transparent 40%),
+                        linear-gradient(180deg, transparent, rgba(255,255,255,0.04) 50%, transparent);
+            opacity: 0;
+            transition: opacity 300ms ease;
+        }
+        .result-card:hover::after { opacity: 1; }
+
+        /* Focus state for accessibility */
+        .result-card:focus-within {
+            outline: 2px solid color-mix(in oklab, var(--primary) 70%, white 30%);
+            outline-offset: 2px;
+        }
+
+        /* Entrance animation with gentle stagger */
+        @keyframes cardFadeUp {
+            from { opacity: 0; transform: translateY(12px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .result-grid > .result-card {
+            animation: cardFadeUp .6s cubic-bezier(.2,.8,.2,1) both;
+        }
+        .result-grid > .result-card:nth-child(1) { animation-delay: .02s; }
+        .result-grid > .result-card:nth-child(2) { animation-delay: .06s; }
+        .result-grid > .result-card:nth-child(3) { animation-delay: .10s; }
+        .result-grid > .result-card:nth-child(4) { animation-delay: .14s; }
+        .result-grid > .result-card:nth-child(5) { animation-delay: .18s; }
+        .result-grid > .result-card:nth-child(6) { animation-delay: .22s; }
+
+        /* Interactive line hover inside cards */
+        .result-card-line:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        /* Reduced-motion friendly fallbacks */
+        @media (prefers-reduced-motion: reduce) {
+            .result-card, .result-grid > .result-card {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+            }
         }
 
         .result-card h3, .result-card h4 {
@@ -3134,6 +3191,22 @@
           <div class="result-grid" id="results"></div>
           <!-- აქ გამოჩნდება არჩეული ბარათი -->
 
+        <script>
+        // Interactive sheen position for result-card hover
+        (function() {
+            function updateSheenPosition(event) {
+                var card = event.target.closest && event.target.closest('.result-card');
+                if (!card) return;
+                var rect = card.getBoundingClientRect();
+                var x = ((event.clientX - rect.left) / rect.width) * 100;
+                var y = ((event.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mx', x + '%');
+                card.style.setProperty('--my', y + '%');
+            }
+            document.addEventListener('pointermove', updateSheenPosition, { passive: true });
+        })();
+        </script>
+
         <!-- Notification container -->
         <div id="notificationContainer" class="notification-container"></div>
 
@@ -5798,7 +5871,7 @@
         const total = appData.currentMonth.reduce((sum, e) => sum + e.amount, 0);
 
         const messageText = 
-            `🎯 Tip Update:\n📅 Date: ${lastEntry.date}\n💰 Amount: $${lastEntry.amount.toLocaleString('en-US', { minimumFractionDigits: 1 })}\n📊 Total: $${total.toLocaleString('en-US', { minimumFractionDigits: 1 })}\n👤☞  ${(total / totalPoints).toFixed(2)}\n━━━━━━━━━━━━\nhttps://staff.you.ge\n`;
+            `🎯 Tip Update:\n📅 Date: ${lastEntry.date}\n💰 Amount: $${lastEntry.amount.toLocaleString('en-US', { minimumFractionDigits: 1 })}\n📊 Total: $${total.toLocaleString('en-US', { minimumFractionDigits: 1 })}\n👤☞  ${(total / totalPoints).toFixed(2)}\n━━━━━━━━━━━━\nhttps://tips.you.ge\n`;
 
         if (navigator.share) {
             navigator.share({
