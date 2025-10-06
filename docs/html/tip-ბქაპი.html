@@ -3066,103 +3066,6 @@
         .points-input-group-hidden {
             display: none;
         }
-
-        /* Results redesigned layout */
-        .result-card {
-        background: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .result-card.result-summary { margin-top: 12px; }
-        .result-card.result-section { margin-top: 12px; }
-
-        .result-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-        }
-
-        .result-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        }
-
-        .result-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-        .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        border: 1px solid rgba(255,255,255,0.14);
-        background: rgba(255,255,255,0.08);
-        }
-
-        .chip-success { color: #17c964; border-color: rgba(23,201,100,0.35); background: rgba(23,201,100,0.08); }
-        .chip-warn { color: #f5a524; border-color: rgba(245,165,36,0.35); background: rgba(245,165,36,0.08); }
-        .chip-danger { color: #f31260; border-color: rgba(243,18,96,0.35); background: rgba(243,18,96,0.08); }
-        .chip-action { cursor: pointer; }
-
-        .grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        }
-
-        @media (min-width: 720px) {
-        .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        }
-
-        .stat {
-        border: 1px dashed rgba(255,255,255,0.14);
-        border-radius: 12px;
-        padding: 12px;
-        }
-
-        .stat-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 6px; }
-        .stat-value { font-size: 1.15rem; font-weight: 700; }
-        .stat-sub { font-size: 0.8rem; opacity: 0.8; margin-top: 6px; }
-
-        .badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        }
-
-        .badge-outline { border: 1px solid rgba(255,255,255,0.18); }
-
-        .btn-link {
-        background: transparent;
-        color: inherit;
-        border: none;
-        text-decoration: underline;
-        cursor: pointer;
-        font: inherit;
-        }
-
-        .list { display: flex; flex-direction: column; gap: 10px; }
-        .list-row {
-        display: grid;
-        grid-template-columns: 120px 1fr auto;
-        align-items: center;
-        gap: 10px;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        padding: 10px 12px;
-        }
-        .list-label { opacity: 0.85; }
-        .list-value { font-weight: 700; }
-
-                
     </style>
     <!-- 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -5062,57 +4965,48 @@
             } catch (_) {}
 
             document.getElementById('results').innerHTML = (currentCard === 'total') ?
-            `<div class="result-card result-summary">
-                <div class="result-header">
-                    <div class="result-title">ჯამი</div>
-                    <div class="result-meta">
-                        <span class="chip accuracy-chip ${forecastAccuracy >= 80 ? 'chip-success' : forecastAccuracy >= 60 ? 'chip-warn' : 'chip-danger'}">სიზუსტე: ${forecastAccuracy.toFixed(1)}%</span>
-                        ${appData.currentMonth.length >= 3 ? `<button class="chip chip-action" onclick=\"showForecastDetails()\">📊 დეტალები</button>` : ''}
-                    </div>
-                </div>
-                <div class="result-body">
-                    <div class="grid">
-                        <div class="stat">
-                            <div class="stat-label">მთლიანი თანხა</div>
-                            <div class="stat-value">${total.toLocaleString('en-US', { minimumFractionDigits: 1 })} 💸</div>
-                            <div class="stat-sub"><span class="badge badge-outline">დღგ: -${(total * 0.20).toLocaleString('en-US', { maximumFractionDigits: 1 })}$</span></div>
+            `<div class="result-card">
+                <div class="result-card-flex">
+                    <div class="result-card-total">
+                        <div class="result-card-total-label">ჯამი</div>
+                        <div class="result-card-total-value">${total.toLocaleString('en-US', { minimumFractionDigits: 1 })} 💸 <span class="result-card-vat-badge">დღგ: -${(total * 0.20).toLocaleString('en-US', { maximumFractionDigits: 1 })}$</span></div>
+                        <div class="result-card-total-details">1 ფოინტი: ${(total / totalPoints).toFixed(2)}$</div>
                         </div>
-                        <div class="stat">
-                            <div class="stat-label">1 ფოინტი</div>
-                            <div class="stat-value">${(total / totalPoints).toFixed(2)}$</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">საერთო პროგნოზი</div>
-                            <div class="stat-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸</div>
-                            <div class="stat-sub">📆 ${daysInMonth} დღე</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">ფოინტები</div>
-                            <div class="stat-value">
-                                <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
+                    <div class="result-card-forecast">
+                        <div class="result-card-forecast-header">
+                            <div>
+                                <div class="result-card-forecast-label">საერთო პროგნოზი</div>
+                                <div class="result-card-forecast-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸</div>
                             </div>
-                            <div class="stat-sub">1 ფოინტი (პროგნოზი): ${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
+                            <div class="result-card-forecast-accuracy">
+                                <div class="result-card-forecast-accuracy-label">სიზუსტე</div>
+                                <div class="result-card-forecast-accuracy-value">${forecastAccuracy.toFixed(1)}% ${forecastAccuracy >= 80 ? '🟢' : forecastAccuracy >= 60 ? '🟡' : '🔴'}</div>
+                            </div>
                         </div>
+                        <div class="result-card-forecast-details">
+                            <div>📆 ${daysInMonth} დღე</div>
+                            <div>👨‍👩‍👧‍👦 <button onclick="editTotalPoints()" class="result-card-forecast-button">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button></div>
+                            <div>1 ფოინტი (პროგნოზი): ${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
+                        </div>
+                        ${appData.currentMonth.length >= 3 ? `<div class="result-card-forecast-details-button"><button onclick="showForecastDetails()">📊 დეტალები</button></div>` : ''}
                     </div>
                 </div>
             </div>` :
             (currentCard in POINTS ?
-            `<div class="result-card result-section">
-                <div class="result-header">
-                    <div class="result-title">${POINT_LABELS[currentCard]}</div>
+            `<div class="result-card">
+                <div class="result-card-section-header">
+                    <div class="result-card-section-title">${POINT_LABELS[currentCard]}</div>
                 </div>
-                <div class="result-body">
-                    <div class="list">
-                        <div class="list-row">
-                            <div class="list-label">მიმდინარე</div>
-                            <div class="list-value">${((total / totalPoints) * POINTS[currentCard]).toFixed(2)} 💸</div>
-                            <button onclick="calculateSalary('${(total / totalPoints).toFixed(2)}', '${currentCard}')" class="calculate-salary-btn">კალკულატორი</button>
-                        </div>
-                        <div class="list-row">
-                            <div class="list-label">პროგნოზი</div>
-                            <div class="list-value">${((total / totalPoints) * POINTS[currentCard] * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)} 💸</div>
-                            <button onclick="calculateSalary('${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}', '${currentCard}')" class="calculate-salary-btn">კალკულატორი</button>
-                        </div>
+                <div class="result-card-lines">
+                    <div class="result-card-line">
+                        <div class="result-card-line-left">მიმდინარე</div>
+                        <div class="result-card-line-value">${((total / totalPoints) * POINTS[currentCard]).toFixed(2)} 💸</div>
+                        <button onclick="calculateSalary('${(total / totalPoints).toFixed(2)}', '${currentCard}')" class="calculate-salary-btn">კალკულატორი</button>
+                    </div>
+                    <div class="result-card-line">
+                        <div class="result-card-line-left">პროგნოზი</div>
+                        <div class="result-card-line-value">${((total / totalPoints) * POINTS[currentCard] * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)} 💸</div>
+                        <button onclick="calculateSalary('${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}', '${currentCard}')" class="calculate-salary-btn">კალკულატორი</button>
                     </div>
                 </div>
              </div>` :
