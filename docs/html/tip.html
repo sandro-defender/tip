@@ -5085,13 +5085,14 @@
                             <div class="stat-label">საერთო პროგნოზი</div>
                             <div class="stat-value">${(CONFIG.FORECAST_FACTOR).toLocaleString('en-US', { maximumFractionDigits: 0 })} 💸</div>
                             <div class="stat-sub">📆 ${daysInMonth} დღე</div>
+                            <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
                         </div>
                         <div class="stat">
-                            <div class="stat-label">ფოინტები</div>
+                            <div class="stat-label">1 ფოინტი</div>
                             <div class="stat-value">
-                                <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
+                                <div class="stat-sub">${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
                             </div>
-                            <div class="stat-sub">1 ფოინტი (პროგნოზი): ${((total / totalPoints) * (CONFIG.FORECAST_FACTOR / total)).toFixed(2)}$</div>
+                            <button onclick="editTotalPoints()" class="btn-link">${totalPoints.toLocaleString('en-US', { maximumFractionDigits: 0 })}</button>
                         </div>
                     </div>
                 </div>
