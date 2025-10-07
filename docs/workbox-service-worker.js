@@ -54,55 +54,6 @@
    }
  }
  
-// Optional: focus app when notification is clicked
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    (async () => {
-      const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-      const url = '/';
-      for (const client of allClients) {
-        if ('focus' in client) {
-          client.focus();
-          return;
-        }
-      }
-      if (clients.openWindow) {
-        await clients.openWindow(url);
-      }
-    })()
-  );
-});
-
-// Handle Web Push notifications (if using Push API)
-self.addEventListener('push', event => {
-  try {
-    let messageText = '';
-    if (event.data) {
-      const rawText = event.data.text();
-      try {
-        const data = JSON.parse(rawText);
-        messageText = typeof data.message === 'string' && data.message.trim() ? data.message : rawText;
-      } catch (_) {
-        messageText = rawText;
-      }
-    }
-
-    const showPromise = self.registration.showNotification('From Tips', {
-      body: messageText || 'No message',
-      icon: '/apple-touch-icon.png',
-      badge: '/apple-touch-icon.png',
-      tag: 'tips-msg',
-      renotify: true
-    });
-
-    event.waitUntil(showPromise);
-  } catch (e) {
-    // swallow errors to avoid failing the event
-    // console.error('Push parse error', e);
-  }
-});
-
  // ფაილების სია წინასწარი კეშირებისთვის
  const filesToPrecache = [
    { url: '/manifest.json', revision: VERSION },
