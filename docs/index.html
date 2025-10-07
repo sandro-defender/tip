@@ -10,324 +10,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 <!DOCTYPE html>
 <html lang="ka">
 <head>
-    <script>window.VAPID_PUBLIC_KEY='BKMEDAsOqPEIfmh5m3K9vfVKIghwcDC9CuD9sE7e2_c3nPG_dXyLNy0GyG8BvtIGqwdex-oUMmsASBmlB56wv5M';</script>
-    <script>
-        // Component and JavaScript Loading Check
-        (function() {
-            // Detect Messenger browser
-            function isMessengerBrowser() {
-                const ua = navigator.userAgent || navigator.vendor || window.opera;
-                return /FBAN|FBAV/i.test(ua);
-            }
-
-            const requiredComponents = [
-                { id: 'particles-js', type: 'id' },
-                { selector: '.welcome-page', type: 'class' },
-                { id: 'statusBar', type: 'id' },
-                { id: 'themeToggle', type: 'id' },
-                { id: 'particlesToggle', type: 'id' },
-                { id: 'infoButton', type: 'id' },
-                { id: 'links', type: 'id' },
-                { id: 'info', type: 'id' }
-            ];
-
-            const requiredScripts = [
-                'particles.min.js',
-                'install-helper.js',
-                'version.js'
-            ];
-
-            // Only require service worker if NOT in Messenger browser
-            const requiredServices = isMessengerBrowser() ? {} : {
-                'workbox-service-worker.js': async () => {
-                    if (!('serviceWorker' in navigator)) return false;
-                    try {
-                        const registration = await navigator.serviceWorker.getRegistration();
-                        return !!registration;
-                    } catch (e) {
-                        return false;
-                    }
-                }
-            };
-
-            const requiredFunctions = [
-                'applyParticlesConfig',
-                'getDeviceId',
-                'detectDevice',
-                'isAppInstalled',
-                'isPWA'
-            ];
-
-            const maxLoadTime = 10000; // 10 seconds
-            const startTime = Date.now();
-            let loadCheckInterval;
-            let functionCheckAttempts = 0;
-            const maxFunctionCheckAttempts = 20; // 10 seconds total (20 * 500ms)
-
-            async function checkScripts() {
-                const missingScripts = requiredScripts.filter(script => {
-                    const scripts = document.getElementsByTagName('script');
-                    return !Array.from(scripts).some(s => s.src.includes(script));
-                });
-
-                // Проверяем сервисы
-                for (const [service, checkFn] of Object.entries(requiredServices)) {
-                    const isAvailable = await checkFn();
-                    if (!isAvailable) {
-                        missingScripts.push(service);
-                    }
-                }
-
-                return missingScripts;
-            }
-
-            function checkFunctions() {
-                const missingFunctions = requiredFunctions.filter(func => typeof window[func] !== 'function');
-                
-                // Если функции все еще отсутствуют, но мы не превысили максимальное количество попыток
-                if (missingFunctions.length > 0 && functionCheckAttempts < maxFunctionCheckAttempts) {
-                    functionCheckAttempts++;
-                    return []; // Возвращаем пустой массив, чтобы дать функциям время на загрузку
-                }
-                
-                return missingFunctions;
-            }
-
-            async function checkComponents() {
-                const missingComponents = requiredComponents.filter(component => {
-                    if (component.type === 'id') {
-                        return !document.getElementById(component.id);
-                    } else if (component.type === 'class') {
-                        return !document.querySelector(component.selector);
-                    }
-                    return true;
-                }).map(component => component.type === 'id' ? component.id : component.selector);
-
-                const missingScripts = await checkScripts();
-                const missingFunctions = checkFunctions();
-                
-                const allMissing = {
-                    components: missingComponents,
-                    scripts: missingScripts,
-                    functions: missingFunctions
-                };
-
-                const hasMissing = Object.values(allMissing).some(arr => arr.length > 0);
-                
-                if (hasMissing) {
-                    console.warn('Missing elements:', allMissing);
-                    
-                    // Если прошло больше максимального времени загрузки
-                    if (Date.now() - startTime > maxLoadTime) {
-                        console.error('Elements failed to load within time limit');
-                        clearInterval(loadCheckInterval);
-                        
-                        // Показываем сообщение пользователю
-                        const message = document.createElement('div');
-                        message.style.cssText = `
-                            position: fixed;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            background: rgba(0, 0, 0, 0.9);
-                            color: white;
-                            padding: 20px;
-                            border-radius: 10px;
-                            z-index: 9999;
-                            text-align: center;
-                            font-family: system-ui, -apple-system, sans-serif;
-                            max-width: 80%;
-                            max-height: 80vh;
-                            overflow-y: auto;
-                        `;
-
-                        let errorDetails = '';
-                        if (missingComponents.length) {
-                            errorDetails += `<p>Отсутствующие компоненты: ${missingComponents.join(', ')}</p>`;
-                        }
-                        if (missingScripts.length) {
-                            errorDetails += `<p>Отсутствующие скрипты и сервисы: ${missingScripts.join(', ')}</p>`;
-                        }
-                        if (missingFunctions.length) {
-                            errorDetails += `<p>Отсутствующие функции: ${missingFunctions.join(', ')}</p>`;
-                        }
-
-                        message.innerHTML = `
-                            <h3 style="margin: 0 0 10px 0;">Ошибка загрузки</h3>
-                            <p style="margin: 0 0 15px 0;">Некоторые элементы не загрузились</p>
-                            <div style="margin: 0 0 15px 0; text-align: left; font-size: 0.9em;">
-                                ${errorDetails}
-                            </div>
-                            <div style="margin: 0 0 15px 0; color: #6366f1; font-weight: bold;">
-                                Автоматическая перезагрузка через <span id="countdown">5</span> секунд
-                            </div>
-                            <button onclick="window.location.reload(true)" 
-                                    style="background: #6366f1; color: white; border: none; 
-                                           padding: 8px 16px; border-radius: 5px; cursor: pointer;">
-                                Перезагрузить сейчас
-                            </button>
-                        `;
-                        document.body.appendChild(message);
-
-                        // Добавляем таймер обратного отсчета
-                        let timeLeft = 5;
-                        const countdownElement = document.getElementById('countdown');
-                        const countdownInterval = setInterval(() => {
-                            timeLeft--;
-                            countdownElement.textContent = timeLeft;
-                            
-                            if (timeLeft <= 0) {
-                                clearInterval(countdownInterval);
-                                window.location.reload(true);
-                            }
-                        }, 1000);
-                    }
-                } else {
-                    console.log('All elements loaded successfully');
-                    clearInterval(loadCheckInterval);
-                }
-            }
-
-            // Проверяем каждые 500мс
-            loadCheckInterval = setInterval(() => {
-                checkComponents().catch(console.error);
-            }, 500);
-
-            // Также проверяем при полной загрузке страницы
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    checkComponents().catch(console.error);
-                }, 1000); // Даем дополнительную секунду после load
-            });
-
-            // Проверяем загрузку внешних скриптов
-            window.addEventListener('error', function(e) {
-                if (e.target.tagName === 'SCRIPT') {
-                    console.error('Script loading error:', e.target.src);
-                    checkComponents().catch(console.error);
-                }
-            }, true);
-        })();
-
-        // Early Service Worker Registration and Version Check
-        if ('serviceWorker' in navigator) {
-            // Проверяем версию приложения
-            async function checkAppVersion() {
-                try {
-                    // Create a script element to load the version.js file
-                    const script = document.createElement('script');
-                    script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
-                    
-                    // Create a promise that resolves when the script loads
-                    const scriptLoadPromise = new Promise((resolve, reject) => {
-                        script.onload = resolve;
-                        script.onerror = reject;
-                    });
-                    
-                    // Add the script to the document
-                    document.head.appendChild(script);
-                    
-                    // Wait for the script to load
-                    await scriptLoadPromise;
-                    
-                    // Now we can access the version from the global variable
-                    const currentVersion = window.APP_VERSION["main-version"];
-                    const storedVersion = localStorage.getItem('app-version');
-                    
-                    // If version changed or this is first installation
-                    if (storedVersion !== currentVersion) {
-                        // Update version in localStorage
-                        localStorage.setItem('app-version', currentVersion);
-                        
-                        // If this is not the first installation, show notification
-                        if (storedVersion) {
-                            if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                                // Clear cache and reload page
-                                if ('caches' in window) {
-                                    const cacheNames = await caches.keys();
-                                    await Promise.all(
-                                        cacheNames.map(name => caches.delete(name))
-                                    );
-                                }
-                                window.location.reload(true);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking version:', error);
-                    // Add delay before retry
-                    setTimeout(checkAppVersion, 5000);
-                }
-            }
-
-            window.addEventListener('load', function() {
-                // Проверяем версию при загрузке
-                checkAppVersion();
-                
-                // Регистрируем Service Worker
-                navigator.serviceWorker.register('/workbox-service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                        
-                        // Проверяем обновления Service Worker
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // Показываем уведомление об обновлении
-                                    if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
-                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                        window.location.reload();
-                                    }
-                                }
-                            });
-                        });
-
-                        // Обработка версии Service Worker
-                        if (navigator.serviceWorker.controller) {
-                            navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
-                        } else {
-                            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                                navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                        document.getElementById('sw-version').textContent = 'Failed';
-                        document.getElementById('sw-version').classList.remove('loading');
-                    });
-
-                // Обработка сообщений от Service Worker
-                navigator.serviceWorker.addEventListener('message', event => {
-                    if (event.data && event.data.version) {
-                        document.getElementById('sw-version').textContent = event.data.version;
-                        document.getElementById('sw-version').classList.remove('loading');
-                    }
-                });
-            });
-
-            // Периодическая проверка версии (каждый час)
-            setInterval(checkAppVersion, 3600000);
-        } else {
-            document.getElementById('sw-version').textContent = 'Unsupported';
-            document.getElementById('sw-version').classList.remove('loading');
-        }
-    </script>
-    <script>
-        fetch("/includes/head.html")
-            .then(response => response.text())
-            .then(data => document.head.innerHTML += data)
-            .catch(error => console.error("Ошибка загрузки head:", error));
-    </script>
-    <title>Staff Portal</title>
-    <link rel="manifest" href="/manifest.json">
- 
-    <!-- Version Information -->
-    <script src="/version.js"></script>
-
-    <!-- Add Particles.js Library -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         /* CSS Variables for Theming */
         :root {
@@ -1332,6 +1014,325 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             100% { top: calc(100% - 2px); opacity: 0; transform: translateX(-50%) rotateY(720deg); }
         }
     </style>
+    <script>window.VAPID_PUBLIC_KEY='BKMEDAsOqPEIfmh5m3K9vfVKIghwcDC9CuD9sE7e2_c3nPG_dXyLNy0GyG8BvtIGqwdex-oUMmsASBmlB56wv5M';</script>
+    <script>
+        // Component and JavaScript Loading Check
+        (function() {
+            // Detect Messenger browser
+            function isMessengerBrowser() {
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                return /FBAN|FBAV/i.test(ua);
+            }
+
+            const requiredComponents = [
+                { id: 'particles-js', type: 'id' },
+                { selector: '.welcome-page', type: 'class' },
+                { id: 'statusBar', type: 'id' },
+                { id: 'themeToggle', type: 'id' },
+                { id: 'particlesToggle', type: 'id' },
+                { id: 'infoButton', type: 'id' },
+                { id: 'links', type: 'id' },
+                { id: 'info', type: 'id' }
+            ];
+
+            const requiredScripts = [
+                'particles.min.js',
+                'install-helper.js',
+                'version.js'
+            ];
+
+            // Only require service worker if NOT in Messenger browser
+            const requiredServices = isMessengerBrowser() ? {} : {
+                'workbox-service-worker.js': async () => {
+                    if (!('serviceWorker' in navigator)) return false;
+                    try {
+                        const registration = await navigator.serviceWorker.getRegistration();
+                        return !!registration;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            };
+
+            const requiredFunctions = [
+                'applyParticlesConfig',
+                'getDeviceId',
+                'detectDevice',
+                'isAppInstalled',
+                'isPWA'
+            ];
+
+            const maxLoadTime = 10000; // 10 seconds
+            const startTime = Date.now();
+            let loadCheckInterval;
+            let functionCheckAttempts = 0;
+            const maxFunctionCheckAttempts = 20; // 10 seconds total (20 * 500ms)
+
+            async function checkScripts() {
+                const missingScripts = requiredScripts.filter(script => {
+                    const scripts = document.getElementsByTagName('script');
+                    return !Array.from(scripts).some(s => s.src.includes(script));
+                });
+
+                // Проверяем сервисы
+                for (const [service, checkFn] of Object.entries(requiredServices)) {
+                    const isAvailable = await checkFn();
+                    if (!isAvailable) {
+                        missingScripts.push(service);
+                    }
+                }
+
+                return missingScripts;
+            }
+
+            function checkFunctions() {
+                const missingFunctions = requiredFunctions.filter(func => typeof window[func] !== 'function');
+                
+                // Если функции все еще отсутствуют, но мы не превысили максимальное количество попыток
+                if (missingFunctions.length > 0 && functionCheckAttempts < maxFunctionCheckAttempts) {
+                    functionCheckAttempts++;
+                    return []; // Возвращаем пустой массив, чтобы дать функциям время на загрузку
+                }
+                
+                return missingFunctions;
+            }
+
+            async function checkComponents() {
+                const missingComponents = requiredComponents.filter(component => {
+                    if (component.type === 'id') {
+                        return !document.getElementById(component.id);
+                    } else if (component.type === 'class') {
+                        return !document.querySelector(component.selector);
+                    }
+                    return true;
+                }).map(component => component.type === 'id' ? component.id : component.selector);
+
+                const missingScripts = await checkScripts();
+                const missingFunctions = checkFunctions();
+                
+                const allMissing = {
+                    components: missingComponents,
+                    scripts: missingScripts,
+                    functions: missingFunctions
+                };
+
+                const hasMissing = Object.values(allMissing).some(arr => arr.length > 0);
+                
+                if (hasMissing) {
+                    console.warn('Missing elements:', allMissing);
+                    
+                    // Если прошло больше максимального времени загрузки
+                    if (Date.now() - startTime > maxLoadTime) {
+                        console.error('Elements failed to load within time limit');
+                        clearInterval(loadCheckInterval);
+                        
+                        // Показываем сообщение пользователю
+                        const message = document.createElement('div');
+                        message.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: rgba(0, 0, 0, 0.9);
+                            color: white;
+                            padding: 20px;
+                            border-radius: 10px;
+                            z-index: 9999;
+                            text-align: center;
+                            font-family: system-ui, -apple-system, sans-serif;
+                            max-width: 80%;
+                            max-height: 80vh;
+                            overflow-y: auto;
+                        `;
+
+                        let errorDetails = '';
+                        if (missingComponents.length) {
+                            errorDetails += `<p>Отсутствующие компоненты: ${missingComponents.join(', ')}</p>`;
+                        }
+                        if (missingScripts.length) {
+                            errorDetails += `<p>Отсутствующие скрипты и сервисы: ${missingScripts.join(', ')}</p>`;
+                        }
+                        if (missingFunctions.length) {
+                            errorDetails += `<p>Отсутствующие функции: ${missingFunctions.join(', ')}</p>`;
+                        }
+
+                        message.innerHTML = `
+                            <h3 style="margin: 0 0 10px 0;">Ошибка загрузки</h3>
+                            <p style="margin: 0 0 15px 0;">Некоторые элементы не загрузились</p>
+                            <div style="margin: 0 0 15px 0; text-align: left; font-size: 0.9em;">
+                                ${errorDetails}
+                            </div>
+                            <div style="margin: 0 0 15px 0; color: #6366f1; font-weight: bold;">
+                                Автоматическая перезагрузка через <span id="countdown">5</span> секунд
+                            </div>
+                            <button onclick="window.location.reload(true)" 
+                                    style="background: #6366f1; color: white; border: none; 
+                                           padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+                                Перезагрузить сейчас
+                            </button>
+                        `;
+                        document.body.appendChild(message);
+
+                        // Добавляем таймер обратного отсчета
+                        let timeLeft = 5;
+                        const countdownElement = document.getElementById('countdown');
+                        const countdownInterval = setInterval(() => {
+                            timeLeft--;
+                            countdownElement.textContent = timeLeft;
+                            
+                            if (timeLeft <= 0) {
+                                clearInterval(countdownInterval);
+                                window.location.reload(true);
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    console.log('All elements loaded successfully');
+                    clearInterval(loadCheckInterval);
+                }
+            }
+
+            // Проверяем каждые 500мс
+            loadCheckInterval = setInterval(() => {
+                checkComponents().catch(console.error);
+            }, 500);
+
+            // Также проверяем при полной загрузке страницы
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    checkComponents().catch(console.error);
+                }, 1000); // Даем дополнительную секунду после load
+            });
+
+            // Проверяем загрузку внешних скриптов
+            window.addEventListener('error', function(e) {
+                if (e.target.tagName === 'SCRIPT') {
+                    console.error('Script loading error:', e.target.src);
+                    checkComponents().catch(console.error);
+                }
+            }, true);
+        })();
+
+        // Early Service Worker Registration and Version Check
+        if ('serviceWorker' in navigator) {
+            // Проверяем версию приложения
+            async function checkAppVersion() {
+                try {
+                    // Create a script element to load the version.js file
+                    const script = document.createElement('script');
+                    script.src = '/version.js?t=' + Date.now(); // Add cache-busting parameter
+                    
+                    // Create a promise that resolves when the script loads
+                    const scriptLoadPromise = new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                    });
+                    
+                    // Add the script to the document
+                    document.head.appendChild(script);
+                    
+                    // Wait for the script to load
+                    await scriptLoadPromise;
+                    
+                    // Now we can access the version from the global variable
+                    const currentVersion = window.APP_VERSION["main-version"];
+                    const storedVersion = localStorage.getItem('app-version');
+                    
+                    // If version changed or this is first installation
+                    if (storedVersion !== currentVersion) {
+                        // Update version in localStorage
+                        localStorage.setItem('app-version', currentVersion);
+                        
+                        // If this is not the first installation, show notification
+                        if (storedVersion) {
+                            if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                                // Clear cache and reload page
+                                if ('caches' in window) {
+                                    const cacheNames = await caches.keys();
+                                    await Promise.all(
+                                        cacheNames.map(name => caches.delete(name))
+                                    );
+                                }
+                                window.location.reload(true);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking version:', error);
+                    // Add delay before retry
+                    setTimeout(checkAppVersion, 5000);
+                }
+            }
+
+            window.addEventListener('load', function() {
+                // Проверяем версию при загрузке
+                checkAppVersion();
+                
+                // Регистрируем Service Worker
+                navigator.serviceWorker.register('/workbox-service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration);
+                        
+                        // Проверяем обновления Service Worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Показываем уведомление об обновлении
+                                    if (confirm('ხელმისაწვდომია ახალი ვერსია. გსურთ განახლება?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+
+                        // Обработка версии Service Worker
+                        if (navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
+                        } else {
+                            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                        document.getElementById('sw-version').textContent = 'Failed';
+                        document.getElementById('sw-version').classList.remove('loading');
+                    });
+
+                // Обработка сообщений от Service Worker
+                navigator.serviceWorker.addEventListener('message', event => {
+                    if (event.data && event.data.version) {
+                        document.getElementById('sw-version').textContent = event.data.version;
+                        document.getElementById('sw-version').classList.remove('loading');
+                    }
+                });
+            });
+
+            // Периодическая проверка версии (каждый час)
+            setInterval(checkAppVersion, 3600000);
+        } else {
+            document.getElementById('sw-version').textContent = 'Unsupported';
+            document.getElementById('sw-version').classList.remove('loading');
+        }
+    </script>
+    <script>
+        fetch("/includes/head.html")
+            .then(response => response.text())
+            .then(data => document.head.innerHTML += data)
+            .catch(error => console.error("Ошибка загрузки head:", error));
+    </script>
+    <title>Staff Portal</title>
+    <link rel="manifest" href="/manifest.json">
+ 
+    <!-- Version Information -->
+    <script src="/version.js"></script>
+
+    <!-- Add Particles.js Library -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
 </head>
 <body data-page="Home">
     <div id="menu-container"></div>
