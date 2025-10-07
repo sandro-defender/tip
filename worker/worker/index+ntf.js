@@ -268,8 +268,9 @@ export default {
 					if (!vapidPublic || !vapidPrivate) return json({ error: 'VAPID keys not configured' }, 500);
 					const { results } = await env.DB.prepare('SELECT id, endpoint FROM "push_subscriptions"').all();
 					const subs = results || [];
-					if (subs.length === 0) return json({ success: true, sent: 0, removed: 0 });
+					if (subs.length === 0) return json({ success: true, sent: 0, removed: 0, total: 0, failures: [] });
 					let sent = 0, removed = 0;
+					const failures = [];
 					const outcomes = await Promise.allSettled(subs.map(async (s) => {
 						try {
 							const res = await sendWebPushToEndpoint(s.endpoint, vapidPublic, vapidPrivate, subject);
@@ -278,13 +279,18 @@ export default {
 								removed++;
 								return 'removed';
 							}
-							if (res.ok) sent++;
+							if (res.ok) {
+								sent++;
+							} else {
+								failures.push({ id: s.id, status: res.status, statusText: res.statusText || '' });
+							}
 							return 'ok';
 						} catch (e) {
+							failures.push({ id: s.id, error: String(e && e.message || e) });
 							return 'error';
 						}
 					}));
-					return json({ success: true, sent, removed, total: subs.length });
+					return json({ success: true, sent, removed, total: subs.length, failures });
 				}
 				if (actionPost === 'update_day') {
 					const day = Number.parseInt(body.day || '0', 10);
