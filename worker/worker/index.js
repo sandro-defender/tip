@@ -1,15 +1,16 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-      "Pragma": "no-cache",
-      "Expires": "0",
-      "Content-Type": "application/json; charset=utf-8"
-    };
+		const corsHeaders = {
+			"Access-Control-Allow-Origin": "https://tips.you.ge",
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match, If-Modified-Since, X-Request-ID, Cache-Control, Pragma, Expires, X-Requested-With, Accept, Accept-Language, Origin",
+			"Access-Control-Allow-Credentials": "true",
+			"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+			"Pragma": "no-cache",
+			"Expires": "0",
+			"Content-Type": "application/json; charset=utf-8"
+		};
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
