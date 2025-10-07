@@ -378,7 +378,7 @@ self.addEventListener('push', (event) => {
         const amt = lastVal > 0 ? (Math.round(lastVal * 100) / 100).toFixed(2) : null;
         const totalStr = (Math.round(monthTotal * 100) / 100).toFixed(2);
         if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • თვის ჯამი: ${totalStr} $`;
-        else body = `თვის ჯამი: ${totalStr} $`;
+        else body = `ჯამი: ${totalStr} $`;
       }
     } catch (_) {}
     const data = { url: '/tip' };
