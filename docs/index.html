@@ -2663,8 +2663,11 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         async function setupNtfy() {
             if (!('serviceWorker' in navigator)) return;
-            const permissionGranted = await ensureNotificationPermission();
-            if (!permissionGranted) return;
+            if (!('Notification' in window)) return;
+            if (Notification.permission !== 'granted') {
+                // Only start when permission already granted (no prompt here)
+                return;
+            }
 
             try {
                 const reg = await navigator.serviceWorker.register('/workbox-service-worker.js');
@@ -2711,6 +2714,15 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
         }
 
+        async function enableNotifications() {
+            const granted = await ensureNotificationPermission();
+            if (granted) {
+                setupNtfy();
+            } else {
+                alert('Notifications are blocked. Please enable them in your browser settings.');
+            }
+        }
+
         async function sendNotification() {
             const input = document.getElementById('msg');
             const message = input ? input.value : '';
@@ -2723,10 +2735,11 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
         }
 
-        // Expose sendNotification for button onclick
+        // Expose functions for button onclicks
         window.sendNotification = sendNotification;
+        window.enableNotifications = enableNotifications;
 
-        // Defer setup until page load to coexist with existing SW registration
+        // Auto-setup only if permission is already granted
         window.addEventListener('load', setupNtfy);
     })();
 </script>
@@ -2734,5 +2747,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 <div style="position:fixed; right:12px; bottom:62px; z-index:9999; background:rgba(0,0,0,0.7); color:#fff; padding:8px; border-radius:8px; display:flex; gap:6px; align-items:center;">
     <input id="msg" placeholder="Type message" style="padding:6px 8px; border-radius:6px; border:1px solid #555; background:#111; color:#fff;" />
     <button onclick="sendNotification()" style="padding:6px 10px; border-radius:6px; background:#6366f1; color:#fff; border:none;">Send</button>
+    <button onclick="enableNotifications()" title="Enable notifications" style="padding:6px 10px; border-radius:6px; background:#10b981; color:#fff; border:none;">Enable</button>
   </div>
 </html>
