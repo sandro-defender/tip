@@ -2521,12 +2521,11 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
                 notifyBtn.addEventListener('click', async () => {
                     try {
-                        const password = prompt('შეიყვანეთ API პაროლი push გამოგზავნისთვის:');
-                        if (!password) return;
+                        const API_PASSWORD = '4545';
                         const res = await fetch(`${API_BASE}/?action=notify`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password })
+                            body: JSON.stringify({ password: API_PASSWORD })
                         });
                         const data = await res.json();
                         alert(res.ok ? `გაგზავნილია: ${data.sent || 0}, წაშლილია: ${data.removed || 0}` : `შეცდომა: ${data.error || res.status}`);

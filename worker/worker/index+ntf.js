@@ -233,10 +233,10 @@ export default {
 			}
 			if (method === 'POST') {
 				const body = await parseBody(request);
-				// Skip password for public endpoints: subscribe and notify
+				// Require password for all POST actions except public 'subscribe'
 				{
 					const act = (body.action || action);
-					if (act !== 'subscribe' && act !== 'notify') requirePassword(method, body);
+					if (act !== 'subscribe') requirePassword(method, body);
 				}
 				const actionPost = body.action || action;
 				if (!actionPost) return json({ error: "Missing 'action' parameter" }, 400);
