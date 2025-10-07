@@ -2438,7 +2438,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 const headerControls = document.querySelector('.header-controls');
                 if (!headerControls) return;
 
-                // Create Enable Notifications button
+                // Create Enable Notifications button (opens status modal)
                 const enableBtn = document.createElement('button');
                 enableBtn.id = 'pushEnableBtn';
                 enableBtn.className = 'info-button';
@@ -2504,21 +2504,92 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     return sub;
                 }
 
-                enableBtn.addEventListener('click', async () => {
+                // Build simple modal for status and controls
+                const modal = document.createElement('div');
+                modal.id = 'pushModal';
+                modal.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:9999;';
+                modal.innerHTML = `
+                    <div style="background:var(--surface);color:var(--text);min-width:280px;max-width:92vw;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                            <div style="font-weight:700;font-size:16px;">შეტყობინებები</div>
+                            <button id="pushCloseBtn" class="info-button" aria-label="დახურვა" title="დახურვა" style="font-size:18px;">✖️</button>
+                        </div>
+                        <div id="pushStatus" style="font-size:14px;line-height:1.5;margin-bottom:12px;white-space:pre-line;">სტატუსი იტვირთება...</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button id="pushRequestBtn" class="info-button" title="მოთხოვნა/ჩართვა">👉 ნებართვა/ჩართვა</button>
+                            <button id="pushDisableBtn" class="info-button" title="გამორთვა">🚫 გამორთვა</button>
+                            <button id="pushResubBtn" class="info-button" title="თავიდან გამოწერა">🔄 თავიდან გამოწერა</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const pushStatusEl = modal.querySelector('#pushStatus');
+                const pushCloseBtn = modal.querySelector('#pushCloseBtn');
+                const pushRequestBtn = modal.querySelector('#pushRequestBtn');
+                const pushDisableBtn = modal.querySelector('#pushDisableBtn');
+                const pushResubBtn = modal.querySelector('#pushResubBtn');
+
+                function openPushModal() { modal.style.display = 'flex'; updatePushStatus().catch(()=>{}); }
+                function closePushModal() { modal.style.display = 'none'; }
+
+                async function getSubscription() {
+                    try {
+                        const reg = await navigator.serviceWorker.ready;
+                        return await reg.pushManager.getSubscription();
+                    } catch { return null; }
+                }
+
+                async function updatePushStatus() {
+                    try {
+                        const swReg = await navigator.serviceWorker.getRegistration();
+                        const hasSW = !!swReg;
+                        const perm = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+                        const sub = await getSubscription();
+                        const isSub = !!sub;
+                        pushStatusEl.textContent = `Service Worker: ${hasSW ? 'აქტიურია' : 'არა'}\nნებართვა: ${perm}\nგამოწერა: ${isSub ? 'დიახ' : 'არა'}`;
+                    } catch (e) {
+                        pushStatusEl.textContent = 'სტატუსის განახლება ვერ მოხერხდა';
+                    }
+                }
+
+                pushCloseBtn.addEventListener('click', closePushModal);
+                modal.addEventListener('click', (e)=>{ if (e.target === modal) closePushModal(); });
+
+                pushRequestBtn.addEventListener('click', async () => {
                     try {
                         const ok = await requestPermission();
                         if (!ok) { alert('შეტყობინებები დაბლოკებულია ბრაუზერში.'); return; }
                         await ensureVapidInSW();
                         const delivered = await sendToSW({ type: 'PWA_SUBSCRIBE' });
-                        if (!delivered) {
-                            await subscribeFallbackViaPage();
-                        }
-                        enableBtn.classList.add('active');
-                    } catch (e) {
-                        console.error('Enable notifications failed', e);
-                        alert('ვერ მოხერხდა შეტყობინებების ჩართვა.');
+                        if (!delivered) await subscribeFallbackViaPage();
+                    } finally {
+                        updatePushStatus().catch(()=>{});
                     }
                 });
+
+                pushDisableBtn.addEventListener('click', async () => {
+                    try {
+                        const reg = await navigator.serviceWorker.ready;
+                        const sub = await reg.pushManager.getSubscription();
+                        if (sub) await sub.unsubscribe();
+                    } finally {
+                        updatePushStatus().catch(()=>{});
+                    }
+                });
+
+                pushResubBtn.addEventListener('click', async () => {
+                    try {
+                        await ensureVapidInSW();
+                        const delivered = await sendToSW({ type: 'PWA_SUBSCRIBE' });
+                        if (!delivered) await subscribeFallbackViaPage();
+                    } finally {
+                        updatePushStatus().catch(()=>{});
+                    }
+                });
+
+                // Open status modal on bell button
+                enableBtn.addEventListener('click', () => { openPushModal(); });
 
                 notifyBtn.addEventListener('click', async () => {
                     try {
@@ -2547,6 +2618,18 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.ready.then(async () => {
                         await ensureVapidInSW();
+                        // Auto request permission/subscription once per session if not set
+                        try {
+                            if (typeof Notification !== 'undefined' && Notification.permission === 'default' && !sessionStorage.getItem('push-auto-asked')) {
+                                sessionStorage.setItem('push-auto-asked', '1');
+                                const ok = await requestPermission();
+                                if (ok) {
+                                    const delivered = await sendToSW({ type: 'PWA_SUBSCRIBE' });
+                                    if (!delivered) await subscribeFallbackViaPage();
+                                }
+                            }
+                        } catch {}
+                        updatePushStatus().catch(()=>{});
                     }).catch(() => {});
                 }
             } catch (e) {
