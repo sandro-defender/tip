@@ -375,9 +375,12 @@ self.addEventListener('push', (event) => {
           const v = Number(days[d] || 0);
           if (v > 0) { lastVal = v; break; }
         }
-        const amt = lastVal > 0 ? (Math.round(lastVal * 100) / 100).toFixed(2) : null;
-        const totalStr = (Math.round(monthTotal * 100) / 100).toFixed(2);
-        if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • თვის ჯამი: ${totalStr} $`;
+        const amtNum = lastVal > 0 ? Math.round(lastVal * 10) / 10 : null;
+        const totalNum = Math.round(monthTotal * 10) / 10;
+        const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        const amt = amtNum !== null ? fmt.format(amtNum) : null;
+        const totalStr = fmt.format(totalNum);
+        if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • ჯამი: ${totalStr} $`;
         else body = `ჯამი: ${totalStr} $`;
       }
     } catch (_) {}
