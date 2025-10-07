@@ -1084,6 +1084,25 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             color: var(--danger);
         }
 
+        /* Selected state styling for Push modal buttons */
+        #pushModal button.selected,
+        #pushModal button[aria-pressed="true"] {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.25) inset;
+            filter: saturate(1.05);
+        }
+        #pushModal #pushDisableBtn.selected,
+        #pushModal #pushDisableBtn[aria-pressed="true"] {
+            outline-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25) inset;
+        }
+        #pushModal #pushResubBtn.selected,
+        #pushModal #pushResubBtn[aria-pressed="true"] {
+            outline-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25) inset;
+        }
+
         /* Ensure moved header links (anchors) have no underline */
         .header-controls a.info-button,
         .header-controls a.info-button:hover,
@@ -2550,6 +2569,33 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     } catch { return null; }
                 }
 
+                function reflectSelection({ permission, isSubscribed }) {
+                    // Reset
+                    [pushRequestBtn, pushDisableBtn, pushResubBtn].forEach(btn => {
+                        if (!btn) return;
+                        btn.classList.remove('selected');
+                        btn.setAttribute('aria-pressed', 'false');
+                    });
+
+                    // Decide selection
+                    // - If permission is 'granted' and subscribed -> Disable button selected
+                    // - If permission is 'granted' and not subscribed -> Resubscribe selected
+                    // - If permission is 'default' -> Request/enable selected
+                    // - If permission is 'denied' -> Disable selected (indicates blocked)
+                    let target = null;
+                    if (permission === 'granted') {
+                        target = isSubscribed ? pushDisableBtn : pushResubBtn;
+                    } else if (permission === 'default') {
+                        target = pushRequestBtn;
+                    } else if (permission === 'denied') {
+                        target = pushDisableBtn;
+                    }
+                    if (target) {
+                        target.classList.add('selected');
+                        target.setAttribute('aria-pressed', 'true');
+                    }
+                }
+
                 async function updatePushStatus() {
                     try {
                         const swReg = await navigator.serviceWorker.getRegistration();
@@ -2558,6 +2604,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         const sub = await getSubscription();
                         const isSub = !!sub;
                         pushStatusEl.textContent = `Service Worker: ${hasSW ? 'აქტიურია' : 'არა'}\nნებართვა: ${perm}\nგამოწერა: ${isSub ? 'დიახ' : 'არა'}`;
+                        reflectSelection({ permission: perm, isSubscribed: isSub });
                     } catch (e) {
                         pushStatusEl.textContent = 'სტატუსის განახლება ვერ მოხერხდა';
                     }
