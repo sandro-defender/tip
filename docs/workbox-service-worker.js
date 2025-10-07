@@ -359,7 +359,7 @@ self.addEventListener('message', (event) => {
 self.addEventListener('push', (event) => {
   event.waitUntil((async () => {
     const title = 'Tips Update';
-    let body = 'გაიხსნა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
+    let body = 'დაემატა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
     try {
       const now = new Date();
       const y = now.getFullYear();
@@ -369,15 +369,16 @@ self.addEventListener('push', (event) => {
       if (res.ok) {
         const json = await res.json();
         const days = json && json.days ? json.days : {};
+        const monthTotal = Number(json && json.total ? json.total : 0) || 0;
         let lastVal = 0;
         for (let d = 31; d >= 1; d--) {
           const v = Number(days[d] || 0);
           if (v > 0) { lastVal = v; break; }
         }
-        if (lastVal > 0) {
-          const amt = (Math.round(lastVal * 100) / 100).toFixed(2);
-          body = `ბოლო ჩარიცხვა: ${amt} ₾`;
-        }
+        const amt = lastVal > 0 ? (Math.round(lastVal * 100) / 100).toFixed(2) : null;
+        const totalStr = (Math.round(monthTotal * 100) / 100).toFixed(2);
+        if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • თვის ჯამი: ${totalStr} $`;
+        else body = `თვის ჯამი: ${totalStr} $`;
       }
     } catch (_) {}
     const data = { url: '/tip' };
