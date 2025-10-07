@@ -3098,7 +3098,7 @@
             <div class="user-menu-wrapper">
                 <button class="user-btn" type="button" title="User" onclick="toggleUserMenu(event)">👤</button>
                 <div class="user-dropdown" id="userDropdown" onclick="event.stopPropagation()">
-                    <a href="/marge" style="text-decoration: none;">🔄 Sync</a>
+                    <a href="/?admin=1" style="text-decoration: none;">🔄 Sync</a>
                     <button type="button" onclick="logout()">🔒 Logout</button>
                 </div>
             </div>
@@ -3215,7 +3215,7 @@
         // ⚙️ კონფიგურაცია
         const CONFIG = {
             API_URL: 'https://tips-api.you.ge/api/d1', // 🔗 D1 Worker endpoint — API მისამართი (migrated from /api/db.php)
-            API_PASSWORD: 'your_secret_key', // 🔑 API password for POST requests — API პაროლი POST მოთხოვნებისთვის
+            API_PASSWORD: '4545', // 🔑 API password for POST requests — API პაროლი POST მოთხოვნებისთვის
             TIMEZONE_OFFSET: 4, // 🕒 Offset in hours from UTC — დროის ზონის გამოტანა UTC-დან საათებში
             DEV_MODE: false, // 🧪 If true, do not call API. Return mock data for offline work
             PASSWORD: '4545', // 🔑 შეცვალეთ პაროლი — მთავარი პაროლი
