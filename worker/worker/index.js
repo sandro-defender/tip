@@ -1,10 +1,5 @@
-import { webPush } from 'web-push-lite';
-
-const PUBLIC_VAPID_KEY = 'BDPy7...'; // Replace with your public VAPID key
-const PRIVATE_VAPID_KEY = 'uG9c...'; // Replace with your private VAPID key
-
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
@@ -20,9 +15,6 @@ export default {
 
     const json = (data, status = 200) => new Response(JSON.stringify(data, null, 2), { status, headers: corsHeaders });
 
-    const now = new Date();
-
-    // ===================== Your Original Tips Functions =====================
     function getTableName(year) {
       const y = Number.parseInt(year, 10);
       return `data_${Number.isFinite(y) ? y : new Date().getFullYear()}`;
@@ -92,108 +84,126 @@ export default {
       const provided = bodyOrQuery.password || bodyOrQuery.p || '';
       const expected = env.API_PASSWORD || '';
       if (!expected) return;
-      if (!provided || provided !== expected) throw { status: 401, message: 'Invalid password', details: { hint: 'Check API_PASSWORD secret' } };
+      if (!provided || provided !== expected) throw { status: 401, message: 'Invalid password' };
     }
 
-    // ===================== Push Notification Functions =====================
-    async function saveSubscription(db, sub) {
-      const id = crypto.randomUUID();
-      const nowSec = Math.floor(Date.now() / 1000);
-      await db.prepare(`INSERT INTO subscriptions (id, endpoint, keys, created_at) VALUES (?, ?, ?, ?)`)
-        .bind(id, sub.endpoint, JSON.stringify(sub.keys), nowSec).run();
-    }
-
-    async function sendNotification(db, message) {
-      const { results } = await db.prepare('SELECT * FROM subscriptions').all();
-      const sends = results.map(row => {
-        const sub = { endpoint: row.endpoint, keys: JSON.parse(row.keys) };
-        return webPush.sendNotification(sub, JSON.stringify({ title: 'Tips', message }), {
-          vapid: { subject: 'mailto:you@yourdomain.com', publicKey: PUBLIC_VAPID_KEY, privateKey: PRIVATE_VAPID_KEY }
-        });
-      });
-      await Promise.all(sends);
-    }
-
-    // ===================== Main Request Handling =====================
     try {
-      const method = request.method.toUpperCase();
       const action = url.searchParams.get('action') || '';
-      const year = Number.parseInt(url.searchParams.get('year') || String(now.getFullYear()), 10);
-      const month = Number.parseInt(url.searchParams.get('month') || String(now.getMonth() + 1), 10);
+      const method = request.method.toUpperCase();
+      const now = new Date();
 
-      // Ensure table exists
-      await createTableIfNotExists(env.DB, year);
-      const table = getTableName(year);
-
+      // --- GET requests ---
       if (method === 'GET') {
+        if (!action) return json({ error: "Missing 'action' parameter", available_actions: ['get_year','get_month','get_latest_tip'] }, 400);
+
+        const year = Number.parseInt(url.searchParams.get('year') || String(now.getFullYear()), 10);
+        const month = Number.parseInt(url.searchParams.get('month') || String(now.getMonth() + 1), 10);
+
+        if (year < 2000 || year > 2100) return json({ error: 'Invalid year parameter' }, 400);
+        if (month < 1 || month > 12) return json({ error: 'Invalid month parameter' }, 400);
+
+        await createTableIfNotExists(env.DB, year);
+        const table = getTableName(year);
+
         if (action === 'get_year') {
           const { results } = await env.DB.prepare(`SELECT month, points, total FROM "${table}" ORDER BY month ASC`).all();
           return json({ year, months: results || [] });
         }
+
         if (action === 'get_month') {
           const { results } = await env.DB.prepare(`SELECT * FROM "${table}" WHERE month = ?`).bind(month).all();
           const row = results && results[0];
+          if (!row) {
+            const points = await getPreviousMonthPoints(env.DB, year, month);
+            return json({ year, month, points, total: 0.0, days: Object.fromEntries(Array.from({ length: 31 }, (_, i) => [i + 1, 0.0])) });
+          }
           const days = {};
-          if (row) for (let i = 1; i <= 31; i++) days[i] = Number.parseFloat(row[`day${i}`] ?? 0) || 0;
-          return json({ year, month, points: row?.points || 5767, total: row?.total || 0, days });
+          for (let i = 1; i <= 31; i++) days[i] = Number.parseFloat(row[`day${i}`] ?? 0) || 0.0;
+          return json({ year, month, points: Number.parseInt(row.points, 10) || 0, total: Number.parseFloat(row.total) || 0.0, days });
         }
+
+        if (action === 'get_latest_tip') {
+          const { results } = await env.DB.prepare(`SELECT * FROM "${table}" ORDER BY id DESC LIMIT 1`).all();
+          const tip = results && results[0];
+          return json({ title: 'Tips', message: tip ? `Month ${tip.month}: ${tip.total}` : 'No tips yet' });
+        }
+
         return json({ error: 'Unknown GET action' }, 400);
       }
 
+      // --- POST requests ---
       if (method === 'POST') {
         const body = await parseBody(request);
         requirePassword(method, body);
 
-        // ========== Push endpoints ==========
-        if (action === 'subscribe_push') {
-          if (!body.subscription) return json({ error: 'Missing subscription object' }, 400);
-          await saveSubscription(env.DB, body.subscription);
-          return json({ success: true });
-        }
+        const year = Number.parseInt(body.year || String(now.getFullYear()), 10);
+        const month = Number.parseInt(body.month || String(now.getMonth() + 1), 10);
+        await createTableIfNotExists(env.DB, year);
+        const table = getTableName(year);
 
-        if (action === 'send_push') {
-          const msg = body.message || 'Test notification';
-          await sendNotification(env.DB, msg);
-          return json({ success: true });
-        }
-
-        // ========== Original Tips POST actions ==========
         if (action === 'update_day') {
           const day = Number.parseInt(body.day || '0', 10);
           const value = Number.parseFloat(body.value || '0');
-          const { results } = await env.DB.prepare(`SELECT * FROM "${table}" WHERE month=?`).bind(month).all();
+          if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return json({ error: 'Invalid date parameters' }, 400);
+
+          const { results } = await env.DB.prepare(`SELECT * FROM "${table}" WHERE month = ?`).bind(month).all();
           if (results && results[0]) {
-            await env.DB.prepare(`UPDATE "${table}" SET "day${day}"=? WHERE month=?`).bind(value, month).run();
-            const { results: again } = await env.DB.prepare(`SELECT * FROM "${table}" WHERE month=?`).bind(month).all();
-            const total = calculateMonthTotal(again[0]);
-            await env.DB.prepare(`UPDATE "${table}" SET total=? WHERE month=?`).bind(total, month).run();
+            await env.DB.prepare(`UPDATE "${table}" SET "day${day}" = ? WHERE month = ?`).bind(value, month).run();
+            const total = calculateMonthTotal(results[0]);
+            await env.DB.prepare(`UPDATE "${table}" SET total = ? WHERE month = ?`).bind(total, month).run();
           } else {
             const points = await getPreviousMonthPoints(env.DB, year, month);
-            await env.DB.prepare(`INSERT INTO "${table}" (month, points, "day${day}", total) VALUES (?, ?, ?, ?)`)
-              .bind(month, points, value, value).run();
+            await env.DB.prepare(`INSERT INTO "${table}" (month, points, "day${day}", total) VALUES (?, ?, ?, ?)`).bind(month, points, value, value).run();
           }
           return json({ success: true, year, month, day, value });
         }
 
         if (action === 'update_points') {
           const points = Number.parseInt(body.points || '0', 10);
-          const { results } = await env.DB.prepare(`SELECT id FROM "${table}" WHERE month=?`).bind(month).all();
+          if (year < 2000 || year > 2100 || month < 1 || month > 12 || points < 0) return json({ error: 'Invalid parameters' }, 400);
+          const { results } = await env.DB.prepare(`SELECT id FROM "${table}" WHERE month = ?`).bind(month).all();
           if (results && results[0]) {
-            await env.DB.prepare(`UPDATE "${table}" SET points=? WHERE month=?`).bind(points, month).run();
+            await env.DB.prepare(`UPDATE "${table}" SET points = ? WHERE month = ?`).bind(points, month).run();
           } else {
-            await env.DB.prepare(`INSERT INTO "${table}" (month, points, total) VALUES (?, ?, 0)`).bind(month, points).run();
+            await env.DB.prepare(`INSERT INTO "${table}" (month, points, total) VALUES (?, ?, 0.0)`).bind(month, points).run();
           }
           return json({ success: true, year, month, points });
+        }
+
+        if (action === 'subscribe') {
+          if (!body.endpoint) return json({ error: 'Missing subscription data' }, 400);
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS subscriptions (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint TEXT UNIQUE,
+              p256dh TEXT,
+              auth TEXT
+            )
+          `).run();
+          const exists = await env.DB.prepare(`SELECT id FROM subscriptions WHERE endpoint = ?`).bind(body.endpoint).all();
+          if (!exists.results.length) {
+            await env.DB.prepare(`INSERT INTO subscriptions (endpoint, p256dh, auth) VALUES (?, ?, ?)`)
+              .bind(body.endpoint, body.keys.p256dh, body.keys.auth).run();
+          }
+          return json({ success: true });
+        }
+
+        if (action === 'notify') {
+          const subs = await env.DB.prepare(`SELECT * FROM subscriptions`).all();
+          for (const sub of subs.results) {
+            try { await fetch(sub.endpoint, { method: 'POST', headers: { TTL: '60' }, body: null }); }
+            catch (e) { console.log('Push failed:', e); }
+          }
+          return json({ success: true, notified: subs.results.length });
         }
 
         return json({ error: 'Unknown POST action' }, 400);
       }
 
       return json({ error: 'Method not allowed' }, 405);
-
     } catch (err) {
       const status = err?.status || 500;
-      return json({ error: 'Internal server error', details: err?.details || err?.message || String(err) }, status);
+      return json({ error: 'Internal server error', details: err?.details || String(err?.message || err) }, status);
     }
   }
 };
