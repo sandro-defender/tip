@@ -2669,14 +2669,43 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             try {
                 const reg = await navigator.serviceWorker.register('/workbox-service-worker.js');
                 const ntfyUrl = `wss://ntfy.sh/${topic}/ws`;
-                const ws = new WebSocket(ntfyUrl);
-                ws.onmessage = (event) => {
-                    const data = String(event.data || '');
-                    reg.showNotification('Message', { body: data });
+
+                let ws;
+                let reconnectDelayMs = 1000;
+
+                const connect = () => {
+                    try {
+                        ws = new WebSocket(ntfyUrl);
+                    } catch (e) {
+                        console.warn('[ntfy] WS construct error', e);
+                        scheduleReconnect();
+                        return;
+                    }
+
+                    ws.onopen = () => {
+                        console.log('[ntfy] subscribed via WebSocket');
+                        reconnectDelayMs = 1000; // reset backoff on success
+                    };
+                    ws.onmessage = (event) => {
+                        const data = String(event.data || '');
+                        reg.showNotification('Message', { body: data });
+                    };
+                    ws.onerror = (err) => {
+                        console.warn('[ntfy] WS error', err);
+                    };
+                    ws.onclose = () => {
+                        console.log('[ntfy] WS closed, will reconnect');
+                        scheduleReconnect();
+                    };
                 };
-                ws.onerror = () => {
-                    // no-op
+
+                const scheduleReconnect = () => {
+                    const delay = Math.min(reconnectDelayMs, 30000);
+                    reconnectDelayMs = Math.min(reconnectDelayMs * 2, 30000);
+                    setTimeout(connect, delay);
                 };
+
+                connect();
             } catch (e) {
                 // no-op
             }
@@ -2702,7 +2731,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     })();
 </script>
 
-<div style="position:fixed; right:12px; bottom:12px; z-index:9999; background:rgba(0,0,0,0.7); color:#fff; padding:8px; border-radius:8px; display:flex; gap:6px; align-items:center;">
+<div style="position:fixed; right:12px; bottom:62px; z-index:9999; background:rgba(0,0,0,0.7); color:#fff; padding:8px; border-radius:8px; display:flex; gap:6px; align-items:center;">
     <input id="msg" placeholder="Type message" style="padding:6px 8px; border-radius:6px; border:1px solid #555; background:#111; color:#fff;" />
     <button onclick="sendNotification()" style="padding:6px 10px; border-radius:6px; background:#6366f1; color:#fff; border:none;">Send</button>
   </div>
