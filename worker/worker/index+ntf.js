@@ -282,11 +282,13 @@ export default {
 							if (res.ok) {
 								sent++;
 							} else {
-								failures.push({ id: s.id, status: res.status, statusText: res.statusText || '' });
+								let text = '';
+								try { text = await res.text(); } catch (_) { text = ''; }
+								failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, status: res.status, statusText: res.statusText || '', body: (text || '').slice(0, 300) });
 							}
 							return 'ok';
 						} catch (e) {
-							failures.push({ id: s.id, error: String(e && e.message || e) });
+							failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, error: String(e && e.message || e) });
 							return 'error';
 						}
 					}));
