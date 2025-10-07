@@ -21,6 +21,16 @@ export default {
 			const y = Number.parseInt(year, 10);
 			return `data_${Number.isFinite(y) ? y : new Date().getFullYear()}`;
 		}
+		async function createPushTableIfNotExists(db) {
+			const sql = `CREATE TABLE IF NOT EXISTS "push_subscriptions" (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				endpoint TEXT NOT NULL UNIQUE,
+				p256dh TEXT NOT NULL,
+				auth TEXT NOT NULL,
+				created_at TEXT NOT NULL
+			)`;
+			await db.prepare(sql).run();
+		}
 		async function createTableIfNotExists(db, year) {
 			const table = getTableName(year);
 			const sql = `CREATE TABLE IF NOT EXISTS "${table}" (
@@ -51,6 +61,65 @@ export default {
 				total += Number.isFinite(v) ? v : 0;
 			}
 			return Math.round(total * 100) / 100;
+		}
+		function b64urlToUint8Array(b64url) {
+			const pad = '='.repeat((4 - (b64url.length % 4)) % 4);
+			const b64 = (b64url + pad).replace(/-/g, '+').replace(/_/g, '/');
+			const raw = atob(b64);
+			const arr = new Uint8Array(raw.length);
+			for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+			return arr;
+		}
+		function uint8ArrayToB64url(arr) {
+			let str = '';
+			for (let i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
+			const b64 = btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+			return b64;
+		}
+		async function importVapidPrivateKey(privateKeyB64Url) {
+			const keyData = b64urlToUint8Array(privateKeyB64Url);
+			return await crypto.subtle.importKey(
+				'pkcs8',
+				keyData,
+				{ name: 'ECDSA', namedCurve: 'P-256' },
+				false,
+				['sign']
+			);
+		}
+		async function generateVapidJWT(audience, subject, vapidPrivateKeyB64Url) {
+			const header = { alg: 'ES256', typ: 'JWT' };
+			const exp = Math.floor(Date.now() / 1000) + 12 * 60 * 60; // 12h
+			const payload = { aud: audience, exp, sub: subject };
+			const encoder = new TextEncoder();
+			const b64url = (obj) => {
+				const json = JSON.stringify(obj);
+				const bytes = encoder.encode(json);
+				return uint8ArrayToB64url(bytes);
+			};
+			const input = `${b64url(header)}.${b64url(payload)}`;
+			const key = await importVapidPrivateKey(vapidPrivateKeyB64Url);
+			const signature = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(input)));
+			const jwt = `${input}.${uint8ArrayToB64url(signature)}$`;
+			return jwt.replace(/\$$/, '');
+		}
+		function getAudienceFromEndpoint(endpoint) {
+			try {
+				const u = new URL(endpoint);
+				return `${u.protocol}//${u.host}`;
+			} catch {
+				return '';
+			}
+		}
+		async function sendWebPushToEndpoint(endpoint, vapidPublicKeyB64Url, vapidPrivateKeyB64Url, subject) {
+			const audience = getAudienceFromEndpoint(endpoint);
+			if (!audience) throw new Error('Invalid endpoint URL');
+			const jwt = await generateVapidJWT(audience, subject, vapidPrivateKeyB64Url);
+			const headers = new Headers();
+			headers.set('TTL', '2419200');
+			headers.set('Authorization', `WebPush ${jwt}`);
+			headers.set('Crypto-Key', `p256ecdsa=${vapidPublicKeyB64Url}`);
+			const res = await fetch(endpoint, { method: 'POST', headers });
+			return res;
 		}
 		async function getPreviousMonthPoints(db, year, month) {
 			let prevMonth = month - 1;
@@ -124,13 +193,56 @@ export default {
 			}
 			if (method === 'POST') {
 				const body = await parseBody(request);
-				requirePassword(method, body);
+				// Skip password for public subscription endpoint only
+				if ((body.action || action) !== 'subscribe') requirePassword(method, body);
 				const actionPost = body.action || action;
 				if (!actionPost) return json({ error: "Missing 'action' parameter" }, 400);
 				const year = Number.parseInt(body.year || String(now.getFullYear()), 10);
 				const month = Number.parseInt(body.month || String(now.getMonth() + 1), 10);
 				await createTableIfNotExists(env.DB, year);
 				const table = getTableName(year);
+				// Push subscription storage
+				if (actionPost === 'subscribe') {
+					await createPushTableIfNotExists(env.DB);
+					const endpoint = String(body.endpoint || '').trim();
+					const p256dh = String(body.p256dh || body["keys[p256dh]"] || (body.keys && body.keys.p256dh) || '').trim();
+					const auth = String(body.auth || body["keys[auth]"] || (body.keys && body.keys.auth) || '').trim();
+					if (!endpoint || !/^https?:\/\//i.test(endpoint)) return json({ error: 'Invalid endpoint' }, 400);
+					if (!p256dh || !auth) return json({ error: 'Missing keys' }, 400);
+					const { results } = await env.DB.prepare('SELECT id FROM "push_subscriptions" WHERE endpoint = ?').bind(endpoint).all();
+					if (results && results[0]) {
+						await env.DB.prepare('UPDATE "push_subscriptions" SET p256dh = ?, auth = ? WHERE endpoint = ?').bind(p256dh, auth, endpoint).run();
+					} else {
+						await env.DB.prepare('INSERT INTO "push_subscriptions" (endpoint, p256dh, auth, created_at) VALUES (?, ?, ?, ?)').bind(endpoint, p256dh, auth, new Date().toISOString()).run();
+					}
+					return json({ success: true });
+				}
+				if (actionPost === 'notify') {
+					await createPushTableIfNotExists(env.DB);
+					const vapidPublic = (env.VAPID_PUBLIC_KEY || '').trim();
+					const vapidPrivate = (env.VAPID_PRIVATE_KEY || '').trim();
+					const subject = (env.VAPID_SUBJECT || 'mailto:admin@tips.you.ge').trim();
+					if (!vapidPublic || !vapidPrivate) return json({ error: 'VAPID keys not configured' }, 500);
+					const { results } = await env.DB.prepare('SELECT id, endpoint FROM "push_subscriptions"').all();
+					const subs = results || [];
+					if (subs.length === 0) return json({ success: true, sent: 0, removed: 0 });
+					let sent = 0, removed = 0;
+					const outcomes = await Promise.allSettled(subs.map(async (s) => {
+						try {
+							const res = await sendWebPushToEndpoint(s.endpoint, vapidPublic, vapidPrivate, subject);
+							if (res.status === 404 || res.status === 410) {
+								await env.DB.prepare('DELETE FROM "push_subscriptions" WHERE id = ?').bind(s.id).run();
+								removed++;
+								return 'removed';
+							}
+							if (res.ok) sent++;
+							return 'ok';
+						} catch (e) {
+							return 'error';
+						}
+					}));
+					return json({ success: true, sent, removed, total: subs.length });
+				}
 				if (actionPost === 'update_day') {
 					const day = Number.parseInt(body.day || '0', 10);
 					const value = Number.parseFloat(body.value || '0');
@@ -170,3 +282,4 @@ export default {
 
 // Changelog:
 // 2025-09-30 - Initial Worker migration from PHP+MySQL to D1 (GPT-5)
+// 2025-10-07 - Added push subscription storage and notify endpoint using VAPID (GPT-5)
