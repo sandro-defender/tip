@@ -357,17 +357,39 @@ self.addEventListener('message', (event) => {
 
 // Push event: ვაჩვენებთ მარტივ შეტყობინებას; კლიენტი შემდეგ მიიღებს განახლებებს
 self.addEventListener('push', (event) => {
-  const title = 'Tips • ახალი განახლება';
-  const body = 'გაიხსნა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
-  const data = { url: '/tip' };
-  const options = {
-    body,
-    data,
-    icon: '/icon/logo3/icon-512.png',
-    badge: '/icon/logo3/icon-180.png',
-    vibrate: [100, 50, 100]
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil((async () => {
+    const title = 'Tips Update';
+    let body = 'გაიხსნა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
+    try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const url = `${API_BASE}/?action=get_month&year=${y}&month=${m}`;
+      const res = await fetch(url, { method: 'GET' });
+      if (res.ok) {
+        const json = await res.json();
+        const days = json && json.days ? json.days : {};
+        let lastVal = 0;
+        for (let d = 31; d >= 1; d--) {
+          const v = Number(days[d] || 0);
+          if (v > 0) { lastVal = v; break; }
+        }
+        if (lastVal > 0) {
+          const amt = (Math.round(lastVal * 100) / 100).toFixed(2);
+          body = `ბოლო ჩარიცხვა: ${amt} ₾`;
+        }
+      }
+    } catch (_) {}
+    const data = { url: '/tip' };
+    const options = {
+      body,
+      data,
+      icon: '/icon/logo3/icon-512.png',
+      badge: '/icon/logo3/icon-180.png',
+      vibrate: [100, 50, 100]
+    };
+    return self.registration.showNotification(title, options);
+  })());
 });
 
 // Notification click: ვხსნით/ვფოკუსდებით აპზე
