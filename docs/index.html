@@ -2690,8 +2690,29 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         reconnectDelayMs = 1000; // reset backoff on success
                     };
                     ws.onmessage = (event) => {
-                        const data = String(event.data || '');
-                        reg.showNotification('Message', { body: data });
+                        try {
+                            const text = String(event.data || '');
+                            let payload;
+                            try {
+                                payload = JSON.parse(text);
+                            } catch (_) {
+                                payload = null;
+                            }
+
+                            // ntfy websocket sends different event types; we want actual messages only
+                            if (payload && payload.event && payload.event !== 'message') {
+                                return; // ignore open/keepalive or other events
+                            }
+
+                            const onlyMessage = payload && typeof payload.message === 'string'
+                                ? payload.message
+                                : text;
+
+                            // Show only the message as notification title (no body)
+                            reg.showNotification(onlyMessage);
+                        } catch (_) {
+                            // ignore parse/display errors
+                        }
                     };
                     ws.onerror = (err) => {
                         console.warn('[ntfy] WS error', err);
