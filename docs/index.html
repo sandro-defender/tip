@@ -2529,7 +2529,14 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                             body: JSON.stringify({ password: API_PASSWORD })
                         });
                         const data = await res.json();
-                        alert(res.ok ? `გაგზავნილია: ${data.sent || 0}, წაშლილია: ${data.removed || 0}` : `შეცდომა: ${data.error || res.status}`);
+                        if (data && Array.isArray(data.failures) && data.failures.length) {
+                            try { console.log('Push notify failures:', data.failures); } catch(_) {}
+                            const f = data.failures[0] || {};
+                            const detail = f.status ? `სტატუსი ${f.status} ${f.statusText||''}` : (f.error || '');
+                            alert(`გაგზავნილია: ${data.sent||0}, წაშლილია: ${data.removed||0}\nჩავარდა: ${data.failures.length}\n${detail}`);
+                        } else {
+                            alert(res.ok ? `გაგზავნილია: ${data.sent || 0}, წაშლილია: ${data.removed || 0}` : `შეცდომა: ${data.error || res.status}`);
+                        }
                     } catch (e) {
                         console.error('Notify failed', e);
                         alert('შეტყობინების გაგზავნა ვერ მოხერხდა.');
