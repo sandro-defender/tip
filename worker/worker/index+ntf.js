@@ -161,6 +161,34 @@ export default {
 			const res = await fetch(endpoint, { method: 'POST', headers, body: '' });
 			return res;
 		}
+		async function notifyAllSubscribers(db, vapidPublic, vapidPrivate, subject) {
+			await createPushTableIfNotExists(db);
+			const { results } = await db.prepare('SELECT id, endpoint FROM "push_subscriptions"').all();
+			const subs = results || [];
+			let sent = 0, removed = 0;
+			const failures = [];
+			if (subs.length === 0) return { sent, removed, total: 0, failures };
+			await Promise.allSettled(subs.map(async (s) => {
+				try {
+					const res = await sendWebPushToEndpoint(s.endpoint, vapidPublic, vapidPrivate, subject);
+					if (res.status === 404 || res.status === 410) {
+						await db.prepare('DELETE FROM "push_subscriptions" WHERE id = ?').bind(s.id).run();
+						removed++;
+						return;
+					}
+					if (res.ok) {
+						sent++;
+					} else {
+						let text = '';
+						try { text = await res.text(); } catch {}
+						failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, status: res.status, statusText: res.statusText || '', body: (text || '').slice(0, 300) });
+					}
+				} catch (e) {
+					failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, error: String(e && e.message || e) });
+				}
+			}));
+			return { sent, removed, total: subs.length, failures };
+		}
 		async function getPreviousMonthPoints(db, year, month) {
 			let prevMonth = month - 1;
 			let prevYear = year;
@@ -266,33 +294,8 @@ export default {
 					const vapidPrivate = (env.VAPID_PRIVATE_KEY || '').trim();
 					const subject = (env.VAPID_SUBJECT || 'mailto:admin@tips.you.ge').trim();
 					if (!vapidPublic || !vapidPrivate) return json({ error: 'VAPID keys not configured' }, 500);
-					const { results } = await env.DB.prepare('SELECT id, endpoint FROM "push_subscriptions"').all();
-					const subs = results || [];
-					if (subs.length === 0) return json({ success: true, sent: 0, removed: 0, total: 0, failures: [] });
-					let sent = 0, removed = 0;
-					const failures = [];
-					const outcomes = await Promise.allSettled(subs.map(async (s) => {
-						try {
-							const res = await sendWebPushToEndpoint(s.endpoint, vapidPublic, vapidPrivate, subject);
-							if (res.status === 404 || res.status === 410) {
-								await env.DB.prepare('DELETE FROM "push_subscriptions" WHERE id = ?').bind(s.id).run();
-								removed++;
-								return 'removed';
-							}
-							if (res.ok) {
-								sent++;
-							} else {
-								let text = '';
-								try { text = await res.text(); } catch (_) { text = ''; }
-								failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, status: res.status, statusText: res.statusText || '', body: (text || '').slice(0, 300) });
-							}
-							return 'ok';
-						} catch (e) {
-							failures.push({ id: s.id, endpointHost: (new URL(s.endpoint)).host, error: String(e && e.message || e) });
-							return 'error';
-						}
-					}));
-					return json({ success: true, sent, removed, total: subs.length, failures });
+					const result = await notifyAllSubscribers(env.DB, vapidPublic, vapidPrivate, subject);
+					return json({ success: true, ...result });
 				}
 				if (actionPost === 'update_day') {
 					const day = Number.parseInt(body.day || '0', 10);
@@ -308,6 +311,15 @@ export default {
 						const points = await getPreviousMonthPoints(env.DB, year, month);
 						await env.DB.prepare(`INSERT INTO "${table}" (month, points, "day${day}", total) VALUES (?, ?, ?, ?)`).bind(month, points, value, value).run();
 					}
+					// Trigger push in background (no password required here)
+					try {
+						const vapidPublic = (env.VAPID_PUBLIC_KEY || '').trim();
+						const vapidPrivate = (env.VAPID_PRIVATE_KEY || '').trim();
+						const subject = (env.VAPID_SUBJECT || 'mailto:admin@tips.you.ge').trim();
+						if (vapidPublic && vapidPrivate) {
+							ctx.waitUntil(notifyAllSubscribers(env.DB, vapidPublic, vapidPrivate, subject));
+						}
+					} catch {}
 					return json({ success: true, message: 'Day updated successfully', year, month, day, value });
 				}
 				if (actionPost === 'update_points') {
