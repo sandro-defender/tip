@@ -161,6 +161,31 @@ export default {
 			const res = await fetch(endpoint, { method: 'POST', headers, body: '' });
 			return res;
 		}
+
+		async function notifyAll(env) {
+			const vapidPublic = (env.VAPID_PUBLIC_KEY || '').trim();
+			const vapidPrivate = (env.VAPID_PRIVATE_KEY || '').trim();
+			const subject = (env.VAPID_SUBJECT || 'mailto:admin@tips.you.ge').trim();
+			if (!vapidPublic || !vapidPrivate) return { sent: 0, removed: 0, failures: [{ error: 'VAPID keys not configured' }] };
+			await createPushTableIfNotExists(env.DB);
+			const { results } = await env.DB.prepare('SELECT id, endpoint FROM "push_subscriptions"').all();
+			const subs = results || [];
+			let sent = 0, removed = 0; const failures = [];
+			await Promise.allSettled(subs.map(async (s) => {
+				try {
+					const res = await sendWebPushToEndpoint(s.endpoint, vapidPublic, vapidPrivate, subject);
+					if (res.status === 404 || res.status === 410) {
+						await env.DB.prepare('DELETE FROM "push_subscriptions" WHERE id = ?').bind(s.id).run();
+						removed++;
+						return;
+					}
+					if (res.ok) sent++; else failures.push({ id: s.id, status: res.status });
+				} catch (e) {
+					failures.push({ id: s.id, error: String(e && e.message || e) });
+				}
+			}));
+			return { sent, removed, failures };
+		}
 		async function getPreviousMonthPoints(db, year, month) {
 			let prevMonth = month - 1;
 			let prevYear = year;
@@ -308,6 +333,8 @@ export default {
 						const points = await getPreviousMonthPoints(env.DB, year, month);
 						await env.DB.prepare(`INSERT INTO "${table}" (month, points, "day${day}", total) VALUES (?, ?, ?, ?)`).bind(month, points, value, value).run();
 					}
+					// Trigger push notify in background (best-effort)
+					ctx.waitUntil(notifyAll(env).catch(()=>{}));
 					return json({ success: true, message: 'Day updated successfully', year, month, day, value });
 				}
 				if (actionPost === 'update_points') {
