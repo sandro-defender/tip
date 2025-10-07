@@ -54,26 +54,6 @@
    }
  }
  
-// Optional: focus app when notification is clicked
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    (async () => {
-      const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-      const url = '/';
-      for (const client of allClients) {
-        if ('focus' in client) {
-          client.focus();
-          return;
-        }
-      }
-      if (clients.openWindow) {
-        await clients.openWindow(url);
-      }
-    })()
-  );
-});
-
  // ფაილების სია წინასწარი კეშირებისთვის
  const filesToPrecache = [
    { url: '/manifest.json', revision: VERSION },

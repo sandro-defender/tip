@@ -1396,6 +1396,55 @@ Purpose: Main portal page with device theme detection and automatic theme switch
     <script>
         // API base for D1 Worker (migrated from /api/db.php)
         const API_URL = 'https://tips-api.you.ge/api/d1';
+        const DEV_MODE = false; // 🧪 If true, mock API responses for offline
+
+        // 🧪 DEV MODE: Intercept API calls to API_URL and return mock data
+        (function setupDevModeMock() {
+            if (!DEV_MODE) return;
+            const realFetch = window.fetch.bind(window);
+
+            function makeResponse(bodyObj, init = { status: 200, headers: { 'Content-Type': 'application/json' } }) {
+                const body = typeof bodyObj === 'string' ? bodyObj : JSON.stringify(bodyObj);
+                return new Response(body, init);
+            }
+
+            function mockMonthPayload(year, month) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const days = {};
+                let total = 0;
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const val = (d % 3 === 0) ? 0 : Math.floor(50 + (d * 7) % 250);
+                    days[d] = val;
+                    total += val;
+                }
+                return { year, month, total, days };
+            }
+
+            window.fetch = async function(url, options = {}) {
+                const target = typeof url === 'string' ? url : (url && url.url) || '';
+                try {
+                    if (typeof target === 'string' && target.startsWith(API_URL)) {
+                        const u = new URL(target);
+                        const params = u.searchParams;
+                        const action = params.get('action');
+                        const method = (options && options.method) ? String(options.method).toUpperCase() : 'GET';
+
+                        if (method === 'GET' && action === 'get_month') {
+                            const year = parseInt(params.get('year') || String(new Date().getFullYear()), 10);
+                            const month = parseInt(params.get('month') || String(new Date().getMonth() + 1), 10);
+                            return makeResponse(mockMonthPayload(year, month));
+                        }
+
+                        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+                            return makeResponse({ success: true, dev: true });
+                        }
+                    }
+                } catch (e) {
+                    return realFetch(url, options);
+                }
+                return realFetch(url, options);
+            };
+        })();
 
         //---> მენიუს ჩატვირთვა
         fetch('/includes/menu.html')
@@ -2595,4 +2644,66 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
     -->
 </body>
+
+<script>
+    (function() {
+        const topic = 'mytopic';
+
+        async function ensureNotificationPermission() {
+            if (!('Notification' in window)) return false;
+            if (Notification.permission === 'granted') return true;
+            if (Notification.permission === 'denied') return false;
+            try {
+                const perm = await Notification.requestPermission();
+                return perm === 'granted';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function setupNtfy() {
+            if (!('serviceWorker' in navigator)) return;
+            const permissionGranted = await ensureNotificationPermission();
+            if (!permissionGranted) return;
+
+            try {
+                const reg = await navigator.serviceWorker.register('/workbox-service-worker.js');
+                const ntfyUrl = `wss://ntfy.sh/${topic}/ws`;
+                const ws = new WebSocket(ntfyUrl);
+                ws.onmessage = (event) => {
+                    const data = String(event.data || '');
+                    reg.showNotification('Message', { body: data });
+                };
+                ws.onerror = () => {
+                    // no-op
+                };
+            } catch (e) {
+                // no-op
+            }
+        }
+
+        async function sendNotification() {
+            const input = document.getElementById('msg');
+            const message = input ? input.value : '';
+            if (!message) return;
+            try {
+                await fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: message });
+                alert('Notification sent!');
+            } catch (e) {
+                alert('Failed to send notification');
+            }
+        }
+
+        // Expose sendNotification for button onclick
+        window.sendNotification = sendNotification;
+
+        // Defer setup until page load to coexist with existing SW registration
+        window.addEventListener('load', setupNtfy);
+    })();
+</script>
+
+<div style="position:fixed; right:12px; bottom:12px; z-index:9999; background:rgba(0,0,0,0.7); color:#fff; padding:8px; border-radius:8px; display:flex; gap:6px; align-items:center;">
+    <input id="msg" placeholder="Type message" style="padding:6px 8px; border-radius:6px; border:1px solid #555; background:#111; color:#fff;" />
+    <button onclick="sendNotification()" style="padding:6px 10px; border-radius:6px; background:#6366f1; color:#fff; border:none;">Send</button>
+  </div>
 </html>
