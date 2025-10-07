@@ -298,4 +298,108 @@
      throw error; // ვაგდებთ შეცდომას შემდგომი დამუშავებისთვის მოვლენის დამმუშავებელში
    }
  } 
+
+// ================= Push Notifications Integration =================
+const API_BASE = 'https://tips-api.you.ge';
+
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function sendSubscriptionToServer(subscription) {
+  try {
+    const data = subscription?.toJSON?.() || {};
+    const endpoint = data.endpoint || subscription.endpoint;
+    const p256dh = data.keys?.p256dh;
+    const auth = data.keys?.auth;
+    if (!endpoint || !p256dh || !auth) throw new Error('Invalid subscription payload');
+    await fetch(`${API_BASE}/?action=subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint, p256dh, auth })
+    });
+  } catch (err) {
+    logError(err, 'ჩანაწერის გაგზავნა სერვერზე');
+  }
+}
+
+async function subscribeAndRegisterOnServer() {
+  const vapid = self.__VAPID_PUBLIC_KEY__ || '';
+  const options = { userVisibleOnly: true };
+  if (vapid) {
+    options.applicationServerKey = urlB64ToUint8Array(vapid);
+  }
+  const sub = await self.registration.pushManager.subscribe(options);
+  await sendSubscriptionToServer(sub);
+  return sub;
+}
+
+// დამხმარე მესიჯ-ლისტენერი VAPID და გამოწერაზე
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'PWA_SET_VAPID') {
+    try {
+      self.__VAPID_PUBLIC_KEY__ = String(event.data.vapidPublicKey || '').trim();
+    } catch (err) {
+      logError(err, 'VAPID გასაღების დაყენება');
+    }
+  }
+  if (event.data?.type === 'PWA_SUBSCRIBE') {
+    event.waitUntil(subscribeAndRegisterOnServer().catch(err => logError(err, 'პუშზე გამოწერა PWA_SUBSCRIBE')));
+  }
+});
+
+// Push event: ვაჩვენებთ მარტივ შეტყობინებას; კლიენტი შემდეგ მიიღებს განახლებებს
+self.addEventListener('push', (event) => {
+  const title = 'Tips • ახალი განახლება';
+  const body = 'გაიხსნა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
+  const data = { url: '/tip' };
+  const options = {
+    body,
+    data,
+    icon: '/icon/logo3/icon-512.png',
+    badge: '/icon/logo3/icon-180.png',
+    vibrate: [100, 50, 100]
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click: ვხსნით/ვფოკუსდებით აპზე
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        try {
+          if ('focus' in client) return client.focus();
+        } catch {}
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+    })
+  );
+});
+
+// გამოწერის ცვლილების დამუშავება: ავტომატური ხელახლა გამოწერა და სერვერზე განახლება
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const vapid = self.__VAPID_PUBLIC_KEY__ || '';
+        const options = { userVisibleOnly: true };
+        if (vapid) options.applicationServerKey = urlB64ToUint8Array(vapid);
+        const sub = await self.registration.pushManager.subscribe(options);
+        await sendSubscriptionToServer(sub);
+      } catch (err) {
+        logError(err, 'pushsubscriptionchange');
+      }
+    })()
+  );
+});
  
