@@ -2501,7 +2501,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     const endpoint = data.endpoint || sub.endpoint;
                     const p256dh = data.keys?.p256dh;
                     const auth = data.keys?.auth;
-                    await fetch('https://tips-api.you.ge/?action=subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint, p256dh, auth }) });
+                    const device_id = (window.getDeviceId ? window.getDeviceId() : localStorage.getItem('device_id')) || '';
+                    await fetch('https://tips-api.you.ge/?action=subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint, p256dh, auth, device_id }) });
                     return sub;
                 }
 

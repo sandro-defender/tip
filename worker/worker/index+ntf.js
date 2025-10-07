@@ -36,9 +36,18 @@ export default {
 				endpoint TEXT NOT NULL UNIQUE,
 				p256dh TEXT NOT NULL,
 				auth TEXT NOT NULL,
-				created_at TEXT NOT NULL
+				device_id TEXT,
+				ua TEXT,
+				origin TEXT,
+				created_at TEXT NOT NULL,
+				last_seen TEXT
 			)`;
 			await db.prepare(sql).run();
+			// Best-effort: add missing columns for existing tables
+			try { await db.prepare('ALTER TABLE "push_subscriptions" ADD COLUMN device_id TEXT').run(); } catch {}
+			try { await db.prepare('ALTER TABLE "push_subscriptions" ADD COLUMN ua TEXT').run(); } catch {}
+			try { await db.prepare('ALTER TABLE "push_subscriptions" ADD COLUMN origin TEXT').run(); } catch {}
+			try { await db.prepare('ALTER TABLE "push_subscriptions" ADD COLUMN last_seen TEXT').run(); } catch {}
 		}
 		async function createTableIfNotExists(db, year) {
 			const table = getTableName(year);
@@ -179,12 +188,27 @@ export default {
 						removed++;
 						return;
 					}
-					if (res.ok) sent++; else failures.push({ id: s.id, status: res.status });
+					if (res.ok) {
+						sent++;
+						await env.DB.prepare('UPDATE "push_subscriptions" SET last_seen = ? WHERE id = ?').bind(new Date().toISOString(), s.id).run();
+					} else {
+						failures.push({ id: s.id, status: res.status });
+					}
 				} catch (e) {
 					failures.push({ id: s.id, error: String(e && e.message || e) });
 				}
 			}));
 			return { sent, removed, failures };
+		}
+
+		async function cleanupOldSubscriptions(db, { maxInactiveDays = 180 } = {}) {
+			await createPushTableIfNotExists(db);
+			const cutoff = new Date(Date.now() - maxInactiveDays * 24 * 60 * 60 * 1000).toISOString();
+			// Delete rows never seen and created long ago
+			const { changes: delNever } = await db.prepare('DELETE FROM "push_subscriptions" WHERE last_seen IS NULL AND created_at < ?').bind(cutoff).run();
+			// Delete rows not seen for a long time
+			const { changes: delOld } = await db.prepare('DELETE FROM "push_subscriptions" WHERE last_seen IS NOT NULL AND last_seen < ?').bind(cutoff).run();
+			return { deleted: (delNever || 0) + (delOld || 0) };
 		}
 		async function getPreviousMonthPoints(db, year, month) {
 			let prevMonth = month - 1;
@@ -275,13 +299,27 @@ export default {
 					const endpoint = String(body.endpoint || '').trim();
 					const p256dh = String(body.p256dh || body["keys[p256dh]"] || (body.keys && body.keys.p256dh) || '').trim();
 					const auth = String(body.auth || body["keys[auth]"] || (body.keys && body.keys.auth) || '').trim();
+					const deviceId = String(body.device_id || body.deviceId || '').trim();
+					const ua = request.headers.get('User-Agent') || '';
+					const origin = request.headers.get('Origin') || '';
 					if (!endpoint || !/^https?:\/\//i.test(endpoint)) return json({ error: 'Invalid endpoint' }, 400);
 					if (!p256dh || !auth) return json({ error: 'Missing keys' }, 400);
 					const { results } = await env.DB.prepare('SELECT id FROM "push_subscriptions" WHERE endpoint = ?').bind(endpoint).all();
 					if (results && results[0]) {
-						await env.DB.prepare('UPDATE "push_subscriptions" SET p256dh = ?, auth = ? WHERE endpoint = ?').bind(p256dh, auth, endpoint).run();
+						await env.DB.prepare('UPDATE "push_subscriptions" SET p256dh = ?, auth = ?, device_id = ?, ua = ?, origin = ?, last_seen = ? WHERE endpoint = ?').bind(p256dh, auth, deviceId || null, ua, origin, new Date().toISOString(), endpoint).run();
 					} else {
-						await env.DB.prepare('INSERT INTO "push_subscriptions" (endpoint, p256dh, auth, created_at) VALUES (?, ?, ?, ?)').bind(endpoint, p256dh, auth, new Date().toISOString()).run();
+						await env.DB.prepare('INSERT INTO "push_subscriptions" (endpoint, p256dh, auth, device_id, ua, origin, created_at, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(endpoint, p256dh, auth, deviceId || null, ua, origin, new Date().toISOString(), new Date().toISOString()).run();
+					}
+					// Prune duplicates for same device_id: keep most recent endpoint
+					if (deviceId) {
+						const { results: dups } = await env.DB.prepare('SELECT id FROM "push_subscriptions" WHERE device_id = ? AND endpoint != ? ORDER BY last_seen DESC').bind(deviceId, endpoint).all();
+						if (dups && dups.length > 0) {
+							// Keep the first (most recent) which is current; delete others
+							const idsToDelete = dups.slice(1).map(r => r.id);
+							for (const id of idsToDelete) {
+								await env.DB.prepare('DELETE FROM "push_subscriptions" WHERE id = ?').bind(id).run();
+							}
+						}
 					}
 					return json({ success: true });
 				}
@@ -317,7 +355,14 @@ export default {
 							return 'error';
 						}
 					}));
-					return json({ success: true, sent, removed, total: subs.length, failures });
+					// best-effort cleanup of very old rows
+					const cleaned = await cleanupOldSubscriptions(env.DB).catch(() => ({ deleted: 0 }));
+					return json({ success: true, sent, removed, total: subs.length, failures, cleaned_deleted: cleaned.deleted });
+				}
+				if (actionPost === 'cleanup') {
+					const days = Number.parseInt(body.days || '180', 10);
+					const res = await cleanupOldSubscriptions(env.DB, { maxInactiveDays: Number.isFinite(days) && days > 0 ? days : 180 });
+					return json({ success: true, ...res });
 				}
 				if (actionPost === 'update_day') {
 					const day = Number.parseInt(body.day || '0', 10);

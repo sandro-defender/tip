@@ -319,11 +319,13 @@ async function sendSubscriptionToServer(subscription) {
     const endpoint = data.endpoint || subscription.endpoint;
     const p256dh = data.keys?.p256dh;
     const auth = data.keys?.auth;
+    const device_id = (self && self.clients && self.crypto && self.crypto.randomUUID) ? undefined : undefined; // placeholder
+    // Try read a persisted device id from clients (not directly available here); page already stores device id.
     if (!endpoint || !p256dh || !auth) throw new Error('Invalid subscription payload');
     await fetch(`${API_BASE}/?action=subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint, p256dh, auth })
+      body: JSON.stringify({ endpoint, p256dh, auth, device_id })
     });
   } catch (err) {
     logError(err, 'ჩანაწერის გაგზავნა სერვერზე');
