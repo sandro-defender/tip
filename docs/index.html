@@ -2648,6 +2648,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 <script>
     (function() {
         const topic = 'mytopic';
+        const ntfyBase = 'https://ntfy.sh';
 
         async function ensureNotificationPermission() {
             if (!('Notification' in window)) return false;
@@ -2738,6 +2739,31 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         async function enableNotifications() {
             const granted = await ensureNotificationPermission();
             if (granted) {
+                // Subscribe to Web Push and register with ntfy
+                try {
+                    const registration = await (async () => {
+                        // Prefer existing registration
+                        const existing = await navigator.serviceWorker.getRegistration();
+                        if (existing) return existing;
+                        return navigator.serviceWorker.register('/workbox-service-worker.js');
+                    })();
+
+                    const existingSub = await registration.pushManager.getSubscription();
+                    const subscription = existingSub || await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: null
+                    });
+
+                    await fetch(`${ntfyBase}/${topic}/subscribe`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(subscription)
+                    });
+                    console.log('[ntfy] Subscribed Web Push for topic:', topic);
+                } catch (e) {
+                    console.warn('[ntfy] Web Push subscription failed', e);
+                }
+
                 setupNtfy();
             } else {
                 alert('Notifications are blocked. Please enable them in your browser settings.');
@@ -2761,7 +2787,23 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         window.enableNotifications = enableNotifications;
 
         // Auto-setup only if permission is already granted
-        window.addEventListener('load', setupNtfy);
+        window.addEventListener('load', async () => {
+            if (Notification.permission === 'granted') {
+                // Attempt to ensure push subscription exists on load
+                try {
+                    const registration = await (async () => {
+                        const existing = await navigator.serviceWorker.getRegistration();
+                        if (existing) return existing;
+                        return navigator.serviceWorker.register('/workbox-service-worker.js');
+                    })();
+                    const sub = await registration.pushManager.getSubscription();
+                    if (!sub) {
+                        // Do not prompt here; require user gesture via Enable
+                    }
+                } catch (_) {}
+                setupNtfy();
+            }
+        });
     })();
 </script>
 
