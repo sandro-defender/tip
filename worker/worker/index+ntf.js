@@ -85,15 +85,38 @@ export default {
 			const b64 = btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 			return b64;
 		}
-		async function importVapidPrivateKey(privateKeyB64Url) {
-			const keyData = b64urlToUint8Array(privateKeyB64Url);
-			return await crypto.subtle.importKey(
-				'pkcs8',
-				keyData,
-				{ name: 'ECDSA', namedCurve: 'P-256' },
-				false,
-				['sign']
-			);
+		function parseUncompressedPublicXY(pubB64Url) {
+			const raw = b64urlToUint8Array(pubB64Url);
+			if (raw.length !== 65 || raw[0] !== 0x04) throw new Error('Invalid VAPID public key format');
+			const x = raw.slice(1, 33);
+			const y = raw.slice(33, 65);
+			return { x: uint8ArrayToB64url(x), y: uint8ArrayToB64url(y) };
+		}
+		async function importVapidPrivateKeyAuto(vapidPublicKeyB64Url, privateKeyB64Url) {
+			// Accept either PKCS8 (standard) or raw 32-byte private scalar 'd'
+			const priv = b64urlToUint8Array(privateKeyB64Url);
+			try {
+				// Try PKCS8 first
+				return await crypto.subtle.importKey(
+					'pkcs8',
+					priv,
+					{ name: 'ECDSA', namedCurve: 'P-256' },
+					false,
+					['sign']
+				);
+			} catch (_) {
+				// Fallback to JWK using provided public key for x,y and raw d
+				if (priv.length !== 32) throw new Error('VAPID private key must be PKCS8 or 32-byte raw scalar');
+				const { x, y } = parseUncompressedPublicXY(vapidPublicKeyB64Url);
+				const jwk = { kty: 'EC', crv: 'P-256', x, y, d: privateKeyB64Url, ext: false, key_ops: ['sign'] };
+				return await crypto.subtle.importKey(
+					'jwk',
+					jwk,
+					{ name: 'ECDSA', namedCurve: 'P-256' },
+					false,
+					['sign']
+				);
+			}
 		}
 		async function generateVapidJWT(audience, subject, vapidPrivateKeyB64Url) {
 			const header = { alg: 'ES256', typ: 'JWT' };
@@ -106,7 +129,7 @@ export default {
 				return uint8ArrayToB64url(bytes);
 			};
 			const input = `${b64url(header)}.${b64url(payload)}`;
-			const key = await importVapidPrivateKey(vapidPrivateKeyB64Url);
+			// key import now handled by caller (needs public key for JWK fallback)
 			const signature = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(input)));
 			const jwt = `${input}.${uint8ArrayToB64url(signature)}$`;
 			return jwt.replace(/\$$/, '');
@@ -122,12 +145,20 @@ export default {
 		async function sendWebPushToEndpoint(endpoint, vapidPublicKeyB64Url, vapidPrivateKeyB64Url, subject) {
 			const audience = getAudienceFromEndpoint(endpoint);
 			if (!audience) throw new Error('Invalid endpoint URL');
-			const jwt = await generateVapidJWT(audience, subject, vapidPrivateKeyB64Url);
+			const key = await importVapidPrivateKeyAuto(vapidPublicKeyB64Url, vapidPrivateKeyB64Url);
+			const header = { alg: 'ES256', typ: 'JWT' };
+			const exp = Math.floor(Date.now() / 1000) + 12 * 60 * 60;
+			const payload = { aud: audience, exp, sub: subject };
+			const encoder = new TextEncoder();
+			const i = `${uint8ArrayToB64url(encoder.encode(JSON.stringify(header)))}.${uint8ArrayToB64url(encoder.encode(JSON.stringify(payload)))}`;
+			const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, encoder.encode(i)));
+			const jwt = `${i}.${uint8ArrayToB64url(sig)}`;
 			const headers = new Headers();
-			headers.set('TTL', '2419200');
+			headers.set('TTL', '60');
 			headers.set('Authorization', `WebPush ${jwt}`);
 			headers.set('Crypto-Key', `p256ecdsa=${vapidPublicKeyB64Url}`);
-			const res = await fetch(endpoint, { method: 'POST', headers });
+			headers.set('Content-Length', '0');
+			const res = await fetch(endpoint, { method: 'POST', headers, body: '' });
 			return res;
 		}
 		async function getPreviousMonthPoints(db, year, month) {
