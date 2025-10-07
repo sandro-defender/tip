@@ -1,5 +1,7 @@
 name = "tips-api"
-main = "worker/index.js"
+# main = "worker/index.js"
+main = "worker/index+ntf.js"
+
 compatibility_date = "2025-09-30"
 
 preview_urls = true   # or false, depending on your preference
