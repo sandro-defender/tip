@@ -18,7 +18,7 @@ export async function onRequest(context) {
   }
 
   // ✅ If password matches, serve secret.html
-  const response = await env.ASSETS.fetch("https://tips.you.ge/html/bar/html");
+  const response = await env.ASSETS.fetch("https://tips.you.ge/html/bar.html");
   return new Response(await response.text(), {
     headers: { "Content-Type": "text/html" }
   });
