@@ -921,7 +921,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="sikoli">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">სიქოლი</span>
-              <small style="opacity:0.8;">(tip/30*2.5, -18h/day)</small>
+              <small style="opacity:0.8;">(tip/30*2.5, -12h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="sikoli" data-missed="0">0</button>
@@ -936,7 +936,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="nocall">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">NoCall</span>
-              <small style="opacity:0.8;">(tip/30*3, -24h/day)</small>
+              <small style="opacity:0.8;">(tip/30*3, -12h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="nocall" data-missed="0">0</button>
@@ -951,7 +951,7 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
           <div class="absence-row" data-type="suspend">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">Suspend</span>
-              <small style="opacity:0.8;">(tip/30*4, -36h/day)</small>
+              <small style="opacity:0.8;">(tip/30*4, -12h/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="suspend" data-missed="0">0</button>
@@ -1175,11 +1175,11 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
 
         // Absence types configuration
         const ABSENCE_TYPES = [
-          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
           { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
-          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyMultiplier: 2.5, salaryHoursDeducted: 18, description: 'Sick (no-doc?)' },
-          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyMultiplier: 3,   salaryHoursDeducted: 24, description: 'No call / no show' },
-          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyMultiplier: 4,   salaryHoursDeducted: 36, description: 'Suspension' },
+          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
+          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyMultiplier: 2.5, salaryHoursDeducted: 12, description: 'Sick (no-doc?)' },
+          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyMultiplier: 3,   salaryHoursDeducted: 12, description: 'No call / no show' },
+          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyMultiplier: 4,   salaryHoursDeducted: 12, description: 'Suspension' },
         ];
 
         function getAbsenceTypeById(id) {
