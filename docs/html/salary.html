@@ -888,21 +888,6 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
         <button id="closeMissedModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
         <h2 style="margin-bottom:10px;font-size:1.2rem;color:var(--primary);">➖ გაცდენები</h2>
         <div id="missedOptionsContainer" style="display:flex;flex-direction:column;gap:12px;">
-          <div class="absence-row" data-type="unpaid">
-            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-              <span style="font-weight:600;">Unpaid</span>
-              <small style="opacity:0.8;">(tip/30*2, -12h/day)</small>
-            </div>
-            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
-              <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="1">1</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="2">2</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="3">3</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="4">4</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="5">5</button>
-              <button class="toggle-btn" data-absence="unpaid" data-missed="6">6</button>
-            </div>
-          </div>
           <div class="absence-row" data-type="buleteni">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">ბიულეტენი</span>
@@ -916,6 +901,21 @@ Purpose: Frontend page for salary and tips calculation with shifts and absences
               <button class="toggle-btn" data-absence="buleteni" data-missed="4">4</button>
               <button class="toggle-btn" data-absence="buleteni" data-missed="5">5</button>
               <button class="toggle-btn" data-absence="buleteni" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="unpaid">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">Unpaid</span>
+              <small style="opacity:0.8;">(tip/30*2, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="6">6</button>
             </div>
           </div>
           <div class="absence-row" data-type="sikoli">
