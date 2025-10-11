@@ -333,18 +333,6 @@ async function sendSubscriptionToServer(subscription) {
 }
 
 async function subscribeAndRegisterOnServer() {
-  // Check if we're in PWA mode before subscribing
-  const clients = await self.clients.matchAll();
-  const isPWA = clients.some(client => 
-    client.url.includes('display-mode: standalone') || 
-    client.url.includes('android-app://')
-  );
-  
-  if (!isPWA) {
-    console.log('Service Worker: Not in PWA mode, skipping notification subscription');
-    return null;
-  }
-
   const vapid = self.__VAPID_PUBLIC_KEY__ || '';
   const options = { userVisibleOnly: true };
   if (vapid) {
@@ -431,18 +419,6 @@ self.addEventListener('pushsubscriptionchange', (event) => {
   event.waitUntil(
     (async () => {
       try {
-        // Check if we're in PWA mode before resubscribing
-        const clients = await self.clients.matchAll();
-        const isPWA = clients.some(client => 
-          client.url.includes('display-mode: standalone') || 
-          client.url.includes('android-app://')
-        );
-        
-        if (!isPWA) {
-          console.log('Service Worker: Not in PWA mode, skipping push subscription change');
-          return;
-        }
-
         const vapid = self.__VAPID_PUBLIC_KEY__ || '';
         const options = { userVisibleOnly: true };
         if (vapid) options.applicationServerKey = urlB64ToUint8Array(vapid);

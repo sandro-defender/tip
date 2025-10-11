@@ -1,10 +1,10 @@
 <!--
 Project: Tip Tracker
 File: index.html
-Version: 1.8
+Version: 1.7
 Author: Cursor AI
-Model: Claude 3.5 Sonnet
-Last Modified: 2025-01-27
+Model: GPT-5
+Last Modified: 2025-10-05
 Purpose: Main portal page with device theme detection and automatic theme switching
 -->
 <!DOCTYPE html>
@@ -2849,7 +2849,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         });
     </script>
 
-    <script src="/js/notification-permission.js"></script>
     <script src="/js/install-helper.js"></script>
     <script>
         // Initialize the install helper with custom options
@@ -2862,13 +2861,5 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             textColor: 'white'
         });
     </script>
-
-<!--
-CHANGELOG
-[2025-01-27] v1.8 – Added notification permission manager script integration.
-Reason: To implement user-friendly notification permission request that only appears in PWA mode.
-Thoughts: Integrated NotificationPermissionManager script to show permission modal after PWA installation.
-Model: Claude 3.5 Sonnet
--->
 </body>
 </html>
