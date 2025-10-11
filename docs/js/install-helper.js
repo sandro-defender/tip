@@ -1,5 +1,5 @@
 class InstallHelper {
-    static VERSION = '0.0.1';
+    static VERSION = '0.0.2';
 
     constructor(options = {}) {
         // Log version on initialization
@@ -950,6 +950,9 @@ class InstallHelper {
 
             // Show success message
             this.showInstallSuccess();
+
+            // Initialize notification permission manager after PWA installation
+            this.initializeNotificationPermission();
         });
 
         // Check for display mode changes
@@ -1520,6 +1523,24 @@ class InstallHelper {
     }
 
     /**
+     * Initialize notification permission manager
+     */
+    initializeNotificationPermission() {
+        // Check if NotificationPermissionManager is available
+        if (typeof window.NotificationPermissionManager !== 'undefined') {
+            console.log('InstallHelper: Initializing notification permission manager');
+            
+            // Create notification permission manager instance
+            this.notificationManager = new window.NotificationPermissionManager({
+                autoShow: true,
+                showDelay: 3000 // Show after 3 seconds of PWA installation
+            });
+        } else {
+            console.log('InstallHelper: NotificationPermissionManager not available');
+        }
+    }
+
+    /**
      * Detect if running inside a messenger in-app browser
      * @returns {boolean}
      */
@@ -1548,3 +1569,11 @@ class InstallHelper {
         return false;
     }
 }
+
+<!--
+CHANGELOG
+[2025-01-27] v0.0.2 – Added notification permission manager integration for PWA mode.
+Reason: To implement user-friendly notification permission request that only appears in PWA mode.
+Thoughts: Integrated with NotificationPermissionManager to show permission modal after PWA installation.
+Model: Claude 3.5 Sonnet
+-->
