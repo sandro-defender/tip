@@ -411,89 +411,170 @@ AI Model Used: GPT-5
         };
 
         const calendarUtils = {
-    getStatus: (date, startDate) => {
-        const diffDays = Math.floor((date - startDate) / 86400000);
-        const patternCycle = 12;
-        const patternPosition = ((diffDays % patternCycle) + patternCycle) % patternCycle;
+            getStatus: (date, startDate) => {
+                const diffDays = Math.floor((date - startDate) / 86400000);
+                const totalCycle = config.workCycle + config.restCycle;
+                const cyclePosition = ((diffDays % totalCycle) + totalCycle) % totalCycle;
+                
+                // New pattern: r.r.r/g.g.g/lr.lr.lr/g.g.g/r.r.r/...
+                // This creates a 12-day cycle: 3 red, 3 green, 3 light red, 3 green
+                const patternCycle = 12;
+                const patternPosition = ((diffDays % patternCycle) + patternCycle) % patternCycle;
+                
+                if (patternPosition < 3) {
+                    return 'work'; // Red (first 3 days)
+                } else if (patternPosition < 6) {
+                    return 'rest'; // Green (next 3 days)
+                } else if (patternPosition < 9) {
+                    return 'light-work'; // Light red (next 3 days)
+                } else {
+                    return 'rest'; // Green (last 3 days)
+                }
+            },
 
-        if (patternPosition < 3) return 'work';         // 3 дня — красные
-        else if (patternPosition < 6) return 'rest';    // 3 дня — зелёные
-        else if (patternPosition < 9) return 'light-work'; // 3 дня — светло-красные
-        else return 'rest';                             // 3 дня — зелёные
-    },
+            generateMonth: (year, month, startDate) => {
+                const table = document.createElement('table');
+                table.className = `month-table ${new Date().getMonth() === month ? 'current-month' : ''}`;
+                
+                const caption = table.createCaption();
+                const monthName = new Date(year, month).toLocaleDateString('ka-GE', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
 
-    generateMonth: (year, month, startDate) => {
-        const table = document.createElement('table');
-        table.className = `month-table ${new Date().getMonth() === month ? 'current-month' : ''}`;
+                const headerRow = table.insertRow();
+                ['კვ', 'ორ', 'სამ', 'ოთ', 'ხუთ', 'პარ', 'შაბ'].forEach(day => {
+                    const th = document.createElement('th');
+                    th.textContent = day;
+                    headerRow.appendChild(th);
+                });
 
-        const caption = table.createCaption();
-        const monthName = new Date(year, month).toLocaleDateString('ka-GE', { 
-            month: 'long', 
-            year: 'numeric' 
-        });
+                let currentDay = new Date(year, month, 1);
+                let workDays = 0;
 
-        // 🗓 Заголовки — понедельник первый
-        const headerRow = table.insertRow();
-        ['ორ', 'სამ', 'ოთ', 'ხუთ', 'პარ', 'შაბ', 'კვ'].forEach(day => {
-            const th = document.createElement('th');
-            th.textContent = day;
-            headerRow.appendChild(th);
-        });
+                // Fill in any spaces before the 1st day
+                const firstDayIndex = currentDay.getDay();
+                if (firstDayIndex > 0) {
+                    const emptyRow = table.insertRow();
+                    for (let i = 0; i < firstDayIndex; i++) {
+                        emptyRow.insertCell();
+                    }
+                    
+                    // Add the remaining days of the first week
+                    for (let i = firstDayIndex; i < 7; i++) {
+                        const cell = emptyRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+                        
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
 
-        let currentDay = new Date(year, month, 1);
-        let workDays = 0;
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
 
-        // 🧮 Смещение первого дня (понедельник = 0)
-        let firstDayIndex = (currentDay.getDay() + 6) % 7;
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
 
-        const firstRow = table.insertRow();
-        for (let i = 0; i < firstDayIndex; i++) {
-            firstRow.insertCell(); // пустые ячейки до первого дня
-        }
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                } else {
+                    // Add the first week
+                    const weekRow = table.insertRow();
+                    for (let i = 0; i < 7; i++) {
+                        const cell = weekRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+                        
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
 
-        while (currentDay.getMonth() === month) {
-            if (firstDayIndex === 7) {
-                firstDayIndex = 0;
-                var weekRow = table.insertRow();
-            } else if (currentDay.getDate() === 1) {
-                var weekRow = firstRow;
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
+
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
+
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                }
+
+                // Fill the rest of the month
+                while (currentDay.getMonth() === month) {
+                    const weekRow = table.insertRow();
+                    
+                    for (let i = 0; i < 7; i++) {
+                        if (currentDay.getMonth() !== month) {
+                            weekRow.insertCell();
+                            continue;
+                        }
+                        
+                        const cell = weekRow.insertCell();
+                        const cellDate = new Date(currentDay);
+                        cell.textContent = cellDate.getDate();
+
+                        // სტატუსის გამოთვლა
+                        const status = calendarUtils.getStatus(cellDate, startDate);
+                        if (status === 'work' || status === 'light-work') workDays++;
+                        cell.classList.add(status + '-day');
+
+                        // მონიშნული თარიღი
+                        if (cellDate.toDateString() === startDate.toDateString()) {
+                            cell.classList.add('selected-date');
+                        }
+
+                        // ღილაკის ფუნქციონალი
+                        cell.addEventListener('click', () => {
+                            // Remove selected class from previous selection
+                            const selected = table.querySelector('.selected-date');
+                            if (selected) selected.classList.remove('selected-date');
+                            
+                            // Add selected class to current cell
+                            cell.classList.add('selected-date');
+                            
+                            selectedDate = new Date(cellDate);
+                            generateCalendar();
+                        });
+
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                }
+
+                caption.innerHTML = `
+                    ${monthName}
+                    <div class="small">${workDays} დღე, ${workDays * config.dailyHours} საათი</div>
+                `;
+
+                return table;
             }
-
-            const cell = weekRow.insertCell();
-            const cellDate = new Date(currentDay);
-            cell.textContent = cellDate.getDate();
-
-            // Определяем статус
-            const status = calendarUtils.getStatus(cellDate, startDate);
-            if (status === 'work' || status === 'light-work') workDays++;
-            cell.classList.add(status + '-day');
-
-            // Подсветка выбранной даты
-            if (cellDate.toDateString() === startDate.toDateString()) {
-                cell.classList.add('selected-date');
-            }
-
-            // Клик по дню
-            cell.addEventListener('click', () => {
-                const selected = table.querySelector('.selected-date');
-                if (selected) selected.classList.remove('selected-date');
-                cell.classList.add('selected-date');
-                selectedDate = new Date(cellDate);
-                generateCalendar();
-            });
-
-            currentDay.setDate(currentDay.getDate() + 1);
-            firstDayIndex++;
-        }
-
-        caption.innerHTML = `
-            ${monthName}
-            <div class="small">${workDays} დღე, ${workDays * config.dailyHours} საათი</div>
-        `;
-
-        return table;
-    }
-};
+        };
 
         function generateCalendar() {
             const container = document.getElementById('calendarContainer');
