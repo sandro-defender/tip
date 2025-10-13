@@ -1,4 +1,14 @@
- // Workbox ბიბლიოთეკების CDN-დან იმპორტი
+ /*
+Project: Tips Management System
+File: workbox-service-worker.js
+Version: 1.1
+Author: Cursor AI
+Model: Claude 3.5 Sonnet
+Last Modified: 2025-01-27
+Purpose: Service Worker for PWA functionality with push notifications and caching
+*/
+
+// Workbox ბიბლიოთეკების CDN-დან იმპორტი
  importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js');
 
  // ვერსია კეშის მართვისთვის
@@ -360,7 +370,7 @@ self.addEventListener('message', (event) => {
 // Push event: ვაჩვენებთ მარტივ შეტყობინებას; კლიენტი შემდეგ მიიღებს განახლებებს
 self.addEventListener('push', (event) => {
   event.waitUntil((async () => {
-    const title = 'Tips Update';
+    const title = '🎯 Tip Update';
     let body = 'დაემატა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
     try {
       const now = new Date();
@@ -373,17 +383,26 @@ self.addEventListener('push', (event) => {
         const days = json && json.days ? json.days : {};
         const monthTotal = Number(json && json.total ? json.total : 0) || 0;
         let lastVal = 0;
+        let lastDate = '';
         for (let d = 31; d >= 1; d--) {
           const v = Number(days[d] || 0);
-          if (v > 0) { lastVal = v; break; }
+          if (v > 0) { 
+            lastVal = v; 
+            lastDate = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+            break; 
+          }
         }
         const amtNum = lastVal > 0 ? Math.round(lastVal * 10) / 10 : null;
         const totalNum = Math.round(monthTotal * 10) / 10;
         const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
         const amt = amtNum !== null ? fmt.format(amtNum) : null;
         const totalStr = fmt.format(totalNum);
-        if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • ჯამი: ${totalStr} $`;
-        else body = `ჯამი: ${totalStr} $`;
+        
+        if (amt && lastDate) {
+          body = `📅 Date: ${lastDate}\n💰 Amount: $${amt}\n📊 Total: $${totalStr}\n━━━━━━━━━━━━\nhttps://tips.you.ge`;
+        } else {
+          body = `📊 Total: $${totalStr}\n━━━━━━━━━━━━\nhttps://tips.you.ge`;
+        }
       }
     } catch (_) {}
     const data = { url: '/tip' };
@@ -430,4 +449,12 @@ self.addEventListener('pushsubscriptionchange', (event) => {
     })()
   );
 });
+
+/*
+CHANGELOG
+[2025-01-27] v1.1 – Updated push notification format to match shareLastEntry style
+Reason: To provide consistent formatting with emoji-based display and proper line breaks
+Thoughts: Better user experience with structured notification format including date, amount, total, and website URL
+Model: Claude 3.5 Sonnet
+*/
  

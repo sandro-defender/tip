@@ -298,4 +298,136 @@
      throw error; // ვაგდებთ შეცდომას შემდგომი დამუშავებისთვის მოვლენის დამმუშავებელში
    }
  } 
+
+// ================= Push Notifications Integration =================
+const API_BASE = 'https://tips-api.you.ge';
+
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function sendSubscriptionToServer(subscription) {
+  try {
+    const data = subscription?.toJSON?.() || {};
+    const endpoint = data.endpoint || subscription.endpoint;
+    const p256dh = data.keys?.p256dh;
+    const auth = data.keys?.auth;
+    const device_id = (self && self.clients && self.crypto && self.crypto.randomUUID) ? undefined : undefined; // placeholder
+    // Try read a persisted device id from clients (not directly available here); page already stores device id.
+    if (!endpoint || !p256dh || !auth) throw new Error('Invalid subscription payload');
+    await fetch(`${API_BASE}/?action=subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint, p256dh, auth, device_id })
+    });
+  } catch (err) {
+    logError(err, 'ჩანაწერის გაგზავნა სერვერზე');
+  }
+}
+
+async function subscribeAndRegisterOnServer() {
+  const vapid = self.__VAPID_PUBLIC_KEY__ || '';
+  const options = { userVisibleOnly: true };
+  if (vapid) {
+    options.applicationServerKey = urlB64ToUint8Array(vapid);
+  }
+  const sub = await self.registration.pushManager.subscribe(options);
+  await sendSubscriptionToServer(sub);
+  return sub;
+}
+
+// დამხმარე მესიჯ-ლისტენერი VAPID და გამოწერაზე
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'PWA_SET_VAPID') {
+    try {
+      self.__VAPID_PUBLIC_KEY__ = String(event.data.vapidPublicKey || '').trim();
+    } catch (err) {
+      logError(err, 'VAPID გასაღების დაყენება');
+    }
+  }
+  if (event.data?.type === 'PWA_SUBSCRIBE') {
+    event.waitUntil(subscribeAndRegisterOnServer().catch(err => logError(err, 'პუშზე გამოწერა PWA_SUBSCRIBE')));
+  }
+});
+
+// Push event: ვაჩვენებთ მარტივ შეტყობინებას; კლიენტი შემდეგ მიიღებს განახლებებს
+self.addEventListener('push', (event) => {
+  event.waitUntil((async () => {
+    const title = 'Tips Update';
+    let body = 'დაემატა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
+    try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const url = `${API_BASE}/?action=get_month&year=${y}&month=${m}`;
+      const res = await fetch(url, { method: 'GET' });
+      if (res.ok) {
+        const json = await res.json();
+        const days = json && json.days ? json.days : {};
+        const monthTotal = Number(json && json.total ? json.total : 0) || 0;
+        let lastVal = 0;
+        for (let d = 31; d >= 1; d--) {
+          const v = Number(days[d] || 0);
+          if (v > 0) { lastVal = v; break; }
+        }
+        const amtNum = lastVal > 0 ? Math.round(lastVal * 10) / 10 : null;
+        const totalNum = Math.round(monthTotal * 10) / 10;
+        const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        const amt = amtNum !== null ? fmt.format(amtNum) : null;
+        const totalStr = fmt.format(totalNum);
+        if (amt) body = `ბოლო ჩარიცხვა: ${amt} $ • ჯამი: ${totalStr} $`;
+        else body = `ჯამი: ${totalStr} $`;
+      }
+    } catch (_) {}
+    const data = { url: '/tip' };
+    const options = {
+      body,
+      data,
+      icon: '/icon/logo3/icon-512.png',
+      badge: '/icon/logo3/icon-180.png',
+      vibrate: [100, 50, 100]
+    };
+    return self.registration.showNotification(title, options);
+  })());
+});
+
+// Notification click: ვხსნით/ვფოკუსდებით აპზე
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        try {
+          if ('focus' in client) return client.focus();
+        } catch {}
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+    })
+  );
+});
+
+// გამოწერის ცვლილების დამუშავება: ავტომატური ხელახლა გამოწერა და სერვერზე განახლება
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const vapid = self.__VAPID_PUBLIC_KEY__ || '';
+        const options = { userVisibleOnly: true };
+        if (vapid) options.applicationServerKey = urlB64ToUint8Array(vapid);
+        const sub = await self.registration.pushManager.subscribe(options);
+        await sendSubscriptionToServer(sub);
+      } catch (err) {
+        logError(err, 'pushsubscriptionchange');
+      }
+    })()
+  );
+});
  
