@@ -399,7 +399,7 @@ self.addEventListener('push', (event) => {
         const totalStr = fmt.format(totalNum);
         
         if (amt && lastDate) {
-          body = `📅 Date: ${lastDate}\n💰 Amount: $${amt}\n📊 Total: $${totalStr}\n━━━━━━━━━━━━\nhttps://tips.you.ge`;
+          body = `📅 Date: ${lastDate}\n💰 Amount: $${amt}\n📊 Total: $${totalStr}`;
         } else {
           body = `📊 Total: $${totalStr}\n━━━━━━━━━━━━\nhttps://tips.you.ge`;
         }
