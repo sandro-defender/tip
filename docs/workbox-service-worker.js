@@ -1,10 +1,10 @@
- /*
+/*
 Project: Tips Management System
 File: workbox-service-worker.js
-Version: 1.1
+Version: 1.3
 Author: Cursor AI
-Model: Claude 3.5 Sonnet
-Last Modified: 2025-01-27
+Model: GPT-5
+Last Modified: 2025-10-16
 Purpose: Service Worker for PWA functionality with push notifications and caching
 */
 
@@ -397,11 +397,18 @@ self.addEventListener('push', (event) => {
         const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
         const amt = amtNum !== null ? fmt.format(amtNum) : null;
         const totalStr = fmt.format(totalNum);
+        // compute per-point from total/points if points provided by API
+        const pointsRaw = Number((json && (json.points ?? json.total_points ?? json.pts ?? json.point_sum)) ?? NaN);
+        const pointsNum = Number.isFinite(pointsRaw) && pointsRaw > 0 ? pointsRaw : null;
+        const perPointNum = pointsNum ? Math.round((monthTotal / pointsNum) * 10) / 10 : null;
+        const perPointStr = perPointNum !== null ? fmt.format(perPointNum) : null;
         
         if (amt && lastDate) {
           body = `📅 Date: ${lastDate}\n💰 Amount: $${amt}\n📊 Total: $${totalStr}`;
+          if (perPointStr) body += `\n👤☞  $${perPointStr}`;
         } else {
-          body = `📊 Total: $${totalStr}\n━━━━━━━━━━━━\nhttps://tips.you.ge`;
+          body = `📊 Total: $${totalStr}`;
+          if (perPointStr) body += `\n👤☞  $${perPointStr}`;
         }
       }
     } catch (_) {}
