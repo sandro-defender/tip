@@ -1,7 +1,7 @@
 <!--
 Project: Staff.You Memo
 File: html/memo/memo.html
-Version: 1.4.1
+Version: 1.4.3
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-10-17
@@ -125,7 +125,7 @@ Purpose: Modern memo UI with drag-drop upload, previews, dark mode, and menu inc
 
   <script>
     // Config
-    const API_URL = "https://script.google.com/macros/s/AKfycbx71cnfKl4WZxb2hYd-lD1xur5kc8BIXoqQkxMxZlQq_55mNj0xwxt7YOectkU-gWke/exec"; // TODO: replace with your Apps Script web app URL
+    const API_URL = "/memo"; // Cloudflare Pages Function proxy with CORS
 
     // Elements
     const form = document.getElementById('memoForm');
@@ -439,6 +439,14 @@ Purpose: Modern memo UI with drag-drop upload, previews, dark mode, and menu inc
 
   <!--
   CHANGELOG
+  [2025-10-17] v1.4.3 – Switched API_URL to /memo Cloudflare proxy with CORS.
+  Reason: Bypass browser CORS with server-side proxy on Cloudflare Pages.
+  Impact: Frontend fetch succeeds without CORS; backend URL configurable via env.
+  Model: GPT-5
+  [2025-10-17] v1.4.2 – Fixed malformed API_URL causing CORS/fetch failure.
+  Reason: URL mistakenly concatenated two endpoints; requests failed.
+  Impact: Memos load and submit properly when backend allows CORS.
+  Model: GPT-5
   [2025-10-17] v1.4.1 – Hide New Memo by default; add toggle button and ARIA.
   Reason: Requested UX to open the form only on demand.
   Impact: Cleaner initial view; accessible toggle; auto-close after submit.
