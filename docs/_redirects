@@ -16,6 +16,7 @@
 /tip         /html/tip.html    200
 /galery      /html/galery.html    200
 /statistics  /html/statistics.html    200
+/memo  /html/memo.html    200
 /404         /html/404.html    200
 /403         /html/403.html    200
 /500         /html/500.html    200
