@@ -1,10 +1,10 @@
 /*
 Project: Tips Management System
 File: workbox-service-worker.js
-Version: 1.3
+Version: 1.4
 Author: Cursor AI
 Model: GPT-5
-Last Modified: 2025-10-16
+Last Modified: 2025-10-17
 Purpose: Service Worker for PWA functionality with push notifications and caching
 */
 
@@ -370,7 +370,7 @@ self.addEventListener('message', (event) => {
 // Push event: ვაჩვენებთ მარტივ შეტყობინებას; კლიენტი შემდეგ მიიღებს განახლებებს
 self.addEventListener('push', (event) => {
   event.waitUntil((async () => {
-    const title = '🎯 Tip Update';
+    let title = '🎯 Tip Update';
     let body = 'დაემატა ახალი ინფორმაცია. დააჭირეთ სანახავად.';
     try {
       const now = new Date();
@@ -404,7 +404,8 @@ self.addEventListener('push', (event) => {
         const perPointStr = perPointNum !== null ? fmt.format(perPointNum) : null;
         
         if (amt && lastDate) {
-          body = `📅 Date: ${lastDate}\n💰 Amount: $${amt}\n📊 Total: $${totalStr}`;
+          title = `🎯 Tip Update: $${amt}`;
+          body = `📅 Date: ${lastDate}\n📊 Total: $${totalStr}`;
           if (perPointStr) body += `\n👤☞  $${perPointStr}`;
         } else {
           body = `📊 Total: $${totalStr}`;
