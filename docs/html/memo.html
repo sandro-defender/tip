@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.5
+Version: 1.9.6
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1119,11 +1119,148 @@ Purpose: Blog/memo page with simplified type selection using title field
         margin-bottom: 40px; /* Maximum spacing on small screens */
       }
     }
+
+    /* Password Protection Modal */
+    .password-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    }
+
+    .password-modal-content {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .password-header h2 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.8em;
+    }
+
+    .password-header p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1em;
+    }
+
+    .password-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .password-form input {
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .password-form input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .password-form button {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .password-form button:hover {
+      transform: translateY(-2px);
+    }
+
+    .password-error {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      color: #c33;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .error-icon {
+      font-size: 1.2em;
+    }
+
+    /* Hide main content when password protection is active */
+    body.password-protected .container,
+    body.password-protected #menu-container {
+      display: none;
+    }
+
+    body.password-protected .password-modal {
+      display: flex;
+    }
   </style>
 </head>
 <body>
+  <!-- Password Protection Modal -->
+  <div id="passwordProtectionModal" class="password-modal">
+    <div class="password-modal-content">
+      <div class="password-header">
+        <h2>🔒 Access Required</h2>
+        <p>Please enter the password to access this page</p>
+      </div>
+      <form id="passwordProtectionForm" class="password-form">
+        <div class="form-group">
+          <input type="password" id="pagePassword" placeholder="Enter password" required>
+          <button type="submit" class="btn btn-primary">Access</button>
+        </div>
+      </form>
+      <div id="passwordError" class="password-error" style="display: none;">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">Incorrect password. Please try again.</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Include Menu -->
-  <div id="menu-container"></div>
+  <div id="menu-container" style="display: none;"></div>
   <script>
     fetch('/includes/menu.html')
       .then(response => response.text())
@@ -1303,6 +1440,62 @@ Purpose: Blog/memo page with simplified type selection using title field
     let currentFilter = 'all';
     let pendingFormData = null;
 
+    // Password Protection
+    const PAGE_PASSWORD = 'admin123'; // Change this to your desired password
+    
+    // Check if user is already authenticated
+    function checkAuthentication() {
+      const isAuthenticated = sessionStorage.getItem('memoAuthenticated');
+      if (isAuthenticated === 'true') {
+        showMainContent();
+      } else {
+        showPasswordModal();
+      }
+    }
+    
+    function showPasswordModal() {
+      document.body.classList.add('password-protected');
+      document.getElementById('passwordProtectionModal').style.display = 'flex';
+      document.getElementById('pagePassword').focus();
+    }
+    
+    function showMainContent() {
+      document.body.classList.remove('password-protected');
+      document.getElementById('passwordProtectionModal').style.display = 'none';
+      document.getElementById('menu-container').style.display = 'block';
+    }
+    
+    function hidePasswordError() {
+      document.getElementById('passwordError').style.display = 'none';
+    }
+    
+    function showPasswordError() {
+      document.getElementById('passwordError').style.display = 'flex';
+      setTimeout(hidePasswordError, 3000); // Hide error after 3 seconds
+    }
+    
+    // Password form submission
+    document.getElementById('passwordProtectionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const enteredPassword = document.getElementById('pagePassword').value;
+      
+      if (enteredPassword === PAGE_PASSWORD) {
+        sessionStorage.setItem('memoAuthenticated', 'true');
+        showMainContent();
+        loadPosts(); // Load posts after authentication
+      } else {
+        showPasswordError();
+        document.getElementById('pagePassword').value = '';
+        document.getElementById('pagePassword').focus();
+      }
+    });
+    
+    // Initialize authentication check when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuthentication();
+    });
+
     // Date formatting function
     function formatDate(dateString) {
       try {
@@ -1345,7 +1538,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       console.error('Please configure your API_URL');
     } else {
       document.getElementById('configNotice').style.display = 'none';
-      loadPosts();
+      // loadPosts() will be called after authentication
     }
 
     async function loadPosts() {
@@ -2198,6 +2391,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.5 – Moved type/title to top and made buttons more transparent.
   Reason: User requested to move type/title to top of post and make action buttons more transparent.
   Impact: Title/date now at top with dark gradient, buttons at bottom with increased transparency (5% opacity).
+  Model: GPT-5
+  [2025-01-12] v1.9.6 – Added password protection to page access.
+  Reason: User requested password protection similar to statistics.html for page security.
+  Impact: Page now requires password authentication before showing content, with session-based persistence.
   Model: GPT-5
   -->
 </body>
