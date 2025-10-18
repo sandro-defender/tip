@@ -304,8 +304,9 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-images-grid img {
-      width: 50%;
+      width: 100%;
       height: auto;
+      max-height: 50vh;
       object-fit: cover;
       cursor: pointer;
     }
@@ -2179,9 +2180,9 @@ Purpose: Blog/memo page with simplified type selection using title field
   Reason: User requested to show only one image when there's one, and only two images when there are multiple.
   Impact: Single images display in full width, multiple images display in 2-column grid, removed "+X more" overlay.
   Model: GPT-5
-  [2025-01-12] v1.9.3 – Decreased image size to 50% of container width.
-  Reason: User requested to reduce image size for more compact post cards.
-  Impact: Images now display at 50% width instead of full width, creating smaller, more compact post cards.
+  [2025-01-12] v1.9.3 – Added maximum height limit for large images.
+  Reason: User requested to limit image height to 50% of viewport height for very large images.
+  Impact: Images now have max-height: 50vh to prevent extremely tall images while maintaining aspect ratio.
   Model: GPT-5
   -->
 </body>
