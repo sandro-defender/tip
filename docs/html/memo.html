@@ -11,8 +11,12 @@ Purpose: Blog/memo page with simplified type selection using title field
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    fetch("/includes/head.html")
+        .then(response => response.text())
+        .then(data => document.head.innerHTML += data)
+        .catch(error => console.error("Ошибка загрузки head:", error));
+</script>
   <title>My Staff</title>
   <style>
     * {
