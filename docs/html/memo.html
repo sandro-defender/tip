@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.6.1
+Version: 1.6.2
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1175,7 +1175,8 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('postContent').value = post.content || '';
       document.getElementById('adminPassword').value = '';
       
-      uploadedImages = post.imageUrls || [];
+      // Clear uploaded images array for editing - existing images will be preserved on backend
+      uploadedImages = [];
       displayPreviews();
       
       document.getElementById('postModal').classList.add('active');
@@ -1479,9 +1480,13 @@ Purpose: Blog/memo page with simplified type selection using title field
           type: type,
           title: type, // Send type as title to backend
           content: content || null,
-          imageData: uploadedImages.length > 0 ? uploadedImages : null,
           password: password
         };
+        
+        // Only send imageData for new posts or when adding new images to existing posts
+        if (!id || uploadedImages.length > 0) {
+          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
+        }
         
         if (id) {
           data.id = id;
@@ -1715,6 +1720,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.5.0 – Added dedicated image gallery modal with navigation.
   Reason: Fix image viewing functionality - clicking post images now opens dedicated gallery.
   Impact: Users can now view full-size images with proper navigation between multiple images.
+  Model: GPT-5
+  [2025-01-12] v1.6.2 – Fixed image handling error when editing posts with existing images.
+  Reason: Prevent "Could not decode string" error by properly handling existing images during edit.
+  Impact: Users can now edit posts with existing images without encountering decode errors.
   Model: GPT-5
   -->
 </body>
