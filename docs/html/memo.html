@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.6.0
+Version: 1.6.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1480,26 +1480,49 @@ Purpose: Blog/memo page with post type filtering and optional title/content
         return;
       }
       
+      // Validate and clean data
+      const data = {
+        action: id ? 'updatePost' : 'createPost',
+        type: String(type).trim(),
+        title: title ? String(title).trim() : '',
+        content: content ? String(content).trim() : '',
+        imageData: uploadedImages.length > 0 ? uploadedImages : null,
+        password: String(password).trim()
+      };
+      
+      // Validate type
+      const validTypes = ['memo', 'shift', 'tip', 'other'];
+      if (!validTypes.includes(data.type)) {
+        alert('Invalid post type. Please select a valid type.');
+        return;
+      }
+      
       try {
-        const data = {
-          action: id ? 'updatePost' : 'createPost',
-          type: type,
-          title: title || null,
-          content: content || null,
-          imageData: uploadedImages.length > 0 ? uploadedImages : null,
-          password: password
-        };
         
         if (id) {
           data.id = id;
         }
         
+        console.log('Sending data:', data); // Debug log
+        
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(data)
         });
         
-        const result = await response.json();
+        let result;
+        try {
+          result = await response.json();
+          console.log('Response:', result); // Debug log
+        } catch (jsonError) {
+          console.error('JSON Parse Error:', jsonError);
+          console.error('Response text:', await response.text());
+          alert('Error parsing server response. Check console for details.');
+          return;
+        }
         
         if (result.success) {
           closeModal();
@@ -1509,6 +1532,7 @@ Purpose: Blog/memo page with post type filtering and optional title/content
           alert('Error: ' + result.message);
         }
       } catch (error) {
+        console.error('Request Error:', error);
         alert('Error: ' + error.message);
       } finally {
         saveBtn.disabled = false;
@@ -1691,6 +1715,10 @@ Purpose: Blog/memo page with post type filtering and optional title/content
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.6.1 – Fixed data encoding/decoding error when editing posts with new type field.
+  Reason: Resolve "Could not decode string" error by improving data validation and error handling.
+  Impact: Posts can now be edited successfully with proper data formatting and better error messages.
+  Model: GPT-5
   [2025-01-12] v1.6.0 – Added post type filtering system and made title/content optional.
   Reason: Implement post categorization with memo/shift/tip/other types and filtering functionality.
   Impact: Users can now categorize posts and filter by type, with optional title/content for flexibility.
