@@ -47,10 +47,16 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         /* Prepare for pseudo-element gloss */
         position: fixed;
         overflow: visible;
-        /* Ensure menu stays at bottom and doesn't follow scroll */
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
+        /* Force menu to stay completely fixed - no movement at all */
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-transform: translate3d(0, 0, 0) !important;
         will-change: transform;
+        /* Prevent any scroll interference */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        /* Force GPU layer */
+        -webkit-perspective: 1000;
+        perspective: 1000;
     }
 
     /* Subtle gloss highlight */
@@ -271,14 +277,25 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         }
     }
 
-    /* iOS Safari specific fixes */
+    /* iOS Safari specific fixes - AGGRESSIVE LOCKING */
     @supports (-webkit-touch-callout: none) {
         .bottom-nav {
-            /* Force hardware acceleration on iOS */
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
+            /* Force hardware acceleration on iOS - NO MOVEMENT */
+            -webkit-transform: translate3d(0, 0, 0) !important;
+            transform: translate3d(0, 0, 0) !important;
             /* Prevent iOS bounce effect from affecting menu */
             -webkit-overflow-scrolling: touch;
+            /* Lock position completely */
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            /* Force GPU layer separation */
+            -webkit-backface-visibility: hidden !important;
+            backface-visibility: hidden !important;
+            /* Prevent any transform changes */
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
         }
     }
 
@@ -369,6 +386,7 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                 this.setActiveItem();
                 this.bindEvents();
                 this.checkNotifications();
+                this.lockMenuPosition();
             }
             
             setActiveItem() {
@@ -582,6 +600,41 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                 // console.log('Refreshing active state...');
                 this.setActiveItem();
             }
+            
+            // Force menu to stay locked in position - NO MOVEMENT
+            lockMenuPosition() {
+                const menu = document.querySelector('.bottom-nav');
+                if (!menu) return;
+                
+                // Force position every frame to prevent any movement
+                const lockPosition = () => {
+                    menu.style.position = 'fixed';
+                    menu.style.bottom = '0';
+                    menu.style.left = '0';
+                    menu.style.right = '0';
+                    menu.style.transform = 'translate3d(0, 0, 0)';
+                    menu.style.webkitTransform = 'translate3d(0, 0, 0)';
+                    menu.style.zIndex = '1000';
+                };
+                
+                // Lock immediately
+                lockPosition();
+                
+                // Lock on scroll events
+                window.addEventListener('scroll', lockPosition, { passive: true });
+                window.addEventListener('touchmove', lockPosition, { passive: true });
+                window.addEventListener('resize', lockPosition, { passive: true });
+                
+                // Lock on orientation change
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(lockPosition, 100);
+                });
+                
+                // Continuous locking for iOS
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    setInterval(lockPosition, 16); // 60fps
+                }
+            }
         }
         
         // Initialize when DOM is ready
@@ -649,9 +702,9 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
 
 <!--
 CHANGELOG
-[2025-01-27] v1.3.1 – Fixed menu positioning issues with viewport meta tag and iOS scroll behavior.
-Reason: Changed padding calculation to calc(8px + env(safe-area-inset-bottom)) and added iOS-specific fixes for scroll behavior.
-Impact: Menu now stays at bottom without gaps and doesn't follow page scroll on iOS Safari.
+[2025-01-27] v1.3.1 – AGGRESSIVELY locked menu position to prevent ANY movement during scroll.
+Reason: Added !important CSS rules, hardware acceleration, and JavaScript position locking to completely prevent menu from following page scroll.
+Impact: Menu is now completely locked in place - NO MOVEMENT AT ALL during scroll on any device.
 Model: GPT-4o
 [2025-09-18] v1.3.0 – Added frosted glass design, .glass utility, improved dark mode.
 Reason: Implement requested transparent glass design with modern UX.

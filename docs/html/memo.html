@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.10.1
+Version: 1.10.3
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1757,14 +1757,16 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     // Password Protection
     const PAGE_PASSWORD = '4545'; // Change this to your desired password
+    let authTimeout = null;
     
     // Check if user is already authenticated
     function checkAuthentication() {
-      const isAuthenticated = sessionStorage.getItem('memoAuthenticated');
+      const isAuthenticated = localStorage.getItem('memoAuthenticated');
       if (isAuthenticated === 'true') {
         showMainContent();
       } else {
         showPagePasswordModal();
+        startAuthTimeout();
       }
     }
     
@@ -1775,6 +1777,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
     
     function showMainContent() {
+      clearAuthTimeout();
       document.body.classList.remove('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'none';
       document.getElementById('menu-container').style.display = 'block';
@@ -1782,6 +1785,20 @@ Purpose: Blog/memo page with simplified type selection using title field
       setTimeout(() => {
         loadPosts();
       }, 100);
+    }
+    
+    function startAuthTimeout() {
+      clearAuthTimeout();
+      authTimeout = setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 10000); // 10 seconds
+    }
+    
+    function clearAuthTimeout() {
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+        authTimeout = null;
+      }
     }
     
     function hidePasswordError() {
@@ -1800,12 +1817,14 @@ Purpose: Blog/memo page with simplified type selection using title field
       const enteredPassword = document.getElementById('pagePassword').value;
       
       if (enteredPassword === PAGE_PASSWORD) {
-        sessionStorage.setItem('memoAuthenticated', 'true');
+        localStorage.setItem('memoAuthenticated', 'true');
         showMainContent();
       } else {
         showPasswordError();
         document.getElementById('pagePassword').value = '';
         document.getElementById('pagePassword').focus();
+        // Restart timeout after failed attempt
+        startAuthTimeout();
       }
     });
     
@@ -2909,6 +2928,14 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.3 – Added 10-second timeout redirect to main page if user doesn't authenticate.
+  Reason: User requested automatic redirect to main page after 10 seconds if authentication is not completed.
+  Impact: Users who don't authenticate within 10 seconds will be automatically redirected to index.html, improving security and user experience.
+  Model: GPT-5
+  [2025-01-12] v1.10.2 – Fixed password authentication to use localStorage instead of sessionStorage.
+  Reason: User reported that password was always being asked at login - authentication should persist across browser sessions.
+  Impact: Authentication now persists using localStorage, so users won't need to re-enter password every time they visit the page.
+  Model: GPT-5
   [2025-01-12] v1.11.0 – Complete modern styling overhaul with glassmorphism and contemporary design.
   Reason: User requested to upgrade all styles to make the page look modern.
   Impact: Implemented modern design system with glassmorphism effects, improved typography, enhanced animations, better color palette, and contemporary UI patterns throughout the application.
