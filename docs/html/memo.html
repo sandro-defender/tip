@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.5.4
+Version: 1.5.5
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -26,11 +26,13 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 20px;
+      padding-bottom: 100px; /* Add space for bottom navigation menu */
     }
 
     .container {
       max-width: 900px;
       margin: 0 auto;
+      margin-bottom: 20px; /* Additional spacing from bottom menu */
     }
 
     header {
@@ -808,6 +810,27 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       user-select: text;
       -webkit-user-select: text;
     }
+
+    /* Mobile spacing adjustments for bottom menu */
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 120px; /* Extra space on mobile for menu */
+      }
+      
+      .container {
+        margin-bottom: 30px; /* More spacing on mobile */
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding-bottom: 130px; /* Even more space on small mobile */
+      }
+      
+      .container {
+        margin-bottom: 40px; /* Maximum spacing on small screens */
+      }
+    }
   </style>
 </head>
 <body>
@@ -1520,6 +1543,10 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.5.5 – Added proper spacing/gap between content and bottom navigation menu.
+  Reason: Prevent content from being hidden behind fixed bottom menu - ensure proper spacing on all devices.
+  Impact: Content is now properly visible and accessible on all screen sizes with adequate spacing from menu.
+  Model: GPT-5
   [2025-01-12] v1.5.4 – Updated action buttons to show only icons with tooltips.
   Reason: Cleaner UI design - buttons now display only icons with hover tooltips for better space usage.
   Impact: More compact button design while maintaining usability through tooltips.
