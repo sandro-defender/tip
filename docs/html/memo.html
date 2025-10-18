@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.6
+Version: 1.9.7
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1463,6 +1463,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.body.classList.remove('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'none';
       document.getElementById('menu-container').style.display = 'block';
+      // Load posts after showing main content with small delay to ensure DOM is ready
+      setTimeout(() => {
+        loadPosts();
+      }, 100);
     }
     
     function hidePasswordError() {
@@ -1483,7 +1487,6 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (enteredPassword === PAGE_PASSWORD) {
         sessionStorage.setItem('memoAuthenticated', 'true');
         showMainContent();
-        loadPosts(); // Load posts after authentication
       } else {
         showPasswordError();
         document.getElementById('pagePassword').value = '';
@@ -1542,11 +1545,15 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     async function loadPosts() {
+      console.log('Loading posts...'); // Debug log
       showLoading('Loading posts...');
       
       try {
+        console.log('Fetching from API:', API_URL); // Debug log
         const response = await fetch(`${API_URL}?action=getPosts`);
+        console.log('Response received:', response.status); // Debug log
         const result = await response.json();
+        console.log('Result:', result); // Debug log
         
         hideLoading();
         
@@ -1556,6 +1563,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           showError('Failed to load posts');
         }
       } catch (error) {
+        console.error('Error loading posts:', error); // Debug log
         hideLoading();
         showError('Error connecting to server: ' + error.message);
       }
@@ -2395,6 +2403,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.6 – Added password protection to page access.
   Reason: User requested password protection similar to statistics.html for page security.
   Impact: Page now requires password authentication before showing content, with session-based persistence.
+  Model: GPT-5
+  [2025-01-12] v1.9.7 – Fixed posts not loading after authentication.
+  Reason: User reported posts weren't loading after password authentication.
+  Impact: Added proper loadPosts() call in showMainContent() with DOM ready delay and debug logging.
   Model: GPT-5
   -->
 </body>
