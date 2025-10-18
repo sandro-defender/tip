@@ -11,6 +11,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <script>
     fetch("/includes/head.html")
         .then(response => response.text())
@@ -20,66 +21,89 @@ Purpose: Blog/memo page with simplified type selection using title field
   <title>My Staff</title>
   <style>
     :root {
-      /* Light theme colors */
-      --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --bg-secondary: white;
-      --text-primary: #333;
-      --text-secondary: #666;
-      --text-white: white;
-      --border-color: #e0e0e0;
-      --shadow-color: rgba(0,0,0,0.1);
-      --overlay-bg: rgba(0,0,0,0.7);
-      --modal-bg: white;
-      --button-bg: #667eea;
-      --button-hover: #5a6fd8;
-      --filter-bg: rgba(255, 255, 255, 0.2);
+      /* Modern Light Theme */
+      --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --bg-secondary: rgba(255, 255, 255, 0.95);
+      --bg-glass: rgba(255, 255, 255, 0.1);
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b7280;
+      --text-white: #ffffff;
+      --text-muted: #9ca3af;
+      --border-color: rgba(255, 255, 255, 0.2);
+      --border-light: rgba(0, 0, 0, 0.1);
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+      --overlay-bg: rgba(0, 0, 0, 0.8);
+      --modal-bg: rgba(255, 255, 255, 0.95);
+      --button-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --button-secondary: rgba(255, 255, 255, 0.2);
+      --button-hover: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --filter-bg: rgba(255, 255, 255, 0.15);
       --filter-border: rgba(255, 255, 255, 0.3);
-      --filter-active-bg: rgba(255, 255, 255, 0.9);
+      --filter-active-bg: rgba(255, 255, 255, 0.25);
       --filter-active-text: #667eea;
-      --post-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --post-overlay: linear-gradient(rgba(0,0,0,0.4), transparent);
-      --post-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      --post-hover-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      --pin-bg: #ffd700;
-      --pin-text: #333;
-      --error-bg: #fee;
-      --error-border: #fcc;
-      --error-text: #c33;
-      --success-bg: #d4edda;
-      --success-border: #c3e6cb;
-      --success-text: #155724;
+      --post-gradient: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      --post-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
+      --post-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --post-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      --pin-bg: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      --pin-text: #1f2937;
+      --error-bg: rgba(254, 226, 226, 0.8);
+      --error-border: rgba(252, 165, 165, 0.5);
+      --error-text: #dc2626;
+      --success-bg: rgba(220, 252, 231, 0.8);
+      --success-border: rgba(134, 239, 172, 0.5);
+      --success-text: #059669;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --blur-sm: blur(4px);
+      --blur-md: blur(8px);
+      --blur-lg: blur(16px);
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        /* Dark theme colors */
-        --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        --bg-secondary: #2d3748;
-        --text-primary: #e2e8f0;
-        --text-secondary: #a0aec0;
-        --text-white: #f7fafc;
-        --border-color: #4a5568;
-        --shadow-color: rgba(0,0,0,0.3);
-        --overlay-bg: rgba(0,0,0,0.8);
-        --modal-bg: #2d3748;
-        --button-bg: #4299e1;
-        --button-hover: #3182ce;
-        --filter-bg: rgba(255, 255, 255, 0.1);
-        --filter-border: rgba(255, 255, 255, 0.2);
-        --filter-active-bg: rgba(255, 255, 255, 0.2);
+        /* Modern Dark Theme */
+        --bg-primary: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        --bg-secondary: rgba(30, 30, 46, 0.95);
+        --bg-glass: rgba(255, 255, 255, 0.05);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-white: #ffffff;
+        --text-muted: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-light: rgba(255, 255, 255, 0.1);
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        --shadow-glow: 0 0 20px rgba(66, 153, 225, 0.3);
+        --overlay-bg: rgba(0, 0, 0, 0.9);
+        --modal-bg: rgba(30, 30, 46, 0.95);
+        --button-primary: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        --button-secondary: rgba(255, 255, 255, 0.1);
+        --button-hover: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+        --filter-bg: rgba(255, 255, 255, 0.08);
+        --filter-border: rgba(255, 255, 255, 0.15);
+        --filter-active-bg: rgba(255, 255, 255, 0.15);
         --filter-active-text: #4299e1;
-        --post-gradient: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-        --post-overlay: linear-gradient(rgba(0,0,0,0.6), transparent);
-        --post-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        --post-hover-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        --pin-bg: #f6ad55;
-        --pin-text: #2d3748;
-        --error-bg: #fed7d7;
-        --error-border: #feb2b2;
-        --error-text: #c53030;
-        --success-bg: #c6f6d5;
-        --success-border: #9ae6b4;
-        --success-text: #22543d;
+        --post-gradient: linear-gradient(135deg, rgba(45, 55, 72, 0.9) 0%, rgba(74, 85, 104, 0.9) 100%);
+        --post-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%);
+        --post-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        --post-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        --pin-bg: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        --pin-text: #1a202c;
+        --error-bg: rgba(254, 215, 215, 0.8);
+        --error-border: rgba(252, 178, 178, 0.5);
+        --error-text: #e53e3e;
+        --success-bg: rgba(198, 246, 213, 0.8);
+        --success-border: rgba(154, 230, 180, 0.5);
+        --success-text: #38a169;
       }
     }
 
@@ -89,13 +113,24 @@ Purpose: Blog/memo page with simplified type selection using title field
       box-sizing: border-box;
     }
 
+    html {
+      height: 100%;
+      background: var(--bg-primary);
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       background: var(--bg-primary);
       min-height: 100vh;
-      padding: 20px;
-      padding-bottom: 100px; /* Add space for bottom navigation menu */
-      transition: background 0.3s ease;
+      min-height: -webkit-fill-available;
+      padding: 24px;
+      padding-bottom: 120px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 0;
+      overflow-x: hidden;
+      font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .container {
@@ -107,50 +142,76 @@ Purpose: Blog/memo page with simplified type selection using title field
     header {
       text-align: center;
       color: var(--text-white);
-      margin-bottom: 40px;
+      margin-bottom: 48px;
+      position: relative;
     }
 
     h1 {
-      font-size: 2em;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-
-    @media (min-width: 768px) {
-      h1 {
-        font-size: 3em;
-      }
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .subtitle {
-      font-size: 1.2em;
+      font-size: clamp(1rem, 3vw, 1.25rem);
       opacity: 0.9;
+      font-weight: 500;
+      letter-spacing: 0.01em;
     }
 
     .add-post-btn {
       background: var(--bg-secondary);
-      color: var(--button-bg);
-      border: none;
-      padding: 15px 30px;
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+      padding: 16px 32px;
       font-size: 16px;
-      border-radius: 50px;
+      font-weight: 600;
+      border-radius: var(--radius-xl);
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 4px 15px var(--shadow-color);
-      transition: transform 0.2s, box-shadow 0.2s, background 0.3s ease, color 0.3s ease;
-      margin: 20px 0;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 24px 0;
+      backdrop-filter: var(--blur-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-post-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .add-post-btn:hover::before {
+      left: 100%;
     }
 
     .add-post-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--button-primary);
+    }
+
+    .add-post-btn:active {
+      transform: translateY(0) scale(0.98);
     }
 
     /* Filter Buttons */
     .filter-buttons {
       display: flex;
-      gap: 10px;
-      margin: 20px 0;
+      gap: 12px;
+      margin: 32px 0;
       justify-content: center;
       flex-wrap: wrap;
     }
@@ -158,19 +219,37 @@ Purpose: Blog/memo page with simplified type selection using title field
     .filter-btn {
       background: var(--filter-bg);
       color: var(--text-white);
-      border: 2px solid var(--filter-border);
-      padding: 8px 16px;
+      border: 1px solid var(--filter-border);
+      padding: 12px 20px;
       font-size: 14px;
-      border-radius: 20px;
-      cursor: pointer;
       font-weight: 500;
-      transition: all 0.3s;
-      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: var(--blur-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .filter-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--filter-active-bg);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .filter-btn:hover::before {
+      opacity: 1;
     }
 
     .filter-btn:hover {
-      background: var(--filter-active-bg);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
 
     .filter-btn.active {
@@ -178,6 +257,12 @@ Purpose: Blog/memo page with simplified type selection using title field
       color: var(--filter-active-text);
       border-color: var(--filter-active-bg);
       font-weight: 600;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .filter-btn span {
+      position: relative;
+      z-index: 1;
     }
 
     .modal {
@@ -199,56 +284,73 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .modal-content {
       background: var(--modal-bg);
-      padding: 20px;
-      border-radius: 15px;
+      padding: 32px;
+      border-radius: var(--radius-xl);
       max-width: 600px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px var(--shadow-color);
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: var(--blur-lg);
+      border: 1px solid var(--border-color);
+      position: relative;
     }
 
-    @media (min-width: 768px) {
-      .modal-content {
-        padding: 30px;
-      }
+    .modal-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: var(--radius-xl);
+      pointer-events: none;
     }
 
     .modal-content h2 {
-      margin-bottom: 20px;
-      color: var(--button-bg);
+      margin-bottom: 24px;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .form-group label {
       display: block;
       margin-bottom: 8px;
-      font-weight: bold;
+      font-weight: 600;
       color: var(--text-primary);
+      font-size: 0.875rem;
+      letter-spacing: 0.01em;
     }
 
     .form-group input,
     .form-group textarea,
     .form-group select {
       width: 100%;
-      padding: 12px;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
+      padding: 16px;
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
       font-size: 16px;
       font-family: inherit;
-      transition: border-color 0.3s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       background: var(--bg-secondary);
       color: var(--text-primary);
+      backdrop-filter: var(--blur-sm);
     }
 
     .form-group input:focus,
     .form-group textarea:focus,
     .form-group select:focus {
       outline: none;
-      border-color: var(--button-bg);
+      border-color: var(--button-primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
     }
 
     .form-group textarea {
@@ -258,38 +360,69 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .btn-group {
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 16px;
+      margin-top: 32px;
     }
 
     .btn {
       flex: 1;
-      padding: 12px;
+      padding: 16px 24px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
     }
 
     .btn:hover {
-      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn:active {
+      transform: translateY(0);
     }
 
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     .btn-primary {
-      background: var(--button-bg);
+      background: var(--button-primary);
       color: white;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      background: var(--button-hover);
+      box-shadow: var(--shadow-glow);
     }
 
     .btn-secondary {
-      background: var(--border-color);
+      background: var(--button-secondary);
       color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: var(--blur-md);
     }
 
     .btn-danger {
@@ -322,40 +455,79 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .post-card {
       background: var(--post-gradient);
-      border-radius: 15px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--post-shadow);
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       height: auto;
       min-height: 200px;
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .post-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .post-card:hover::before {
+      opacity: 1;
     }
 
     .post-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-8px) scale(1.02);
       box-shadow: var(--post-hover-shadow);
     }
 
+    .post-card:active {
+      transform: translateY(-4px) scale(1.01);
+    }
+
     .post-card.pinned {
-      border: 3px solid var(--pin-bg);
-      box-shadow: 0 5px 25px rgba(255, 215, 0, 0.3);
+      border: 2px solid var(--pin-bg);
+      box-shadow: var(--post-shadow), 0 0 0 1px var(--pin-bg);
+      position: relative;
+    }
+
+    .post-card.pinned::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: var(--pin-bg);
+      border-radius: var(--radius-lg);
+      z-index: -1;
+      opacity: 0.1;
     }
 
     .pin-badge {
       position: absolute;
-      top: 15px;
-      right: 15px;
+      top: 16px;
+      right: 16px;
       background: var(--pin-bg);
       color: var(--pin-text);
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 13px;
       z-index: 10;
-      box-shadow: 0 2px 10px var(--shadow-color);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .post-images-grid {
@@ -414,107 +586,115 @@ Purpose: Blog/memo page with simplified type selection using title field
       left: 0;
       right: 0;
       background: var(--post-overlay);
-      padding: 15px 15px 20px 15px;
+      padding: 20px 20px 24px 20px;
       z-index: 5;
-    }
-
-    @media (min-width: 768px) {
-      .post-content {
-        padding: 20px 20px 25px 20px;
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .post-content {
-        padding: 25px 25px 30px 25px;
-      }
+      backdrop-filter: var(--blur-sm);
     }
 
     .post-title {
-      font-size: 1.4em;
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      font-weight: 700;
       color: var(--text-white);
       margin-bottom: 8px;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    }
-
-    @media (min-width: 768px) {
-      .post-title {
-        font-size: 1.6em;
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .post-title {
-        font-size: 1.8em;
-      }
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
     }
 
     .post-date {
       color: var(--text-white);
-      font-size: 0.9em;
-      margin-bottom: 8px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
       opacity: 0.9;
     }
 
     .post-text {
       color: var(--text-white);
-      line-height: 1.4;
-      margin-bottom: 12px;
+      line-height: 1.5;
+      margin-bottom: 16px;
       white-space: pre-wrap;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-      font-size: 0.9em;
-      opacity: 0.9;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      font-size: 0.875rem;
+      font-weight: 400;
+      opacity: 0.95;
     }
 
     .post-actions {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       justify-content: space-between;
-      margin-top: 8px;
+      margin-top: 12px;
       position: absolute;
-      bottom: 15px;
-      left: 15px;
-      right: 15px;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
       z-index: 6;
     }
 
     .post-actions button {
-      padding: 8px 12px;
+      padding: 12px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
+      font-weight: 600;
       font-size: 14px;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(3px);
-      color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: var(--blur-md);
+      color: var(--text-white);
       flex: 1;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .post-actions button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .post-actions button:hover::before {
+      opacity: 1;
     }
 
     .post-actions button:hover {
-      background: rgba(255,255,255,0.15);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .post-actions button:active {
+      transform: translateY(0);
     }
 
     .pin-btn {
-      background: rgba(255, 215, 0, 0.4) !important;
-      color: #333 !important;
+      background: rgba(251, 191, 36, 0.2) !important;
+      color: var(--pin-text) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
     }
 
     .pin-btn.pinned {
-      background: rgba(255, 237, 78, 0.5) !important;
+      background: rgba(251, 191, 36, 0.3) !important;
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5) !important;
     }
 
     .edit-btn {
-      background: rgba(76, 175, 80, 0.4) !important;
-      color: white !important;
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--text-white) !important;
+      border-color: rgba(34, 197, 94, 0.3) !important;
     }
 
     .delete-btn {
-      background: rgba(244, 67, 54, 0.4) !important;
-      color: white !important;
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: var(--text-white) !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
     }
 
     .loading {
@@ -1218,10 +1398,26 @@ Purpose: Blog/memo page with simplified type selection using title field
       background: #c82333;
     }
 
-    /* Mobile spacing adjustments for bottom menu */
-    @media (max-width: 768px) {
+    /* iPhone and mobile viewport fixes */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        min-height: -webkit-fill-available;
+        background-attachment: fixed;
+      }
+    }
+
+    /* Prevent white gaps on iOS Safari */
+    @media screen and (max-width: 768px) {
+      html, body {
+        background: var(--bg-primary);
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+      
       body {
         padding-bottom: 120px; /* Extra space on mobile for menu */
+        position: relative;
       }
       
       .container {
@@ -2713,6 +2909,14 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.11.0 – Complete modern styling overhaul with glassmorphism and contemporary design.
+  Reason: User requested to upgrade all styles to make the page look modern.
+  Impact: Implemented modern design system with glassmorphism effects, improved typography, enhanced animations, better color palette, and contemporary UI patterns throughout the application.
+  Model: GPT-5
+  [2025-01-12] v1.10.10 – Fixed white gaps at top and bottom when scrolling on iPhone.
+  Reason: User reported white gaps appearing at top and bottom when scrolling on iPhone Safari.
+  Impact: Added proper viewport meta tag with viewport-fit=cover, fixed background attachment, and iOS-specific CSS to prevent white gaps during scrolling.
+  Model: GPT-5
   [2025-01-12] v1.10.9 – Added automatic dark theme support based on device preference.
   Reason: User requested dark theme support like in index.html that automatically changes based on device theme preference.
   Impact: Added CSS variables for light/dark themes with @media (prefers-color-scheme: dark) to automatically switch themes based on device settings.
@@ -2856,4 +3060,5 @@ Purpose: Blog/memo page with simplified type selection using title field
   Model: GPT-5
   -->
 </body>
+</html>
 </html>
