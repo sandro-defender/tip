@@ -19,6 +19,70 @@ Purpose: Blog/memo page with simplified type selection using title field
 </script>
   <title>My Staff</title>
   <style>
+    :root {
+      /* Light theme colors */
+      --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --bg-secondary: white;
+      --text-primary: #333;
+      --text-secondary: #666;
+      --text-white: white;
+      --border-color: #e0e0e0;
+      --shadow-color: rgba(0,0,0,0.1);
+      --overlay-bg: rgba(0,0,0,0.7);
+      --modal-bg: white;
+      --button-bg: #667eea;
+      --button-hover: #5a6fd8;
+      --filter-bg: rgba(255, 255, 255, 0.2);
+      --filter-border: rgba(255, 255, 255, 0.3);
+      --filter-active-bg: rgba(255, 255, 255, 0.9);
+      --filter-active-text: #667eea;
+      --post-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --post-overlay: linear-gradient(rgba(0,0,0,0.4), transparent);
+      --post-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      --post-hover-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      --pin-bg: #ffd700;
+      --pin-text: #333;
+      --error-bg: #fee;
+      --error-border: #fcc;
+      --error-text: #c33;
+      --success-bg: #d4edda;
+      --success-border: #c3e6cb;
+      --success-text: #155724;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Dark theme colors */
+        --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        --bg-secondary: #2d3748;
+        --text-primary: #e2e8f0;
+        --text-secondary: #a0aec0;
+        --text-white: #f7fafc;
+        --border-color: #4a5568;
+        --shadow-color: rgba(0,0,0,0.3);
+        --overlay-bg: rgba(0,0,0,0.8);
+        --modal-bg: #2d3748;
+        --button-bg: #4299e1;
+        --button-hover: #3182ce;
+        --filter-bg: rgba(255, 255, 255, 0.1);
+        --filter-border: rgba(255, 255, 255, 0.2);
+        --filter-active-bg: rgba(255, 255, 255, 0.2);
+        --filter-active-text: #4299e1;
+        --post-gradient: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        --post-overlay: linear-gradient(rgba(0,0,0,0.6), transparent);
+        --post-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        --post-hover-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        --pin-bg: #f6ad55;
+        --pin-text: #2d3748;
+        --error-bg: #fed7d7;
+        --error-border: #feb2b2;
+        --error-text: #c53030;
+        --success-bg: #c6f6d5;
+        --success-border: #9ae6b4;
+        --success-text: #22543d;
+      }
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -27,10 +91,11 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--bg-primary);
       min-height: 100vh;
       padding: 20px;
       padding-bottom: 100px; /* Add space for bottom navigation menu */
+      transition: background 0.3s ease;
     }
 
     .container {
@@ -41,7 +106,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     header {
       text-align: center;
-      color: white;
+      color: var(--text-white);
       margin-bottom: 40px;
     }
 
@@ -63,16 +128,16 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .add-post-btn {
-      background: white;
-      color: #667eea;
+      background: var(--bg-secondary);
+      color: var(--button-bg);
       border: none;
       padding: 15px 30px;
       font-size: 16px;
       border-radius: 50px;
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px var(--shadow-color);
+      transition: transform 0.2s, box-shadow 0.2s, background 0.3s ease, color 0.3s ease;
       margin: 20px 0;
     }
 
@@ -91,9 +156,9 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .filter-btn {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: var(--filter-bg);
+      color: var(--text-white);
+      border: 2px solid var(--filter-border);
       padding: 8px 16px;
       font-size: 14px;
       border-radius: 20px;
@@ -104,14 +169,14 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .filter-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--filter-active-bg);
       transform: translateY(-1px);
     }
 
     .filter-btn.active {
-      background: rgba(255, 255, 255, 0.9);
-      color: #667eea;
-      border-color: rgba(255, 255, 255, 0.9);
+      background: var(--filter-active-bg);
+      color: var(--filter-active-text);
+      border-color: var(--filter-active-bg);
       font-weight: 600;
     }
 
@@ -122,7 +187,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
+      background: var(--overlay-bg);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -133,14 +198,14 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .modal-content {
-      background: white;
+      background: var(--modal-bg);
       padding: 20px;
       border-radius: 15px;
       max-width: 600px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 40px var(--shadow-color);
     }
 
     @media (min-width: 768px) {
@@ -151,7 +216,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .modal-content h2 {
       margin-bottom: 20px;
-      color: #667eea;
+      color: var(--button-bg);
     }
 
     .form-group {
@@ -162,7 +227,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       display: block;
       margin-bottom: 8px;
       font-weight: bold;
-      color: #333;
+      color: var(--text-primary);
     }
 
     .form-group input,
@@ -170,18 +235,20 @@ Purpose: Blog/memo page with simplified type selection using title field
     .form-group select {
       width: 100%;
       padding: 12px;
-      border: 2px solid #e0e0e0;
+      border: 2px solid var(--border-color);
       border-radius: 8px;
       font-size: 16px;
       font-family: inherit;
       transition: border-color 0.3s;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
     }
 
     .form-group input:focus,
     .form-group textarea:focus,
     .form-group select:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: var(--button-bg);
     }
 
     .form-group textarea {
@@ -216,13 +283,13 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .btn-primary {
-      background: #667eea;
+      background: var(--button-bg);
       color: white;
     }
 
     .btn-secondary {
-      background: #e0e0e0;
-      color: #333;
+      background: var(--border-color);
+      color: var(--text-primary);
     }
 
     .btn-danger {
@@ -254,10 +321,10 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--post-gradient);
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      box-shadow: var(--post-shadow);
       transition: transform 0.3s, box-shadow 0.3s;
       position: relative;
       cursor: pointer;
@@ -269,11 +336,11 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .post-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: var(--post-hover-shadow);
     }
 
     .post-card.pinned {
-      border: 3px solid #ffd700;
+      border: 3px solid var(--pin-bg);
       box-shadow: 0 5px 25px rgba(255, 215, 0, 0.3);
     }
 
@@ -281,14 +348,14 @@ Purpose: Blog/memo page with simplified type selection using title field
       position: absolute;
       top: 15px;
       right: 15px;
-      background: #ffd700;
-      color: #333;
+      background: var(--pin-bg);
+      color: var(--pin-text);
       padding: 8px 15px;
       border-radius: 20px;
       font-weight: bold;
       font-size: 14px;
       z-index: 10;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 10px var(--shadow-color);
     }
 
     .post-images-grid {
@@ -346,7 +413,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       top: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(rgba(0,0,0,0.4), transparent);
+      background: var(--post-overlay);
       padding: 15px 15px 20px 15px;
       z-index: 5;
     }
@@ -365,7 +432,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .post-title {
       font-size: 1.4em;
-      color: white;
+      color: var(--text-white);
       margin-bottom: 8px;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
@@ -383,19 +450,21 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-date {
-      color: rgba(255,255,255,0.9);
+      color: var(--text-white);
       font-size: 0.9em;
       margin-bottom: 8px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      opacity: 0.9;
     }
 
     .post-text {
-      color: rgba(255,255,255,0.9);
+      color: var(--text-white);
       line-height: 1.4;
       margin-bottom: 12px;
       white-space: pre-wrap;
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
       font-size: 0.9em;
+      opacity: 0.9;
     }
 
     .post-actions {
@@ -450,17 +519,17 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .loading {
       text-align: center;
-      color: white;
+      color: var(--text-white);
       font-size: 1.5em;
       padding: 50px;
     }
 
     .no-posts {
       text-align: center;
-      color: white;
+      color: var(--text-white);
       font-size: 1.2em;
       padding: 50px;
-      background: rgba(255,255,255,0.1);
+      background: var(--filter-bg);
       border-radius: 15px;
     }
 
@@ -510,28 +579,28 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .drop-zone {
-      border: 3px dashed #e0e0e0;
+      border: 3px dashed var(--border-color);
       border-radius: 8px;
       padding: 40px;
       text-align: center;
       transition: all 0.3s;
       cursor: pointer;
-      background: #fafafa;
+      background: var(--bg-secondary);
     }
 
     .drop-zone:hover {
-      border-color: #667eea;
-      background: #f5f5ff;
+      border-color: var(--button-bg);
+      background: var(--filter-bg);
     }
 
     .drop-zone.drag-over {
-      border-color: #667eea;
-      background: #e8ebff;
+      border-color: var(--button-bg);
+      background: var(--filter-active-bg);
       transform: scale(1.02);
     }
 
     .drop-zone-text {
-      color: #666;
+      color: var(--text-secondary);
       font-size: 16px;
       margin-bottom: 10px;
     }
@@ -542,36 +611,38 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .error {
-      background: #f44336;
-      color: white;
+      background: var(--error-bg);
+      color: var(--error-text);
       padding: 15px;
       border-radius: 8px;
       margin: 20px 0;
       text-align: center;
+      border: 1px solid var(--error-border);
     }
 
     .config-notice {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--bg-secondary);
       padding: 20px;
       border-radius: 10px;
       margin-bottom: 20px;
-      border-left: 4px solid #f44336;
+      border-left: 4px solid var(--error-text);
     }
 
     .config-notice h3 {
-      color: #f44336;
+      color: var(--error-text);
       margin-bottom: 10px;
     }
 
     .config-notice code {
-      background: #f5f5f5;
+      background: var(--filter-bg);
       padding: 2px 6px;
       border-radius: 3px;
       font-family: monospace;
+      color: var(--text-primary);
     }
 
     .password-prompt {
-      background: rgba(255,255,255,0.1);
+      background: var(--filter-bg);
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 20px;
@@ -580,9 +651,11 @@ Purpose: Blog/memo page with simplified type selection using title field
     .password-prompt input {
       width: 100%;
       padding: 10px;
-      border: 2px solid #e0e0e0;
+      border: 2px solid var(--border-color);
       border-radius: 8px;
       font-size: 16px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
     }
 
     /* View Post Modal */
@@ -593,7 +666,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
+      background: var(--overlay-bg);
       z-index: 2000;
       align-items: center;
       justify-content: center;
@@ -605,7 +678,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .view-modal-content {
-      background: white;
+      background: var(--modal-bg);
       border-radius: 15px;
       max-width: 900px;
       width: 95%;
@@ -814,7 +887,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .view-modal-title {
       font-size: 1.8em;
-      color: #333;
+      color: var(--text-primary);
       margin-bottom: 15px;
     }
 
@@ -825,13 +898,13 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .view-modal-date {
-      color: #999;
+      color: var(--text-secondary);
       font-size: 1em;
       margin-bottom: 25px;
     }
 
     .view-modal-text {
-      color: #666;
+      color: var(--text-secondary);
       line-height: 1.8;
       font-size: 1.1em;
       white-space: pre-wrap;
@@ -868,13 +941,13 @@ Purpose: Blog/memo page with simplified type selection using title field
     .view-modal-thumbnails img:hover,
     .view-modal-thumbnails img.active {
       opacity: 1;
-      border: 2px solid #667eea;
+      border: 2px solid var(--button-bg);
     }
 
     .gallery-info {
       text-align: center;
       margin-top: 15px;
-      color: #666;
+      color: var(--text-secondary);
       font-size: 14px;
     }
 
@@ -2640,6 +2713,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.9 – Added automatic dark theme support based on device preference.
+  Reason: User requested dark theme support like in index.html that automatically changes based on device theme preference.
+  Impact: Added CSS variables for light/dark themes with @media (prefers-color-scheme: dark) to automatically switch themes based on device settings.
+  Model: GPT-5
   [2025-01-12] v1.10.8 – Fixed background page scrolling while viewing pictures in gallery modal.
   Reason: User reported that background page was still scrolling while viewing pictures in the gallery modal.
   Impact: Added stronger scroll prevention by setting body position to fixed and using !important CSS rules to completely prevent background scrolling when gallery is open.
