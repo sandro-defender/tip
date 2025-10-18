@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.1
+Version: 1.9.2
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -289,11 +289,18 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .post-images-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
       gap: 5px;
       width: 100%;
       background: #f0f0f0;
       position: relative;
+    }
+
+    .post-images-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .post-images-grid.multiple {
+      grid-template-columns: repeat(2, 1fr);
     }
 
     .post-images-grid img {
@@ -1366,8 +1373,8 @@ Purpose: Blog/memo page with simplified type selection using title field
 
       container.innerHTML = posts.map((post, index) => {
         const imageCount = post.imageUrls ? post.imageUrls.length : 0;
-        const gridClass = imageCount === 1 ? 'single' : '';
-        const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
+        const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
+        const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
         
         const typeIcon = {
           'memo': '📝',
@@ -1385,8 +1392,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           ${imageCount > 0 ? `
             <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
               ${displayImages.map((url, idx) => {
-                const isLast = idx === 3 && imageCount > 4;
-                return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
+                return `<div>
                   <img src="${url}" alt="${escapeHtml(displayTitle)}" 
                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
                 </div>`;
@@ -1841,8 +1847,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           ${imageCount > 0 ? `
             <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
               ${displayImages.map((url, idx) => {
-                const isLast = idx === 3 && imageCount > 4;
-                return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
+                return `<div>
                   <img src="${url}" alt="${escapeHtml(displayTitle)}" 
                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
                 </div>`;
@@ -2169,6 +2174,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.1 – Made posts fit image size and increased overlay transparency.
   Reason: User requested posts to fit image dimensions and more transparent overlay for better image visibility.
   Impact: Post cards now auto-size to image height and overlay is more transparent (40% opacity vs 80%).
+  Model: GPT-5
+  [2025-01-12] v1.9.2 – Simplified image display to show only 1 or 2 images maximum.
+  Reason: User requested to show only one image when there's one, and only two images when there are multiple.
+  Impact: Single images display in full width, multiple images display in 2-column grid, removed "+X more" overlay.
   Model: GPT-5
   -->
 </body>
