@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.8.0
+Version: 1.8.3
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -949,18 +949,28 @@ Purpose: Blog/memo page with simplified type selection using title field
       visibility: visible;
     }
 
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid #007bff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .loader {
+      width: fit-content;
+      font-size: 40px;
+      font-family: monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #0000;
+      -webkit-text-stroke: 1px #fff;
+      --g:conic-gradient(#fff 0 0) no-repeat text;
+      background:var(--g) 0,var(--g) 1ch,var(--g) 2ch,var(--g) 3ch,var(--g) 4ch,var(--g) 5ch,var(--g) 6ch;
+      background-position-y: 100%;
+      animation: l19 1.5s linear infinite alternate;
     }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .loader:before {
+      content: "Loading";
+    }
+    @keyframes l19 {
+      0%  {background-size: 1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+      25% {background-size: 1ch 100%,1ch 50% ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 50% ,1ch 100%}
+      50% {background-size: 1ch 100%,1ch 100%,1ch 50% ,1ch 0   ,1ch 50% ,1ch 100%,1ch 100%}
+      75% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 50% ,1ch 100%,1ch 100%,1ch 100%}
+      to  {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%}
     }
 
     .loading-text {
@@ -1239,7 +1249,7 @@ Purpose: Blog/memo page with simplified type selection using title field
   <!-- Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay">
     <div>
-      <div class="loading-spinner"></div>
+      <div class="loader"></div>
       <div class="loading-text" id="loadingText">Processing...</div>
     </div>
   </div>
@@ -1268,6 +1278,43 @@ Purpose: Blog/memo page with simplified type selection using title field
     let allPosts = [];
     let currentFilter = 'all';
     let pendingFormData = null;
+
+    // Date formatting function
+    function formatDate(dateString) {
+      try {
+        const date = new Date(dateString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return dateString; // Return original if invalid
+        }
+        
+        // Format for mobile-friendly display
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // If same day, show time
+        if (diffDays === 1) {
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        // If within a week, show day and time
+        if (diffDays <= 7) {
+          return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        // If within a year, show month and day
+        if (date.getFullYear() === now.getFullYear()) {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+        
+        // Otherwise show full date
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch (error) {
+        return dateString; // Return original if error
+      }
+    }
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -1337,7 +1384,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           ` : ''}
           <div class="post-content" onclick="viewPostFromIndex(${index})">
             <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-            <div class="post-date">📅 ${escapeHtml(post.date)}</div>
+            <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
             ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
@@ -1641,7 +1688,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       currentImageIndex = 0;
 
       document.getElementById('viewModalTitle').textContent = post.title;
-      document.getElementById('viewModalDate').textContent = '📅 ' + post.date;
+      document.getElementById('viewModalDate').textContent = '📅 ' + formatDate(post.date);
       document.getElementById('viewModalContent').textContent = post.content;
 
       const pinBtn = document.getElementById('viewModalPinBtn');
@@ -1791,7 +1838,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           ` : ''}
           <div class="post-content" onclick="viewPostFromIndex(${index})">
             <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-            <div class="post-date">📅 ${escapeHtml(post.date)}</div>
+            <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
             ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
@@ -2089,6 +2136,18 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.8.0 – Added loading animations and custom confirmation messages.
   Reason: Replace browser alerts with professional loading states and custom confirmation dialogs.
   Impact: Better user experience with visual feedback during operations and polished confirmation messages.
+  Model: GPT-5
+  [2025-01-12] v1.8.1 – Fixed date formatting for mobile devices.
+  Reason: Dates were showing in ISO format (2025-10-18T02:57:25.000Z) instead of user-friendly format.
+  Impact: Dates now display in mobile-friendly format (time for today, day+time for this week, etc.).
+  Model: GPT-5
+  [2025-01-12] v1.8.2 – Updated date formatting to use 24-hour format.
+  Reason: User requested 24-hour time format instead of 12-hour AM/PM format.
+  Impact: Time displays now show in 24-hour format (e.g., "14:57" instead of "2:57 PM").
+  Model: GPT-5
+  [2025-01-12] v1.8.3 – Replaced loading spinner with animated text loader.
+  Reason: User requested custom text-based loading animation instead of circular spinner.
+  Impact: Loading animation now shows animated "LOADING" text with progressive fill effect.
   Model: GPT-5
   -->
 </body>
