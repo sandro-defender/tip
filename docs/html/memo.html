@@ -722,7 +722,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     /* Prevent page zoom when modal is open */
     body.modal-open {
-      overflow: hidden;
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
+      height: 100% !important;
       touch-action: none;
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -2012,6 +2015,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('imageGalleryModal').classList.add('active');
       document.body.classList.add('modal-open'); // Prevent page zoom
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
       
       // Set up thumbnails
       const thumbnailsContainer = document.getElementById('galleryModalThumbnails');
@@ -2135,6 +2141,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('imageGalleryModal').classList.remove('active');
       document.body.classList.remove('modal-open'); // Restore page zoom
       document.body.style.overflow = ''; // Restore scrolling
+      document.body.style.position = ''; // Restore position
+      document.body.style.width = ''; // Restore width
+      document.body.style.height = ''; // Restore height
       currentGalleryImages = [];
       currentGalleryIndex = 0;
       
@@ -2631,6 +2640,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.8 – Fixed background page scrolling while viewing pictures in gallery modal.
+  Reason: User reported that background page was still scrolling while viewing pictures in the gallery modal.
+  Impact: Added stronger scroll prevention by setting body position to fixed and using !important CSS rules to completely prevent background scrolling when gallery is open.
+  Model: GPT-5
   [2025-01-12] v1.10.7 – Fixed authorization modal cancel button functionality.
   Reason: User reported that the cancel button in the authorization modal was not working.
   Impact: Fixed function name mismatch - cancel button now properly calls closePostPasswordModal() instead of non-existent closePasswordModal().
