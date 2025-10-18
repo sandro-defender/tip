@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.10.0
+Version: 1.10.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -729,9 +729,18 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     /* Image zoom functionality */
     #imageGalleryModal .view-modal-images img.zoomed {
-      cursor: zoom-out;
+      cursor: grab;
       transform: scale(2);
       transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    #imageGalleryModal .view-modal-images img.zoomed:active {
+      cursor: grabbing;
+    }
+
+    #imageGalleryModal .view-modal-images img.panning {
+      transition: none;
     }
 
     /* Prevent text selection in modal */
@@ -2140,8 +2149,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       const mainImage = document.getElementById('galleryModalMainImage');
       mainImage.src = imageUrl;
       
-      // Reset zoom when changing images
+      // Reset zoom and panning when changing images
       mainImage.classList.remove('zoomed');
+      mainImage.style.transform = '';
+      currentX = 0;
+      currentY = 0;
       
       // Update counter
       document.getElementById('galleryImageCounter').textContent = `${index + 1} / ${currentGalleryImages.length}`;
@@ -2183,7 +2195,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (!mainImage) return;
       
       // Click to zoom
-      mainImage.addEventListener('click', toggleImageZoom);
+      mainImage.addEventListener('click', handleImageClick);
       
       // Prevent default zoom behavior
       mainImage.addEventListener('wheel', preventPageZoom, { passive: false });
@@ -2192,27 +2204,107 @@ Purpose: Blog/memo page with simplified type selection using title field
       mainImage.addEventListener('touchstart', handleTouchStart, { passive: false });
       mainImage.addEventListener('touchmove', handleTouchMove, { passive: false });
       mainImage.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
+      // Mouse events for desktop panning
+      mainImage.addEventListener('mousedown', handleMouseDown);
+      mainImage.addEventListener('mousemove', handleMouseMove);
+      mainImage.addEventListener('mouseup', handleMouseUp);
+      mainImage.addEventListener('mouseleave', handleMouseUp);
     }
     
     function removeImageZoomListeners() {
       const mainImage = document.getElementById('galleryModalMainImage');
       if (!mainImage) return;
       
-      mainImage.removeEventListener('click', toggleImageZoom);
+      mainImage.removeEventListener('click', handleImageClick);
       mainImage.removeEventListener('wheel', preventPageZoom);
       mainImage.removeEventListener('touchstart', handleTouchStart);
       mainImage.removeEventListener('touchmove', handleTouchMove);
       mainImage.removeEventListener('touchend', handleTouchEnd);
+      mainImage.removeEventListener('mousedown', handleMouseDown);
+      mainImage.removeEventListener('mousemove', handleMouseMove);
+      mainImage.removeEventListener('mouseup', handleMouseUp);
+      mainImage.removeEventListener('mouseleave', handleMouseUp);
     }
     
-    function toggleImageZoom(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      
+    // Panning variables
+    let currentX = 0;
+    let currentY = 0;
+    let isMousePanning = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
+    
+    function handleImageClick(event) {
       const mainImage = document.getElementById('galleryModalMainImage');
       if (!mainImage) return;
       
-      mainImage.classList.toggle('zoomed');
+      if (mainImage.classList.contains('zoomed')) {
+        // If zoomed, don't toggle zoom, just prevent event
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      } else {
+        // If not zoomed, toggle zoom
+        toggleImageZoom();
+      }
+    }
+    
+    function handleMouseDown(event) {
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (mainImage && mainImage.classList.contains('zoomed')) {
+        isMousePanning = true;
+        mouseStartX = event.clientX - currentX;
+        mouseStartY = event.clientY - currentY;
+        mainImage.classList.add('panning');
+        event.preventDefault();
+      }
+    }
+    
+    function handleMouseMove(event) {
+      if (isMousePanning) {
+        currentX = event.clientX - mouseStartX;
+        currentY = event.clientY - mouseStartY;
+        updateImageTransform();
+        event.preventDefault();
+      }
+    }
+    
+    function handleMouseUp(event) {
+      if (isMousePanning) {
+        isMousePanning = false;
+        const mainImage = document.getElementById('galleryModalMainImage');
+        if (mainImage) {
+          mainImage.classList.remove('panning');
+        }
+      }
+    }
+    
+    function updateImageTransform() {
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (!mainImage) return;
+      
+      if (mainImage.classList.contains('zoomed')) {
+        mainImage.style.transform = `scale(2) translate(${currentX}px, ${currentY}px)`;
+      }
+    }
+    
+    function toggleImageZoom() {
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (!mainImage) return;
+      
+      if (mainImage.classList.contains('zoomed')) {
+        // Unzoom
+        mainImage.classList.remove('zoomed');
+        mainImage.style.transform = '';
+        currentX = 0;
+        currentY = 0;
+      } else {
+        // Zoom
+        mainImage.classList.add('zoomed');
+        mainImage.style.transform = 'scale(2)';
+        currentX = 0;
+        currentY = 0;
+      }
     }
     
     function preventPageZoom(event) {
@@ -2220,9 +2312,12 @@ Purpose: Blog/memo page with simplified type selection using title field
       event.stopPropagation();
     }
     
-    // Touch handling for mobile zoom prevention
+    // Touch handling for mobile zoom prevention and panning
     let touchStartDistance = 0;
     let touchStartTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchPanning = false;
     
     function handleTouchStart(event) {
       if (event.touches.length === 2) {
@@ -2231,6 +2326,14 @@ Purpose: Blog/memo page with simplified type selection using title field
           event.touches[0].clientY - event.touches[1].clientY
         );
         touchStartTime = Date.now();
+      } else if (event.touches.length === 1) {
+        const mainImage = document.getElementById('galleryModalMainImage');
+        if (mainImage && mainImage.classList.contains('zoomed')) {
+          isTouchPanning = true;
+          touchStartX = event.touches[0].clientX - currentX;
+          touchStartY = event.touches[0].clientY - currentY;
+          mainImage.classList.add('panning');
+        }
       }
     }
     
@@ -2238,6 +2341,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (event.touches.length === 2) {
         event.preventDefault();
         event.stopPropagation();
+      } else if (event.touches.length === 1 && isTouchPanning) {
+        event.preventDefault();
+        currentX = event.touches[0].clientX - touchStartX;
+        currentY = event.touches[0].clientY - touchStartY;
+        updateImageTransform();
       }
     }
     
@@ -2248,7 +2356,13 @@ Purpose: Blog/memo page with simplified type selection using title field
         
         // If it's a quick pinch gesture, toggle zoom
         if (touchDuration < 300) {
-          toggleImageZoom(event);
+          toggleImageZoom();
+        }
+      } else if (event.touches.length === 0 && isTouchPanning) {
+        isTouchPanning = false;
+        const mainImage = document.getElementById('galleryModalMainImage');
+        if (mainImage) {
+          mainImage.classList.remove('panning');
         }
       }
     }
@@ -2389,41 +2503,41 @@ Purpose: Blog/memo page with simplified type selection using title field
     });
 
     // Touch swipe for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
+    let swipeTouchStartX = 0;
+    let swipeTouchEndX = 0;
 
     document.getElementById('viewModalImages').addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
+      swipeTouchStartX = e.changedTouches[0].screenX;
     });
 
     document.getElementById('viewModalImages').addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
+      swipeTouchEndX = e.changedTouches[0].screenX;
       handleSwipe();
     });
 
     document.getElementById('galleryModalImages').addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
+      swipeTouchStartX = e.changedTouches[0].screenX;
     });
 
     document.getElementById('galleryModalImages').addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
+      swipeTouchEndX = e.changedTouches[0].screenX;
       handleGallerySwipe();
     });
 
     function handleSwipe() {
-      if (touchEndX < touchStartX - 50) {
+      if (swipeTouchEndX < swipeTouchStartX - 50) {
         nextImage(); // Swipe left
       }
-      if (touchEndX > touchStartX + 50) {
+      if (swipeTouchEndX > swipeTouchStartX + 50) {
         prevImage(); // Swipe right
       }
     }
 
     function handleGallerySwipe() {
-      if (touchEndX < touchStartX - 50) {
+      if (swipeTouchEndX < swipeTouchStartX - 50) {
         nextGalleryImage(); // Swipe left
       }
-      if (touchEndX > touchStartX + 50) {
+      if (swipeTouchEndX > swipeTouchStartX + 50) {
         prevGalleryImage(); // Swipe right
       }
     }
@@ -2431,6 +2545,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.2 – Fixed JavaScript variable redeclaration error.
+  Reason: User reported "Cannot redeclare block-scoped variable 'touchStartX'" error on line 2318.
+  Impact: Renamed touch swipe variables to avoid conflict with touch panning variables, eliminating JavaScript error.
+  Model: GPT-5
   [2025-01-12] v1.6.1 – Simplified form by using title field as type selection.
   Reason: Streamline user interface - title field now serves as type selector instead of separate field.
   Impact: Cleaner form design with type selection integrated into title field, reducing form complexity.
@@ -2538,6 +2656,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.10.0 – Added image zoom functionality and prevented page zoom in gallery modal.
   Reason: User requested that when modal is open, page zoom should be prevented and only image should zoom.
   Impact: Added click-to-zoom for images, prevented page zoom with CSS and JavaScript, added touch gesture support for mobile.
+  Model: GPT-5
+  [2025-01-12] v1.10.1 – Added image panning when zoomed to prevent image switching.
+  Reason: User requested that when image is zoomed, clicking should move/pan the image instead of switching to next image.
+  Impact: Added mouse and touch panning functionality, changed cursor to grab/grabbing, prevented image switching when zoomed.
   Model: GPT-5
   -->
 </body>
