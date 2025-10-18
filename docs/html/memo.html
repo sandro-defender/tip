@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.7
+Version: 1.9.8
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1449,11 +1449,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (isAuthenticated === 'true') {
         showMainContent();
       } else {
-        showPasswordModal();
+        showPagePasswordModal();
       }
     }
     
-    function showPasswordModal() {
+    function showPagePasswordModal() {
       document.body.classList.add('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'flex';
       document.getElementById('pagePassword').focus();
@@ -1704,13 +1704,13 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('postModal').classList.remove('active');
     }
 
-    function showPasswordModal() {
+    function showPostPasswordModal() {
       document.getElementById('passwordModal').classList.add('active');
       document.getElementById('popupPassword').value = '';
       document.getElementById('popupPassword').focus();
     }
 
-    function closePasswordModal() {
+    function closePostPasswordModal() {
       document.getElementById('passwordModal').classList.remove('active');
       pendingFormData = null;
     }
@@ -1801,7 +1801,7 @@ Purpose: Blog/memo page with simplified type selection using title field
         hideLoading();
         
         if (result.success) {
-          closePasswordModal();
+          closePostPasswordModal();
           closeModal();
           loadPosts();
           showConfirmation(
@@ -1864,7 +1864,7 @@ Purpose: Blog/memo page with simplified type selection using title field
         hideLoading();
         
         if (result.success) {
-          closePasswordModal();
+          closePostPasswordModal();
           loadPosts();
           
           if (pendingAction.action === 'delete') {
@@ -2206,17 +2206,17 @@ Purpose: Blog/memo page with simplified type selection using title field
       };
       
       // Show password popup
-      showPasswordModal();
+      showPostPasswordModal();
     });
 
     function confirmDelete(id) {
       pendingAction = { action: 'delete', id: id };
-      showPasswordModal();
+      showPostPasswordModal();
     }
 
     function togglePin(id, currentPinned) {
       pendingAction = { action: 'togglePin', id: id, currentPinned: currentPinned };
-      showPasswordModal();
+      showPostPasswordModal();
     }
 
 
@@ -2407,6 +2407,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.7 – Fixed posts not loading after authentication.
   Reason: User reported posts weren't loading after password authentication.
   Impact: Added proper loadPosts() call in showMainContent() with DOM ready delay and debug logging.
+  Model: GPT-5
+  [2025-01-12] v1.9.8 – Fixed password modal conflict between page and post authentication.
+  Reason: User reported password modal showing twice - page password and post password were conflicting.
+  Impact: Renamed functions to distinguish between page authentication and post action authentication.
   Model: GPT-5
   -->
 </body>
