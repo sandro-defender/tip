@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.0
+Version: 1.9.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -259,8 +259,8 @@ Purpose: Blog/memo page with simplified type selection using title field
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      height: 100%;
-      min-height: 300px;
+      height: auto;
+      min-height: 200px;
     }
 
     .post-card:hover {
@@ -292,19 +292,13 @@ Purpose: Blog/memo page with simplified type selection using title field
       grid-template-columns: repeat(2, 1fr);
       gap: 5px;
       width: 100%;
-      height: 100%;
-      min-height: 300px;
       background: #f0f0f0;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      position: relative;
     }
 
     .post-images-grid img {
       width: 100%;
-      height: 100%;
+      height: auto;
       object-fit: cover;
       cursor: pointer;
     }
@@ -340,7 +334,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      background: linear-gradient(transparent, rgba(0,0,0,0.4));
       padding: 20px 15px 15px 15px;
       z-index: 5;
     }
@@ -407,33 +401,33 @@ Purpose: Blog/memo page with simplified type selection using title field
       font-weight: bold;
       transition: all 0.2s;
       font-size: 14px;
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px);
       color: white;
       flex: 1;
     }
 
     .post-actions button:hover {
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.2);
       transform: translateY(-1px);
     }
 
     .pin-btn {
-      background: rgba(255, 215, 0, 0.8) !important;
+      background: rgba(255, 215, 0, 0.6) !important;
       color: #333 !important;
     }
 
     .pin-btn.pinned {
-      background: rgba(255, 237, 78, 0.9) !important;
+      background: rgba(255, 237, 78, 0.7) !important;
     }
 
     .edit-btn {
-      background: rgba(76, 175, 80, 0.8) !important;
+      background: rgba(76, 175, 80, 0.6) !important;
       color: white !important;
     }
 
     .delete-btn {
-      background: rgba(244, 67, 54, 0.8) !important;
+      background: rgba(244, 67, 54, 0.6) !important;
       color: white !important;
     }
 
@@ -2171,6 +2165,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.0 – Redesigned post appearance with full-image overlay layout.
   Reason: User requested images to fill entire post area with content as overlay at bottom.
   Impact: Posts now have full-image background with title, date, text, and actions overlaid in one line at bottom.
+  Model: GPT-5
+  [2025-01-12] v1.9.1 – Made posts fit image size and increased overlay transparency.
+  Reason: User requested posts to fit image dimensions and more transparent overlay for better image visibility.
+  Impact: Post cards now auto-size to image height and overlay is more transparent (40% opacity vs 80%).
   Model: GPT-5
   -->
 </body>
