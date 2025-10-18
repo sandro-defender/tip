@@ -37,7 +37,10 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         backdrop-filter: saturate(140%) blur(20px);
         -webkit-backdrop-filter: saturate(140%) blur(20px);
         border-top: 1px solid rgba(255, 255, 255, 0.25);
-        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+        /* Fixed padding instead of env() calculation to prevent menu moving up */
+        padding: 8px 0 8px;
+        /* Use margin-bottom for safe area instead of padding */
+        margin-bottom: env(safe-area-inset-bottom);
         z-index: 1000;
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -238,6 +241,9 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                 rgba(30, 30, 30, 0.55) 100%
             );
             border-top-color: rgba(255, 255, 255, 0.10);
+            /* Maintain consistent padding in dark mode */
+            padding: 8px 0 8px;
+            margin-bottom: env(safe-area-inset-bottom);
         }
         
         .bottom-nav .nav-icon {
@@ -631,6 +637,10 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
 
 <!--
 CHANGELOG
+[2025-01-27] v1.3.1 – Fixed menu moving up when viewport meta tag is present.
+Reason: Changed padding calculation from max(8px, env(safe-area-inset-bottom)) to fixed padding with margin-bottom for safe area.
+Impact: Menu now stays in correct position regardless of viewport meta tag presence.
+Model: GPT-4o
 [2025-09-18] v1.3.0 – Added frosted glass design, .glass utility, improved dark mode.
 Reason: Implement requested transparent glass design with modern UX.
 Impact: More modern look; compatible with reduced-motion/transparency user settings.
