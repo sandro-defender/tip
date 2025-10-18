@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Blog</title>
+  <title>Memo</title>
   <style>
     * {
       margin: 0;
@@ -178,6 +178,7 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       transition: transform 0.3s, box-shadow 0.3s;
       position: relative;
+      cursor: pointer;
     }
 
     .post-card:hover {
@@ -204,11 +205,41 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
-    .post-image {
+    .post-images-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
       width: 100%;
-      height: 300px;
-      object-fit: cover;
+      min-height: 300px;
       background: #f0f0f0;
+    }
+
+    .post-images-grid img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .post-images-grid.single img {
+      grid-column: 1 / -1;
+      height: 300px;
+    }
+
+    .image-more-overlay {
+      position: relative;
+    }
+
+    .image-more-overlay::after {
+      content: attr(data-more);
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
     }
 
     .post-content {
@@ -290,10 +321,80 @@
     }
 
     .image-preview {
-      max-width: 100%;
-      max-height: 200px;
-      margin-top: 10px;
+      max-width: 150px;
+      max-height: 150px;
+      margin: 5px;
       border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .preview-item {
+      position: relative;
+      display: inline-block;
+    }
+
+    .preview-item img {
+      display: block;
+    }
+
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .remove-image:hover {
+      background: #d32f2f;
+    }
+
+    .drop-zone {
+      border: 3px dashed #e0e0e0;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: #fafafa;
+    }
+
+    .drop-zone:hover {
+      border-color: #667eea;
+      background: #f5f5ff;
+    }
+
+    .drop-zone.drag-over {
+      border-color: #667eea;
+      background: #e8ebff;
+      transform: scale(1.02);
+    }
+
+    .drop-zone-text {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .drop-zone-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
     }
 
     .error {
@@ -339,6 +440,146 @@
       border-radius: 8px;
       font-size: 16px;
     }
+
+    /* View Post Modal */
+    .view-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .view-modal.active {
+      display: flex;
+    }
+
+    .view-modal-content {
+      background: white;
+      border-radius: 15px;
+      max-width: 900px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      margin: 20px;
+    }
+
+    .view-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 10;
+      line-height: 1;
+    }
+
+    .view-modal-close:hover {
+      background: rgba(0,0,0,0.9);
+    }
+
+    .view-modal-images {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      background: #000;
+      border-radius: 15px 15px 0 0;
+    }
+
+    .view-modal-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .view-modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .view-modal-nav:hover {
+      background: rgba(0,0,0,0.8);
+    }
+
+    .view-modal-nav.prev {
+      left: 10px;
+    }
+
+    .view-modal-nav.next {
+      right: 10px;
+    }
+
+    .view-modal-body {
+      padding: 30px;
+    }
+
+    .view-modal-title {
+      font-size: 2.5em;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .view-modal-date {
+      color: #999;
+      font-size: 1em;
+      margin-bottom: 25px;
+    }
+
+    .view-modal-text {
+      color: #666;
+      line-height: 1.8;
+      font-size: 1.1em;
+      white-space: pre-wrap;
+      margin-bottom: 30px;
+    }
+
+    .view-modal-thumbnails {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .view-modal-thumbnails img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .view-modal-thumbnails img:hover,
+    .view-modal-thumbnails img.active {
+      opacity: 1;
+      border: 2px solid #667eea;
+    }
   </style>
 </head>
 <body>
@@ -350,7 +591,7 @@
     </div>
 
     <header>
-      <h1>📝 My Blog</h1>
+      <h1>📝 Memo</h1>
       <p class="subtitle">Share your thoughts with the world</p>
       <button class="add-post-btn" onclick="openNewPostModal()">➕ Add New Post</button>
     </header>
@@ -383,9 +624,13 @@
         </div>
 
         <div class="form-group">
-          <label for="postImage">Image</label>
-          <input type="file" id="postImage" accept="image/*" onchange="previewImage(this)">
-          <img id="imagePreview" class="image-preview" style="display:none;">
+          <label>Images (Multiple)</label>
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon">📸</div>
+            <div class="drop-zone-text">Drag & drop images here or click to browse</div>
+            <input type="file" id="postImage" accept="image/*" multiple style="display: none;">
+          </div>
+          <div class="preview-container" id="previewContainer"></div>
         </div>
 
         <div class="btn-group">
@@ -410,13 +655,40 @@
     </div>
   </div>
 
+  <!-- View Post Modal -->
+  <div id="viewModal" class="view-modal">
+    <div class="view-modal-content">
+      <button class="view-modal-close" onclick="closeViewModal()">×</button>
+      
+      <div class="view-modal-images" id="viewModalImages" style="display:none;">
+        <button class="view-modal-nav prev" onclick="prevImage()">‹</button>
+        <img id="viewModalMainImage" src="" alt="">
+        <button class="view-modal-nav next" onclick="nextImage()">›</button>
+      </div>
+
+      <div class="view-modal-body">
+        <div class="view-modal-thumbnails" id="viewModalThumbnails"></div>
+        <h1 class="view-modal-title" id="viewModalTitle"></h1>
+        <div class="view-modal-date" id="viewModalDate"></div>
+        <p class="view-modal-text" id="viewModalContent"></p>
+        <div class="post-actions">
+          <button class="pin-btn" id="viewModalPinBtn" onclick="togglePinFromView()">📌 Pin</button>
+          <button class="edit-btn" onclick="editPostFromView()">✏️ Edit</button>
+          <button class="delete-btn" onclick="deletePostFromView()">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
 
-    let currentImageData = null;
     let currentEditingPost = null;
     let pendingAction = null;
+    let uploadedImages = [];
+    let currentViewingPost = null;
+    let currentImageIndex = 0;
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -449,32 +721,101 @@
         return;
       }
 
-      container.innerHTML = posts.map(post => `
-        <div class="post-card ${post.pinned ? 'pinned' : ''}">
+      container.innerHTML = posts.map(post => {
+        const imageCount = post.imageUrls ? post.imageUrls.length : 0;
+        const gridClass = imageCount === 1 ? 'single' : '';
+        const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
+        
+        return `
+        <div class="post-card ${post.pinned ? 'pinned' : ''}" onclick="viewPost(${JSON.stringify(post).replace(/'/g, '&#39;')})">
           ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
-          ${post.imageUrl ? `<img src="${post.imageUrl}" class="post-image" alt="${escapeHtml(post.title)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22%3EImage not available%3C/text%3E%3C/svg%3E'">` : ''}
+          ${imageCount > 0 ? `
+            <div class="post-images-grid ${gridClass}">
+              ${displayImages.map((url, idx) => {
+                const isLast = idx === 3 && imageCount > 4;
+                return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
+                  <img src="${url}" alt="${escapeHtml(post.title)}" 
+                       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
+                </div>`;
+              }).join('')}
+            </div>
+          ` : ''}
           <div class="post-content">
             <h2 class="post-title">${escapeHtml(post.title)}</h2>
             <div class="post-date">📅 ${escapeHtml(post.date)}</div>
-            <p class="post-text">${escapeHtml(post.content)}</p>
-            <div class="post-actions">
+            <p class="post-text">${escapeHtml(post.content.substring(0, 150))}${post.content.length > 150 ? '...' : ''}</p>
+            <div class="post-actions" onclick="event.stopPropagation()">
               <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})">${post.pinned ? '📌 Unpin' : '📌 Pin'}</button>
               <button class="edit-btn" onclick='editPost(${JSON.stringify(post).replace(/'/g, "&#39;")})'>✏️ Edit</button>
               <button class="delete-btn" onclick="confirmDelete('${post.id}')">🗑️ Delete</button>
             </div>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     function openNewPostModal() {
       document.getElementById('modalTitle').textContent = 'Add New Post';
       document.getElementById('postForm').reset();
       document.getElementById('postId').value = '';
-      document.getElementById('imagePreview').style.display = 'none';
-      currentImageData = null;
+      document.getElementById('previewContainer').innerHTML = '';
+      uploadedImages = [];
       currentEditingPost = null;
       document.getElementById('postModal').classList.add('active');
+    }
+
+    // Drag and drop functionality
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('postImage');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            uploadedImages.push(e.target.result);
+            displayPreviews();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function displayPreviews() {
+      const container = document.getElementById('previewContainer');
+      container.innerHTML = uploadedImages.map((img, index) => `
+        <div class="preview-item">
+          <img src="${img}" class="image-preview" alt="Preview ${index + 1}">
+          <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      uploadedImages.splice(index, 1);
+      displayPreviews();
     }
 
     function editPost(post) {
@@ -485,12 +826,9 @@
       document.getElementById('postContent').value = post.content;
       document.getElementById('adminPassword').value = '';
       
-      if (post.imageUrl) {
-        document.getElementById('imagePreview').src = post.imageUrl;
-        document.getElementById('imagePreview').style.display = 'block';
-      }
+      uploadedImages = post.imageUrls || [];
+      displayPreviews();
       
-      currentImageData = null;
       document.getElementById('postModal').classList.add('active');
     }
 
@@ -498,15 +836,98 @@
       document.getElementById('postModal').classList.remove('active');
     }
 
-    function previewImage(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          currentImageData = e.target.result;
-          document.getElementById('imagePreview').src = e.target.result;
-          document.getElementById('imagePreview').style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
+    // View post in modal
+    function viewPost(post) {
+      currentViewingPost = post;
+      currentImageIndex = 0;
+
+      document.getElementById('viewModalTitle').textContent = post.title;
+      document.getElementById('viewModalDate').textContent = '📅 ' + post.date;
+      document.getElementById('viewModalContent').textContent = post.content;
+
+      const pinBtn = document.getElementById('viewModalPinBtn');
+      pinBtn.textContent = post.pinned ? '📌 Unpin' : '📌 Pin';
+      pinBtn.className = post.pinned ? 'pin-btn pinned' : 'pin-btn';
+
+      // Display images
+      if (post.imageUrls && post.imageUrls.length > 0) {
+        document.getElementById('viewModalMainImage').src = post.imageUrls[0];
+        document.getElementById('viewModalImages').style.display = 'block';
+
+        // Show/hide navigation buttons
+        const prevBtn = document.querySelector('.view-modal-nav.prev');
+        const nextBtn = document.querySelector('.view-modal-nav.next');
+        if (post.imageUrls.length > 1) {
+          prevBtn.style.display = 'block';
+          nextBtn.style.display = 'block';
+        } else {
+          prevBtn.style.display = 'none';
+          nextBtn.style.display = 'none';
+        }
+
+        // Display thumbnails
+        const thumbnailsContainer = document.getElementById('viewModalThumbnails');
+        thumbnailsContainer.innerHTML = post.imageUrls.map((url, index) => `
+          <img src="${url}" alt="Thumbnail ${index + 1}" 
+               class="${index === 0 ? 'active' : ''}" 
+               onclick="showImage(${index})">
+        `).join('');
+      } else {
+        document.getElementById('viewModalImages').style.display = 'none';
+        document.getElementById('viewModalThumbnails').innerHTML = '';
+      }
+
+      document.getElementById('viewModal').classList.add('active');
+    }
+
+    function closeViewModal() {
+      document.getElementById('viewModal').classList.remove('active');
+      currentViewingPost = null;
+    }
+
+    function showImage(index) {
+      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
+      
+      currentImageIndex = index;
+      document.getElementById('viewModalMainImage').src = currentViewingPost.imageUrls[index];
+      
+      // Update thumbnail active state
+      const thumbnails = document.querySelectorAll('#viewModalThumbnails img');
+      thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+      });
+    }
+
+    function prevImage() {
+      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
+      currentImageIndex = (currentImageIndex - 1 + currentViewingPost.imageUrls.length) % currentViewingPost.imageUrls.length;
+      showImage(currentImageIndex);
+    }
+
+    function nextImage() {
+      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
+      currentImageIndex = (currentImageIndex + 1) % currentViewingPost.imageUrls.length;
+      showImage(currentImageIndex);
+    }
+
+    function togglePinFromView() {
+      if (currentViewingPost) {
+        closeViewModal();
+        togglePin(currentViewingPost.id, currentViewingPost.pinned);
+      }
+    }
+
+    function editPostFromView() {
+      closeViewModal();
+      if (currentViewingPost) {
+        editPost(currentViewingPost);
+      }
+    }
+
+    function deletePostFromView() {
+      closeViewModal();
+      if (currentViewingPost) {
+        confirmDelete(currentViewingPost.id);
       }
     }
 
@@ -527,7 +948,7 @@
           action: id ? 'updatePost' : 'createPost',
           title: title,
           content: content,
-          imageData: currentImageData,
+          imageData: uploadedImages.length > 0 ? uploadedImages : null,
           password: password
         };
         
@@ -651,6 +1072,20 @@
       div.textContent = text;
       return div.innerHTML;
     }
+
+    // Keyboard navigation for image gallery
+    document.addEventListener('keydown', (e) => {
+      const viewModal = document.getElementById('viewModal');
+      if (viewModal.classList.contains('active')) {
+        if (e.key === 'ArrowLeft') {
+          prevImage();
+        } else if (e.key === 'ArrowRight') {
+          nextImage();
+        } else if (e.key === 'Escape') {
+          closeViewModal();
+        }
+      }
+    });
   </script>
 </body>
 </html>
