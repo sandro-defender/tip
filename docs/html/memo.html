@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.5.1
+Version: 1.5.2
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -886,6 +886,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
     let currentImageIndex = 0;
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
+    let allPosts = [];
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -912,13 +913,14 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
     function displayPosts(posts) {
       const container = document.getElementById('postsContainer');
+      allPosts = posts; // Store posts globally
       
       if (posts.length === 0) {
         container.innerHTML = '<div class="no-posts">No posts yet. Click "Add New Post" to create your first post!</div>';
         return;
       }
 
-      container.innerHTML = posts.map(post => {
+      container.innerHTML = posts.map((post, index) => {
         const imageCount = post.imageUrls ? post.imageUrls.length : 0;
         const gridClass = imageCount === 1 ? 'single' : '';
         const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
@@ -927,7 +929,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
         <div class="post-card ${post.pinned ? 'pinned' : ''}">
           ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
           ${imageCount > 0 ? `
-            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGallery(${JSON.stringify(post).replace(/'/g, '&#39;')})">
+            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
               ${displayImages.map((url, idx) => {
                 const isLast = idx === 3 && imageCount > 4;
                 return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
@@ -937,14 +939,14 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
               }).join('')}
             </div>
           ` : ''}
-          <div class="post-content" onclick="viewPost(${JSON.stringify(post).replace(/'/g, '&#39;')})">
+          <div class="post-content" onclick="viewPostFromIndex(${index})">
             <h2 class="post-title">${escapeHtml(post.title)}</h2>
             <div class="post-date">📅 ${escapeHtml(post.date)}</div>
             <p class="post-text">${escapeHtml(post.content.substring(0, 150))}${post.content.length > 150 ? '...' : ''}</p>
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
             <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})">${post.pinned ? '📌 Unpin' : '📌 Pin'}</button>
-            <button class="edit-btn" onclick='editPost(${JSON.stringify(post).replace(/'/g, "&#39;")})'>✏️ Edit</button>
+            <button class="edit-btn" onclick="editPostFromIndex(${index})">✏️ Edit</button>
             <button class="delete-btn" onclick="confirmDelete('${post.id}')">🗑️ Delete</button>
           </div>
         </div>
@@ -1107,6 +1109,25 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
       
       // Display the first image
       showGalleryImage(0);
+    }
+
+    // Index-based functions to avoid JSON.stringify issues
+    function openImageGalleryFromIndex(index) {
+      if (allPosts[index] && allPosts[index].imageUrls && allPosts[index].imageUrls.length > 0) {
+        openImageGallery(allPosts[index]);
+      }
+    }
+
+    function viewPostFromIndex(index) {
+      if (allPosts[index]) {
+        viewPost(allPosts[index]);
+      }
+    }
+
+    function editPostFromIndex(index) {
+      if (allPosts[index]) {
+        editPost(allPosts[index]);
+      }
     }
 
     function closeViewModal() {
@@ -1434,6 +1455,10 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.5.2 – Fixed JavaScript syntax error when opening posts.
+  Reason: Replaced JSON.stringify in HTML templates with index-based approach to avoid syntax errors.
+  Impact: Posts can now be opened without JavaScript syntax errors.
+  Model: GPT-5
   [2025-01-12] v1.5.1 – Fixed image sizing in posts to fit container height.
   Reason: Improve image display in post cards - images now properly fill their containers.
   Impact: Better visual consistency and image display in post cards.
