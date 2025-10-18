@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.7.0
+Version: 1.7.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -1022,19 +1022,6 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
-  <!-- Password Modal for Pin/Delete -->
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <h2>Enter Password</h2>
-      <div class="password-prompt">
-        <input type="password" id="actionPassword" placeholder="Enter admin password">
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-primary" onclick="executePasswordProtectedAction()">Confirm</button>
-        <button class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Image Gallery Modal -->
   <div id="imageGalleryModal" class="view-modal">
@@ -1262,7 +1249,6 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('postId').value = post.id;
       document.getElementById('postTitle').value = post.type || 'other';
       document.getElementById('postContent').value = post.content || '';
-      document.getElementById('adminPassword').value = '';
       
       // Clear uploaded images array for editing - existing images will be preserved on backend
       uploadedImages = [];
@@ -1824,6 +1810,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.7.0 – Replaced password field with popup authentication modal.
   Reason: Improve UX by removing password field from form and showing popup with prefilled username "admin".
   Impact: Cleaner form interface with password prompt appearing only when needed for authentication.
+  Model: GPT-5
+  [2025-01-12] v1.7.1 – Fixed JavaScript errors in editPost function and removed duplicate password modal.
+  Reason: Remove references to non-existent adminPassword element and duplicate password modal HTML.
+  Impact: Edit functionality now works without JavaScript errors and password popup functions correctly.
   Model: GPT-5
   -->
 </body>
