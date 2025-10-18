@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.7.1
+Version: 1.7.2
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -257,6 +257,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       transition: transform 0.3s, box-shadow 0.3s;
       position: relative;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .post-card:hover {
@@ -326,18 +329,21 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-content {
-      padding: 15px;
+      padding: 15px 15px 0 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     @media (min-width: 768px) {
       .post-content {
-        padding: 20px;
+        padding: 20px 20px 0 20px;
       }
     }
 
     @media (min-width: 1200px) {
       .post-content {
-        padding: 25px;
+        padding: 25px 25px 0 25px;
       }
     }
 
@@ -370,12 +376,15 @@ Purpose: Blog/memo page with simplified type selection using title field
       line-height: 1.6;
       margin-bottom: 20px;
       white-space: pre-wrap;
+      flex: 1;
     }
 
     .post-actions {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
+      margin-top: auto;
+      padding: 15px;
     }
 
     .post-actions button {
@@ -961,7 +970,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     <header>
       <h1>📝 My Staff</h1>
-      <p class="subtitle">Share your thoughts with the world</p>
+      <p class="subtitle">Share memos with staff</p>
       
       <!-- Filter Buttons -->
       <div class="filter-buttons">
@@ -1075,7 +1084,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       <form id="passwordForm">
         <div class="form-group">
           <label for="popupUsername">Username</label>
-          <input type="text" id="popupUsername" value="admin" readonly>
+          <input type="text" id="popupUsername" value="Staff_User" readonly>
         </div>
         <div class="form-group">
           <label for="popupPassword">Password</label>
@@ -1814,6 +1823,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.7.1 – Fixed JavaScript errors in editPost function and removed duplicate password modal.
   Reason: Remove references to non-existent adminPassword element and duplicate password modal HTML.
   Impact: Edit functionality now works without JavaScript errors and password popup functions correctly.
+  Model: GPT-5
+  [2025-01-12] v1.7.2 – Fixed post card layout to ensure action buttons are always at bottom.
+  Reason: Small images on large screens caused action buttons to float in middle instead of bottom.
+  Impact: Action buttons now consistently appear at bottom of post cards regardless of image size.
   Model: GPT-5
   -->
 </body>
