@@ -1,11 +1,11 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.5.5
+Version: 1.6.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
-Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen image gallery
+Purpose: Blog/memo page with post type filtering and optional title/content
 -->
 
 <!DOCTYPE html>
@@ -77,6 +77,40 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       box-shadow: 0 6px 20px rgba(0,0,0,0.3);
     }
 
+    /* Filter Buttons */
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .filter-btn.active {
+      background: rgba(255, 255, 255, 0.9);
+      color: #667eea;
+      border-color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -128,7 +162,8 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
     }
 
     .form-group input,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group select {
       width: 100%;
       padding: 12px;
       border: 2px solid #e0e0e0;
@@ -139,7 +174,8 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
     }
 
     .form-group input:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
       outline: none;
       border-color: #667eea;
     }
@@ -855,6 +891,16 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
     <header>
       <h1>📝 My Staff</h1>
       <p class="subtitle">Share your thoughts with the world</p>
+      
+      <!-- Filter Buttons -->
+      <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterPosts('all')" data-filter="all">All</button>
+        <button class="filter-btn" onclick="filterPosts('memo')" data-filter="memo">📝 Memo</button>
+        <button class="filter-btn" onclick="filterPosts('shift')" data-filter="shift">⏰ Shift</button>
+        <button class="filter-btn" onclick="filterPosts('tip')" data-filter="tip">💡 Tip</button>
+        <button class="filter-btn" onclick="filterPosts('other')" data-filter="other">📄 Other</button>
+      </div>
+      
       <button class="add-post-btn" onclick="openNewPostModal()">➕ Add New Post</button>
     </header>
 
@@ -876,13 +922,24 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
         </div>
 
         <div class="form-group">
-          <label for="postTitle">Title</label>
-          <input type="text" id="postTitle" required>
+          <label for="postType">Type</label>
+          <select id="postType" required>
+            <option value="">Select type...</option>
+            <option value="memo">📝 Memo</option>
+            <option value="shift">⏰ Shift</option>
+            <option value="tip">💡 Tip</option>
+            <option value="other">📄 Other</option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label for="postContent">Content</label>
-          <textarea id="postContent" required></textarea>
+          <label for="postTitle">Title (Optional)</label>
+          <input type="text" id="postTitle" placeholder="Leave empty for auto-generated title">
+        </div>
+
+        <div class="form-group">
+          <label for="postContent">Content (Optional)</label>
+          <textarea id="postContent" placeholder="Leave empty if not needed"></textarea>
         </div>
 
         <div class="form-group">
@@ -974,6 +1031,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
     let allPosts = [];
+    let currentFilter = 'all';
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -1012,24 +1070,34 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
         const gridClass = imageCount === 1 ? 'single' : '';
         const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
         
+        const typeIcon = {
+          'memo': '📝',
+          'shift': '⏰', 
+          'tip': '💡',
+          'other': '📄'
+        };
+        
+        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
+        const displayContent = post.content || '';
+        
         return `
-        <div class="post-card ${post.pinned ? 'pinned' : ''}">
+        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
           ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
           ${imageCount > 0 ? `
             <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
               ${displayImages.map((url, idx) => {
                 const isLast = idx === 3 && imageCount > 4;
                 return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
-                  <img src="${url}" alt="${escapeHtml(post.title)}" 
+                  <img src="${url}" alt="${escapeHtml(displayTitle)}" 
                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
                 </div>`;
               }).join('')}
             </div>
           ` : ''}
           <div class="post-content" onclick="viewPostFromIndex(${index})">
-            <h2 class="post-title">${escapeHtml(post.title)}</h2>
+            <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
             <div class="post-date">📅 ${escapeHtml(post.date)}</div>
-            <p class="post-text">${escapeHtml(post.content.substring(0, 150))}${post.content.length > 150 ? '...' : ''}</p>
+            ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
             <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
@@ -1108,8 +1176,9 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       currentEditingPost = post;
       document.getElementById('modalTitle').textContent = 'Edit Post';
       document.getElementById('postId').value = post.id;
-      document.getElementById('postTitle').value = post.title;
-      document.getElementById('postContent').value = post.content;
+      document.getElementById('postTitle').value = post.title || '';
+      document.getElementById('postContent').value = post.content || '';
+      document.getElementById('postType').value = post.type || 'other';
       document.getElementById('adminPassword').value = '';
       
       uploadedImages = post.imageUrls || [];
@@ -1216,6 +1285,78 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       if (allPosts[index]) {
         editPost(allPosts[index]);
       }
+    }
+
+    // Filter functions
+    function filterPosts(type) {
+      currentFilter = type;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-filter="${type}"]`).classList.add('active');
+      
+      // Filter and display posts
+      const filteredPosts = type === 'all' ? allPosts : allPosts.filter(post => post.type === type);
+      displayFilteredPosts(filteredPosts);
+    }
+
+    function displayFilteredPosts(posts) {
+      const container = document.getElementById('postsContainer');
+      
+      if (posts.length === 0) {
+        const typeNames = {
+          'memo': 'memos',
+          'shift': 'shifts', 
+          'tip': 'tips',
+          'other': 'other posts'
+        };
+        container.innerHTML = `<div class="no-posts">No ${typeNames[currentFilter] || 'posts'} found. Click "Add New Post" to create your first ${currentFilter}!</div>`;
+        return;
+      }
+
+      container.innerHTML = posts.map((post, index) => {
+        const imageCount = post.imageUrls ? post.imageUrls.length : 0;
+        const gridClass = imageCount === 1 ? 'single' : '';
+        const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
+        
+        const typeIcon = {
+          'memo': '📝',
+          'shift': '⏰', 
+          'tip': '💡',
+          'other': '📄'
+        };
+        
+        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
+        const displayContent = post.content || '';
+
+        return `
+        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
+          ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
+          ${imageCount > 0 ? `
+            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
+              ${displayImages.map((url, idx) => {
+                const isLast = idx === 3 && imageCount > 4;
+                return `<div class="${isLast ? 'image-more-overlay' : ''}" ${isLast ? `data-more="+${imageCount - 4}"` : ''}>
+                  <img src="${url}" alt="${escapeHtml(displayTitle)}" 
+                       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
+                </div>`;
+              }).join('')}
+            </div>
+          ` : ''}
+          <div class="post-content" onclick="viewPostFromIndex(${index})">
+            <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
+            <div class="post-date">📅 ${escapeHtml(post.date)}</div>
+            ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
+          </div>
+          <div class="post-actions" onclick="event.stopPropagation()">
+            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
+            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
+            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>
+      `}).join('');
     }
 
     function closeViewModal() {
@@ -1329,15 +1470,22 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
       saveBtn.textContent = 'Saving...';
       
       const id = document.getElementById('postId').value;
-      const title = document.getElementById('postTitle').value;
-      const content = document.getElementById('postContent').value;
+      const title = document.getElementById('postTitle').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+      const type = document.getElementById('postType').value;
       const password = document.getElementById('adminPassword').value;
+      
+      if (!type) {
+        alert('Please select a post type');
+        return;
+      }
       
       try {
         const data = {
           action: id ? 'updatePost' : 'createPost',
-          title: title,
-          content: content,
+          type: type,
+          title: title || null,
+          content: content || null,
           imageData: uploadedImages.length > 0 ? uploadedImages : null,
           password: password
         };
@@ -1543,6 +1691,10 @@ Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen im
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.6.0 – Added post type filtering system and made title/content optional.
+  Reason: Implement post categorization with memo/shift/tip/other types and filtering functionality.
+  Impact: Users can now categorize posts and filter by type, with optional title/content for flexibility.
+  Model: GPT-5
   [2025-01-12] v1.5.5 – Added proper spacing/gap between content and bottom navigation menu.
   Reason: Prevent content from being hidden behind fixed bottom menu - ensure proper spacing on all devices.
   Impact: Content is now properly visible and accessible on all screen sizes with adequate spacing from menu.
