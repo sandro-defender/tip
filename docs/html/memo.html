@@ -1072,7 +1072,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           'other': '📄'
         };
         
-        const displayTitle = `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
+        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
         
         return `
@@ -1322,7 +1322,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           'other': '📄'
         };
         
-        const displayTitle = `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
+        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
 
         return `
@@ -1477,7 +1477,7 @@ Purpose: Blog/memo page with simplified type selection using title field
         const data = {
           action: id ? 'updatePost' : 'createPost',
           type: type,
-          title: type, // Use type as title
+          title: type, // Send type as title to backend
           content: content || null,
           imageData: uploadedImages.length > 0 ? uploadedImages : null,
           password: password
