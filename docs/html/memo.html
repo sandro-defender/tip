@@ -2316,6 +2316,8 @@ Purpose: Blog/memo page with simplified type selection using title field
     let tapCount = 0;
     let initialDistance = 0;
     let initialScale = 1;
+    let hasMoved = false;
+    let panThreshold = 10; // Minimum pixels to move before considering it a pan
     
     function handleTouchStart(event) {
       if (event.touches.length === 2) {
@@ -2335,10 +2337,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       } else if (event.touches.length === 1) {
         const mainImage = document.getElementById('galleryModalMainImage');
         if (mainImage && mainImage.classList.contains('zoomed')) {
-          isTouchPanning = true;
-          touchStartX = event.touches[0].clientX - currentX;
-          touchStartY = event.touches[0].clientY - currentY;
-          mainImage.classList.add('panning');
+          // Reset movement tracking
+          hasMoved = false;
+          touchStartX = event.touches[0].clientX;
+          touchStartY = event.touches[0].clientY;
+          // Don't set isTouchPanning yet - wait for movement
         }
       }
     }
@@ -2374,40 +2377,33 @@ Purpose: Blog/memo page with simplified type selection using title field
             currentY = 0;
           }
         }
-      } else if (event.touches.length === 1 && isTouchPanning) {
-        event.preventDefault();
-        currentX = event.touches[0].clientX - touchStartX;
-        currentY = event.touches[0].clientY - touchStartY;
-        updateImageTransform();
+      } else if (event.touches.length === 1) {
+        const mainImage = document.getElementById('galleryModalMainImage');
+        if (mainImage && mainImage.classList.contains('zoomed')) {
+          const deltaX = event.touches[0].clientX - touchStartX;
+          const deltaY = event.touches[0].clientY - touchStartY;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          
+          // If we've moved enough, start panning
+          if (!hasMoved && distance > panThreshold) {
+            hasMoved = true;
+            isTouchPanning = true;
+            mainImage.classList.add('panning');
+          }
+          
+          // If we're panning, update position
+          if (isTouchPanning) {
+            event.preventDefault();
+            currentX = deltaX;
+            currentY = deltaY;
+            updateImageTransform();
+          }
+        }
       }
     }
     
     function handleTouchEnd(event) {
       if (event.touches.length === 0 && event.changedTouches.length === 1) {
-        // Only check for double tap if we weren't panning
-        if (!isTouchPanning) {
-          const currentTime = Date.now();
-          const tapTime = currentTime - lastTapTime;
-          
-          if (tapTime < 500 && tapTime > 0) {
-            // Double tap detected
-            tapCount++;
-            if (tapCount === 2) {
-              toggleImageZoom();
-              tapCount = 0;
-            }
-          } else {
-            tapCount = 1;
-          }
-          
-          lastTapTime = currentTime;
-          
-          // Reset tap count after delay
-          setTimeout(() => {
-            tapCount = 0;
-          }, 500);
-        }
-        
         // Always stop panning when touch ends
         if (isTouchPanning) {
           isTouchPanning = false;
@@ -2415,7 +2411,31 @@ Purpose: Blog/memo page with simplified type selection using title field
           if (mainImage) {
             mainImage.classList.remove('panning');
           }
+          // Don't check for double tap if we were panning
+          return;
         }
+        
+        // Only check for double tap if we weren't panning
+        const currentTime = Date.now();
+        const tapTime = currentTime - lastTapTime;
+        
+        if (tapTime < 500 && tapTime > 0) {
+          // Double tap detected
+          tapCount++;
+          if (tapCount === 2) {
+            toggleImageZoom();
+            tapCount = 0;
+          }
+        } else {
+          tapCount = 1;
+        }
+        
+        lastTapTime = currentTime;
+        
+        // Reset tap count after delay
+        setTimeout(() => {
+          tapCount = 0;
+        }, 500);
       }
     }
 
@@ -2597,6 +2617,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.5 – Fixed zoom out issue when finishing pan gesture with improved movement detection.
+  Reason: User reported that removing finger after panning was still triggering zoom out instead of just stopping pan.
+  Impact: Added movement threshold detection to better distinguish between taps and pans, preventing unwanted zoom out when finishing pan gestures.
+  Model: GPT-5
   [2025-01-12] v1.10.4 – Fixed zoom out issue when finishing pan gesture.
   Reason: User reported that removing finger after panning was triggering zoom out instead of just stopping pan.
   Impact: Double-tap zoom now only triggers on actual double-taps, not when finishing pan gestures.

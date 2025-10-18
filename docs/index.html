@@ -1379,13 +1379,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <img src="/icon/link-img/stat.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>სტატისტიკა</span>
                 </a>
-                <a href="/shift" class="link-item" title="Manage Shifts">
-                    <img src="/icon/link-img/shift.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
-                    <span>ცვლა</span>
-                </a>
                 <a href="/memo" class="link-item" title="View Gallery">
                     <img src="/icon/link-img/note.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
                     <span>მემო</span>
+                </a>
+                <a href="/shift" class="link-item" title="Manage Shifts">
+                    <img src="/icon/link-img/shift.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <span>ცვლა</span>
                 </a>
                 <a href="/bar" class="link-item" title="Manage Inventory">
                     <img src="/icon/link-img/inventory-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
@@ -2275,9 +2275,9 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 if (!headerControls) return;
 
                 const items = [
-                    { selector: 'a[href="/memo"]', icon: '📝', label: 'გალერეა' },
-                    { selector: 'a[href="/instructions"]', icon: '📖', label: 'ინსტრუქცია' }
-                    //{ selector: '#qrLink', icon: '🔗', label: 'გაზიარება' }
+                    //{ selector: 'a[href="/memo"]', icon: '📝', label: 'გალერეა' },
+                    { selector: 'a[href="/instructions"]', icon: '📖', label: 'ინსტრუქცია' },
+                    { selector: '#qrLink', icon: '🔗', label: 'გაზიარება' }
                 ];
 
                 items.forEach(({ selector, icon, label }) => {
