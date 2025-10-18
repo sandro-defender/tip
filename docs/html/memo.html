@@ -2384,33 +2384,37 @@ Purpose: Blog/memo page with simplified type selection using title field
     
     function handleTouchEnd(event) {
       if (event.touches.length === 0 && event.changedTouches.length === 1) {
-        // Single tap - check for double tap
-        const currentTime = Date.now();
-        const tapTime = currentTime - lastTapTime;
-        
-        if (tapTime < 500 && tapTime > 0) {
-          // Double tap detected
-          tapCount++;
-          if (tapCount === 2) {
-            toggleImageZoom();
-            tapCount = 0;
+        // Only check for double tap if we weren't panning
+        if (!isTouchPanning) {
+          const currentTime = Date.now();
+          const tapTime = currentTime - lastTapTime;
+          
+          if (tapTime < 500 && tapTime > 0) {
+            // Double tap detected
+            tapCount++;
+            if (tapCount === 2) {
+              toggleImageZoom();
+              tapCount = 0;
+            }
+          } else {
+            tapCount = 1;
           }
-        } else {
-          tapCount = 1;
+          
+          lastTapTime = currentTime;
+          
+          // Reset tap count after delay
+          setTimeout(() => {
+            tapCount = 0;
+          }, 500);
         }
         
-        lastTapTime = currentTime;
-        
-        // Reset tap count after delay
-        setTimeout(() => {
-          tapCount = 0;
-        }, 500);
-        
-      } else if (event.touches.length === 0 && isTouchPanning) {
-        isTouchPanning = false;
-        const mainImage = document.getElementById('galleryModalMainImage');
-        if (mainImage) {
-          mainImage.classList.remove('panning');
+        // Always stop panning when touch ends
+        if (isTouchPanning) {
+          isTouchPanning = false;
+          const mainImage = document.getElementById('galleryModalMainImage');
+          if (mainImage) {
+            mainImage.classList.remove('panning');
+          }
         }
       }
     }
@@ -2593,6 +2597,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.4 – Fixed zoom out issue when finishing pan gesture.
+  Reason: User reported that removing finger after panning was triggering zoom out instead of just stopping pan.
+  Impact: Double-tap zoom now only triggers on actual double-taps, not when finishing pan gestures.
+  Model: GPT-5
   [2025-01-12] v1.10.3 – Updated zoom controls to use double-tap and pinch-to-zoom.
   Reason: User requested double-tap instead of single-click for zoom and added two-finger pinch-to-zoom functionality.
   Impact: Images now zoom with double-tap on mobile and pinch gestures, providing more intuitive touch controls.
