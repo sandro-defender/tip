@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.5.0
+Version: 1.5.1
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -256,7 +256,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
     .post-images-grid img {
       width: 100%;
-      height: 150px;
+      height: 100%;
       object-fit: cover;
       cursor: pointer;
     }
@@ -267,7 +267,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
     .post-images-grid.single img {
       grid-column: 1 / -1;
-      height: 300px;
+      height: 100%;
     }
 
     .image-more-overlay {
@@ -1434,6 +1434,10 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.5.1 – Fixed image sizing in posts to fit container height.
+  Reason: Improve image display in post cards - images now properly fill their containers.
+  Impact: Better visual consistency and image display in post cards.
+  Model: GPT-5
   [2025-01-12] v1.5.0 – Added dedicated image gallery modal with navigation.
   Reason: Fix image viewing functionality - clicking post images now opens dedicated gallery.
   Impact: Users can now view full-size images with proper navigation between multiple images.
