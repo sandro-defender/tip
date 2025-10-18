@@ -1,11 +1,11 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.5.2
+Version: 1.5.4
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
-Purpose: Blog/memo page with integrated bottom navigation menu and dedicated image gallery
+Purpose: Blog/memo page with integrated bottom navigation menu and fullscreen image gallery
 -->
 
 <!DOCTYPE html>
@@ -13,7 +13,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Blog</title>
+  <title>My Staff</title>
   <style>
     * {
       margin: 0;
@@ -547,6 +547,51 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
       }
     }
 
+    /* Fullscreen gallery modal styles */
+    #imageGalleryModal .view-modal-content {
+      background: #000;
+      border-radius: 0;
+      max-width: 100vw;
+      width: 100vw;
+      max-height: 100vh;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #imageGalleryModal .view-modal-images {
+      flex: 1;
+      height: calc(100vh - 120px);
+      border-radius: 0;
+    }
+
+    #imageGalleryModal .view-modal-body {
+      background: rgba(0,0,0,0.8);
+      padding: 10px 20px;
+      border-radius: 0;
+    }
+
+    #imageGalleryModal .view-modal-close {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    #imageGalleryModal .view-modal-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    #imageGalleryModal .view-modal-nav {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    #imageGalleryModal .view-modal-nav:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
     .view-modal-close {
       position: absolute;
       top: 20px;
@@ -585,6 +630,14 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
       width: 100%;
       height: 100%;
       object-fit: contain;
+    }
+
+    /* Gallery modal specific image styling */
+    #imageGalleryModal .view-modal-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
     }
 
     .view-modal-nav {
@@ -716,6 +769,17 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
       font-weight: 500;
     }
 
+    /* Gallery modal specific info styling */
+    #imageGalleryModal .gallery-info {
+      color: white;
+    }
+
+    #imageGalleryModal #galleryImageCounter {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
     /* Touch-friendly improvements */
     @media (hover: none) and (pointer: coarse) {
       .post-card:active {
@@ -766,7 +830,7 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
     </div>
 
     <header>
-      <h1>📝 My Blog</h1>
+      <h1>📝 My Staff</h1>
       <p class="subtitle">Share your thoughts with the world</p>
       <button class="add-post-btn" onclick="openNewPostModal()">➕ Add New Post</button>
     </header>
@@ -867,9 +931,9 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
         <div class="view-modal-date" id="viewModalDate"></div>
         <p class="view-modal-text" id="viewModalContent"></p>
         <div class="post-actions">
-          <button class="pin-btn" id="viewModalPinBtn" onclick="togglePinFromView()">📌</button>
-          <button class="edit-btn" onclick="editPostFromView()">✏️</button>
-          <button class="delete-btn" onclick="deletePostFromView()">🗑️</button>
+          <button class="pin-btn" id="viewModalPinBtn" onclick="togglePinFromView()" title="Pin/Unpin">📌</button>
+          <button class="edit-btn" onclick="editPostFromView()" title="Edit">✏️</button>
+          <button class="delete-btn" onclick="deletePostFromView()" title="Delete">🗑️</button>
         </div>
       </div>
     </div>
@@ -945,9 +1009,9 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
             <p class="post-text">${escapeHtml(post.content.substring(0, 150))}${post.content.length > 150 ? '...' : ''}</p>
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
-            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})">${post.pinned ? '📌 Unpin' : '📌 Pin'}</button>
-            <button class="edit-btn" onclick="editPostFromIndex(${index})">✏️ Edit</button>
-            <button class="delete-btn" onclick="confirmDelete('${post.id}')">🗑️ Delete</button>
+            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
+            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
+            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
           </div>
         </div>
       `}).join('');
@@ -1045,7 +1109,8 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
       document.getElementById('viewModalContent').textContent = post.content;
 
       const pinBtn = document.getElementById('viewModalPinBtn');
-      pinBtn.textContent = post.pinned ? '📌 Unpin' : '📌 Pin';
+      pinBtn.textContent = '📌';
+      pinBtn.title = post.pinned ? 'Unpin' : 'Pin';
       pinBtn.className = post.pinned ? 'pin-btn pinned' : 'pin-btn';
 
       // Display images
@@ -1455,6 +1520,14 @@ Purpose: Blog/memo page with integrated bottom navigation menu and dedicated ima
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.5.4 – Updated action buttons to show only icons with tooltips.
+  Reason: Cleaner UI design - buttons now display only icons with hover tooltips for better space usage.
+  Impact: More compact button design while maintaining usability through tooltips.
+  Model: GPT-5
+  [2025-01-12] v1.5.3 – Updated image gallery to fullscreen mode for maximum image display.
+  Reason: Improve image viewing experience - gallery now opens in fullscreen with black background.
+  Impact: Users can now see images at maximum size with better contrast and viewing experience.
+  Model: GPT-5
   [2025-01-12] v1.5.2 – Fixed JavaScript syntax error when opening posts.
   Reason: Replaced JSON.stringify in HTML templates with index-based approach to avoid syntax errors.
   Impact: Posts can now be opened without JavaScript syntax errors.
