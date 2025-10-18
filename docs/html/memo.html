@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.3
+Version: 1.9.5
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -339,23 +339,23 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     .post-content {
       position: absolute;
-      bottom: 0;
+      top: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.4));
-      padding: 20px 15px 15px 15px;
+      background: linear-gradient(rgba(0,0,0,0.4), transparent);
+      padding: 15px 15px 20px 15px;
       z-index: 5;
     }
 
     @media (min-width: 768px) {
       .post-content {
-        padding: 25px 20px 20px 20px;
+        padding: 20px 20px 25px 20px;
       }
     }
 
     @media (min-width: 1200px) {
       .post-content {
-        padding: 30px 25px 25px 25px;
+        padding: 25px 25px 30px 25px;
       }
     }
 
@@ -399,6 +399,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       gap: 8px;
       justify-content: space-between;
       margin-top: 8px;
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      right: 15px;
+      z-index: 6;
     }
 
     .post-actions button {
@@ -409,33 +414,33 @@ Purpose: Blog/memo page with simplified type selection using title field
       font-weight: bold;
       transition: all 0.2s;
       font-size: 14px;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(5px);
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(3px);
       color: white;
       flex: 1;
     }
 
     .post-actions button:hover {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.15);
       transform: translateY(-1px);
     }
 
     .pin-btn {
-      background: rgba(255, 215, 0, 0.6) !important;
+      background: rgba(255, 215, 0, 0.4) !important;
       color: #333 !important;
     }
 
     .pin-btn.pinned {
-      background: rgba(255, 237, 78, 0.7) !important;
+      background: rgba(255, 237, 78, 0.5) !important;
     }
 
     .edit-btn {
-      background: rgba(76, 175, 80, 0.6) !important;
+      background: rgba(76, 175, 80, 0.4) !important;
       color: white !important;
     }
 
     .delete-btn {
-      background: rgba(244, 67, 54, 0.6) !important;
+      background: rgba(244, 67, 54, 0.4) !important;
       color: white !important;
     }
 
@@ -1406,11 +1411,11 @@ Purpose: Blog/memo page with simplified type selection using title field
               <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
               ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
             </div>
-            <div class="post-actions" onclick="event.stopPropagation()">
-              <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
-              <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
-              <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
-            </div>
+          </div>
+          <div class="post-actions" onclick="event.stopPropagation()">
+            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
+            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
+            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
           </div>
         </div>
       `}).join('');
@@ -1829,8 +1834,8 @@ Purpose: Blog/memo page with simplified type selection using title field
 
       container.innerHTML = posts.map((post, index) => {
         const imageCount = post.imageUrls ? post.imageUrls.length : 0;
-        const gridClass = imageCount === 1 ? 'single' : '';
-        const displayImages = post.imageUrls ? post.imageUrls.slice(0, 4) : [];
+        const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
+        const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
         
         const typeIcon = {
           'memo': '📝',
@@ -1855,10 +1860,12 @@ Purpose: Blog/memo page with simplified type selection using title field
               }).join('')}
             </div>
           ` : ''}
-          <div class="post-content" onclick="viewPostFromIndex(${index})">
-            <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-            <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
-            ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
+          <div class="post-content">
+            <div onclick="viewPostFromIndex(${index})">
+              <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
+              <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
+              ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
+            </div>
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
             <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
@@ -2183,6 +2190,14 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.3 – Added maximum height limit for large images.
   Reason: User requested to limit image height to 50% of viewport height for very large images.
   Impact: Images now have max-height: 50vh to prevent extremely tall images while maintaining aspect ratio.
+  Model: GPT-5
+  [2025-01-12] v1.9.4 – Fixed filtering logic to use new 1-2 image display.
+  Reason: User reported that post type filtering was showing all images instead of new 1-2 image logic.
+  Impact: displayFilteredPosts function now uses same logic as displayPosts for consistent image display.
+  Model: GPT-5
+  [2025-01-12] v1.9.5 – Moved type/title to top and made buttons more transparent.
+  Reason: User requested to move type/title to top of post and make action buttons more transparent.
+  Impact: Title/date now at top with dark gradient, buttons at bottom with increased transparency (5% opacity).
   Model: GPT-5
   -->
 </body>
