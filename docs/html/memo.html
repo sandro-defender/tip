@@ -639,6 +639,8 @@ Purpose: Blog/memo page with simplified type selection using title field
       flex: 1;
       height: calc(100vh - 120px);
       border-radius: 0;
+      overflow: hidden;
+      position: relative;
     }
 
     #imageGalleryModal .view-modal-body {
@@ -715,6 +717,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       background: #000;
       cursor: zoom-in;
       transition: transform 0.3s ease;
+      overflow: visible;
     }
 
     /* Prevent page zoom when modal is open */
@@ -2278,7 +2281,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (!mainImage) return;
       
       if (mainImage.classList.contains('zoomed')) {
+        // Allow image to move outside boundaries - no clamping
         mainImage.style.transform = `scale(2) translate(${currentX}px, ${currentY}px)`;
+        mainImage.style.transformOrigin = 'center center';
       }
     }
     
@@ -2290,12 +2295,14 @@ Purpose: Blog/memo page with simplified type selection using title field
         // Unzoom
         mainImage.classList.remove('zoomed');
         mainImage.style.transform = '';
+        mainImage.style.transformOrigin = '';
         currentX = 0;
         currentY = 0;
       } else {
         // Zoom
         mainImage.classList.add('zoomed');
         mainImage.style.transform = 'scale(2)';
+        mainImage.style.transformOrigin = 'center center';
         currentX = 0;
         currentY = 0;
       }
@@ -2337,6 +2344,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       } else if (event.touches.length === 1) {
         const mainImage = document.getElementById('galleryModalMainImage');
         if (mainImage && mainImage.classList.contains('zoomed')) {
+          // Always prevent default to stop page scrolling
+          event.preventDefault();
+          event.stopPropagation();
+          
           // Reset movement tracking
           hasMoved = false;
           touchStartX = event.touches[0].clientX;
@@ -2380,6 +2391,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       } else if (event.touches.length === 1) {
         const mainImage = document.getElementById('galleryModalMainImage');
         if (mainImage && mainImage.classList.contains('zoomed')) {
+          // Always prevent default to stop page scrolling when image is zoomed
+          event.preventDefault();
+          event.stopPropagation();
+          
           const deltaX = event.touches[0].clientX - touchStartX;
           const deltaY = event.touches[0].clientY - touchStartY;
           const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -2393,7 +2408,6 @@ Purpose: Blog/memo page with simplified type selection using title field
           
           // If we're panning, update position
           if (isTouchPanning) {
-            event.preventDefault();
             currentX = deltaX;
             currentY = deltaY;
             updateImageTransform();
@@ -2617,10 +2631,11 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
-  [2025-01-12] v1.10.5 – Fixed zoom out issue when finishing pan gesture with improved movement detection.
-  Reason: User reported that removing finger after panning was still triggering zoom out instead of just stopping pan.
-  Impact: Added movement threshold detection to better distinguish between taps and pans, preventing unwanted zoom out when finishing pan gestures.
+  [2025-01-12] v1.10.6 – Fixed page scrolling during image panning and allowed image to move outside boundaries.
+  Reason: User reported that whole page was moving during image panning and wanted image to be able to move outside borders without zooming out unless double-tapped.
+  Impact: Prevented page scrolling during image panning, allowed image to move freely outside container boundaries when zoomed, and ensured zoom out only happens on double-tap.
   Model: GPT-5
+  [2025-01-12] v1.10.5 – Fixed zoom out issue when finishing pan gesture with improved movement detection.
   [2025-01-12] v1.10.4 – Fixed zoom out issue when finishing pan gesture.
   Reason: User reported that removing finger after panning was triggering zoom out instead of just stopping pan.
   Impact: Double-tap zoom now only triggers on actual double-taps, not when finishing pan gestures.
