@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.6.2
+Version: 1.7.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -847,6 +847,77 @@ Purpose: Blog/memo page with simplified type selection using title field
       -webkit-user-select: text;
     }
 
+    /* Password Modal Styles */
+    #passwordModal .modal-content {
+      max-width: 400px;
+      width: 90%;
+    }
+
+    #passwordModal .form-group {
+      margin-bottom: 20px;
+    }
+
+    #passwordModal .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    #passwordModal .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    #passwordModal .form-group input:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+
+    #passwordModal .form-group input[readonly] {
+      background-color: #f8f9fa;
+      color: #6c757d;
+    }
+
+    #passwordModal .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    #passwordModal .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #passwordModal .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    #passwordModal .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    #passwordModal .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    #passwordModal .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
     /* Mobile spacing adjustments for bottom menu */
     @media (max-width: 768px) {
       body {
@@ -916,10 +987,6 @@ Purpose: Blog/memo page with simplified type selection using title field
       <form id="postForm">
         <input type="hidden" id="postId">
         
-        <div class="password-prompt">
-          <label for="adminPassword">Admin Password</label>
-          <input type="password" id="adminPassword" placeholder="Enter password" required>
-        </div>
 
         <div class="form-group">
           <label for="postTitle">Type</label>
@@ -1014,6 +1081,27 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
+  <!-- Password Popup Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <h2>Admin Authentication</h2>
+      <form id="passwordForm">
+        <div class="form-group">
+          <label for="popupUsername">Username</label>
+          <input type="text" id="popupUsername" value="admin" readonly>
+        </div>
+        <div class="form-group">
+          <label for="popupPassword">Password</label>
+          <input type="password" id="popupPassword" placeholder="Enter password" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Authenticate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
@@ -1027,6 +1115,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     let currentGalleryIndex = 0;
     let allPosts = [];
     let currentFilter = 'all';
+    let pendingFormData = null;
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -1184,6 +1273,119 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     function closeModal() {
       document.getElementById('postModal').classList.remove('active');
+    }
+
+    function showPasswordModal() {
+      document.getElementById('passwordModal').classList.add('active');
+      document.getElementById('popupPassword').value = '';
+      document.getElementById('popupPassword').focus();
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+      pendingFormData = null;
+    }
+
+    // Handle password form submission
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const password = document.getElementById('popupPassword').value.trim();
+      
+      if (!password) {
+        alert('Please enter password');
+        return;
+      }
+      
+      // If we have pending form data, process the post
+      if (pendingFormData) {
+        await processPostSubmission(password);
+      } else if (pendingAction) {
+        await processPendingAction(password);
+      }
+    });
+
+    async function processPostSubmission(password) {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      
+      try {
+        const data = {
+          action: pendingFormData.id ? 'updatePost' : 'createPost',
+          type: pendingFormData.type,
+          title: pendingFormData.type, // Send type as title to backend
+          content: pendingFormData.content || null,
+          password: password
+        };
+        
+        // Only send imageData for new posts or when adding new images to existing posts
+        if (!pendingFormData.id || uploadedImages.length > 0) {
+          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
+        }
+        
+        if (pendingFormData.id) {
+          data.id = pendingFormData.id;
+        }
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          closePasswordModal();
+          closeModal();
+          loadPosts();
+          alert(result.message);
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Post';
+        pendingFormData = null;
+      }
+    }
+
+    async function processPendingAction(password) {
+      try {
+        let data = {
+          password: password
+        };
+        
+        if (pendingAction.action === 'delete') {
+          data.action = 'deletePost';
+          data.id = pendingAction.id;
+        } else if (pendingAction.action === 'togglePin') {
+          data.action = 'togglePin';
+          data.id = pendingAction.id;
+          data.pinned = !pendingAction.currentPinned;
+        }
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          closePasswordModal();
+          loadPosts();
+          alert(result.message);
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      } finally {
+        pendingAction = null;
+      }
     }
 
     // View post in modal
@@ -1460,143 +1662,37 @@ Purpose: Blog/memo page with simplified type selection using title field
     document.getElementById('postForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
-      
       const id = document.getElementById('postId').value;
       const type = document.getElementById('postTitle').value.trim();
       const content = document.getElementById('postContent').value.trim();
-      const password = document.getElementById('adminPassword').value;
       
       if (!type) {
         alert('Please select a post type');
         return;
       }
       
-      try {
-        const data = {
-          action: id ? 'updatePost' : 'createPost',
-          type: type,
-          title: type, // Send type as title to backend
-          content: content || null,
-          password: password
-        };
-        
-        // Only send imageData for new posts or when adding new images to existing posts
-        if (!id || uploadedImages.length > 0) {
-          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
-        }
-        
-        if (id) {
-          data.id = id;
-        }
-        
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          closeModal();
-          loadPosts();
-          alert(result.message);
-        } else {
-          alert('Error: ' + result.message);
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Post';
-      }
+      // Store form data for later use
+      pendingFormData = {
+        id: id,
+        type: type,
+        content: content
+      };
+      
+      // Show password popup
+      showPasswordModal();
     });
 
     function confirmDelete(id) {
       pendingAction = { action: 'delete', id: id };
-      document.getElementById('passwordModal').classList.add('active');
-      document.getElementById('actionPassword').value = '';
-      document.getElementById('actionPassword').focus();
+      showPasswordModal();
     }
 
     function togglePin(id, currentPinned) {
       pendingAction = { action: 'togglePin', id: id, currentPinned: currentPinned };
-      document.getElementById('passwordModal').classList.add('active');
-      document.getElementById('actionPassword').value = '';
-      document.getElementById('actionPassword').focus();
+      showPasswordModal();
     }
 
-    function closePasswordModal() {
-      document.getElementById('passwordModal').classList.remove('active');
-      pendingAction = null;
-    }
 
-    async function executePasswordProtectedAction() {
-      const password = document.getElementById('actionPassword').value;
-      
-      if (!password) {
-        alert('Please enter password');
-        return;
-      }
-
-      if (pendingAction.action === 'delete') {
-        await deletePost(pendingAction.id, password);
-      } else if (pendingAction.action === 'togglePin') {
-        await executeTogglePin(pendingAction.id, password);
-      }
-    }
-
-    async function deletePost(id, password) {
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'deletePost',
-            id: id,
-            password: password
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          closePasswordModal();
-          loadPosts();
-          alert(result.message);
-        } else {
-          alert('Error: ' + result.message);
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
-    async function executeTogglePin(id, password) {
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'togglePin',
-            id: id,
-            password: password
-          })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          closePasswordModal();
-          loadPosts();
-          alert(result.message);
-        } else {
-          alert('Error: ' + result.message);
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
 
     function showError(message) {
       const container = document.getElementById('postsContainer');
@@ -1724,6 +1820,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.6.2 – Fixed image handling error when editing posts with existing images.
   Reason: Prevent "Could not decode string" error by properly handling existing images during edit.
   Impact: Users can now edit posts with existing images without encountering decode errors.
+  Model: GPT-5
+  [2025-01-12] v1.7.0 – Replaced password field with popup authentication modal.
+  Reason: Improve UX by removing password field from form and showing popup with prefilled username "admin".
+  Impact: Cleaner form interface with password prompt appearing only when needed for authentication.
   Model: GPT-5
   -->
 </body>
