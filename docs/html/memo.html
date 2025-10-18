@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.7.2
+Version: 1.8.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -927,6 +927,144 @@ Purpose: Blog/memo page with simplified type selection using title field
       background-color: #0056b3;
     }
 
+    /* Loading Animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: white;
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* Custom Confirmation Messages */
+    .confirmation-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .confirmation-message.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .confirmation-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .confirmation-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .confirmation-text {
+      color: #666;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .confirmation-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .confirmation-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 100px;
+    }
+
+    .confirmation-btn.primary {
+      background: #007bff;
+      color: white;
+    }
+
+    .confirmation-btn.primary:hover {
+      background: #0056b3;
+    }
+
+    .confirmation-btn.secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .confirmation-btn.secondary:hover {
+      background: #5a6268;
+    }
+
+    .confirmation-btn.success {
+      background: #28a745;
+      color: white;
+    }
+
+    .confirmation-btn.success:hover {
+      background: #218838;
+    }
+
+    .confirmation-btn.danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .confirmation-btn.danger:hover {
+      background: #c82333;
+    }
+
     /* Mobile spacing adjustments for bottom menu */
     @media (max-width: 768px) {
       body {
@@ -1098,6 +1236,24 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div>
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Processing...</div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Message -->
+  <div id="confirmationMessage" class="confirmation-message">
+    <div class="confirmation-icon" id="confirmationIcon">✅</div>
+    <div class="confirmation-title" id="confirmationTitle">Success!</div>
+    <div class="confirmation-text" id="confirmationText">Your action has been completed successfully.</div>
+    <div class="confirmation-actions">
+      <button class="confirmation-btn primary" id="confirmationOkBtn" onclick="closeConfirmation()">OK</button>
+    </div>
+  </div>
+
   <script>
     // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
@@ -1122,9 +1278,13 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     async function loadPosts() {
+      showLoading('Loading posts...');
+      
       try {
         const response = await fetch(`${API_URL}?action=getPosts`);
         const result = await response.json();
+        
+        hideLoading();
         
         if (result.success) {
           displayPosts(result.data);
@@ -1132,6 +1292,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           showError('Failed to load posts');
         }
       } catch (error) {
+        hideLoading();
         showError('Error connecting to server: ' + error.message);
       }
     }
@@ -1281,6 +1442,32 @@ Purpose: Blog/memo page with simplified type selection using title field
       pendingFormData = null;
     }
 
+    // Loading and Confirmation Functions
+    function showLoading(text = 'Processing...') {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function showConfirmation(icon, title, text, buttonText = 'OK', buttonClass = 'primary') {
+      document.getElementById('confirmationIcon').textContent = icon;
+      document.getElementById('confirmationTitle').textContent = title;
+      document.getElementById('confirmationText').textContent = text;
+      
+      const okBtn = document.getElementById('confirmationOkBtn');
+      okBtn.textContent = buttonText;
+      okBtn.className = `confirmation-btn ${buttonClass}`;
+      
+      document.getElementById('confirmationMessage').classList.add('active');
+    }
+
+    function closeConfirmation() {
+      document.getElementById('confirmationMessage').classList.remove('active');
+    }
+
     // Handle password form submission
     document.getElementById('passwordForm').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -1288,7 +1475,13 @@ Purpose: Blog/memo page with simplified type selection using title field
       const password = document.getElementById('popupPassword').value.trim();
       
       if (!password) {
-        alert('Please enter password');
+        showConfirmation(
+          '⚠️', 
+          'Authentication Required', 
+          'Please enter your password to continue.',
+          'OK',
+          'secondary'
+        );
         return;
       }
       
@@ -1304,6 +1497,8 @@ Purpose: Blog/memo page with simplified type selection using title field
       const saveBtn = document.getElementById('saveBtn');
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
+      
+      showLoading(pendingFormData.id ? 'Updating post...' : 'Creating post...');
       
       try {
         const data = {
@@ -1330,16 +1525,37 @@ Purpose: Blog/memo page with simplified type selection using title field
         
         const result = await response.json();
         
+        hideLoading();
+        
         if (result.success) {
           closePasswordModal();
           closeModal();
           loadPosts();
-          alert(result.message);
+          showConfirmation(
+            '✅', 
+            'Success!', 
+            result.message || (pendingFormData.id ? 'Post updated successfully!' : 'Post created successfully!'),
+            'OK',
+            'success'
+          );
         } else {
-          alert('Error: ' + result.message);
+          showConfirmation(
+            '❌', 
+            'Error', 
+            result.message || 'Something went wrong. Please try again.',
+            'OK',
+            'danger'
+          );
         }
       } catch (error) {
-        alert('Error: ' + error.message);
+        hideLoading();
+        showConfirmation(
+          '❌', 
+          'Error', 
+          'Network error. Please check your connection and try again.',
+          'OK',
+          'danger'
+        );
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Post';
@@ -1348,6 +1564,9 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     async function processPendingAction(password) {
+      const actionText = pendingAction.action === 'delete' ? 'Deleting post...' : 'Updating pin status...';
+      showLoading(actionText);
+      
       try {
         let data = {
           password: password
@@ -1369,15 +1588,48 @@ Purpose: Blog/memo page with simplified type selection using title field
         
         const result = await response.json();
         
+        hideLoading();
+        
         if (result.success) {
           closePasswordModal();
           loadPosts();
-          alert(result.message);
+          
+          if (pendingAction.action === 'delete') {
+            showConfirmation(
+              '🗑️', 
+              'Post Deleted', 
+              'The post has been successfully deleted.',
+              'OK',
+              'success'
+            );
+          } else {
+            const pinText = pendingAction.currentPinned ? 'unpinned' : 'pinned';
+            showConfirmation(
+              '📌', 
+              'Pin Updated', 
+              `Post has been ${pinText} successfully.`,
+              'OK',
+              'success'
+            );
+          }
         } else {
-          alert('Error: ' + result.message);
+          showConfirmation(
+            '❌', 
+            'Error', 
+            result.message || 'Something went wrong. Please try again.',
+            'OK',
+            'danger'
+          );
         }
       } catch (error) {
-        alert('Error: ' + error.message);
+        hideLoading();
+        showConfirmation(
+          '❌', 
+          'Error', 
+          'Network error. Please check your connection and try again.',
+          'OK',
+          'danger'
+        );
       } finally {
         pendingAction = null;
       }
@@ -1662,7 +1914,13 @@ Purpose: Blog/memo page with simplified type selection using title field
       const content = document.getElementById('postContent').value.trim();
       
       if (!type) {
-        alert('Please select a post type');
+        showConfirmation(
+          '⚠️', 
+          'Validation Error', 
+          'Please select a post type before submitting.',
+          'OK',
+          'secondary'
+        );
         return;
       }
       
@@ -1827,6 +2085,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.7.2 – Fixed post card layout to ensure action buttons are always at bottom.
   Reason: Small images on large screens caused action buttons to float in middle instead of bottom.
   Impact: Action buttons now consistently appear at bottom of post cards regardless of image size.
+  Model: GPT-5
+  [2025-01-12] v1.8.0 – Added loading animations and custom confirmation messages.
+  Reason: Replace browser alerts with professional loading states and custom confirmation dialogs.
+  Impact: Better user experience with visual feedback during operations and polished confirmation messages.
   Model: GPT-5
   -->
 </body>
