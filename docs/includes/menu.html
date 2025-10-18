@@ -37,10 +37,8 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
         backdrop-filter: saturate(140%) blur(20px);
         -webkit-backdrop-filter: saturate(140%) blur(20px);
         border-top: 1px solid rgba(255, 255, 255, 0.25);
-        /* Fixed padding instead of env() calculation to prevent menu moving up */
+        /* Fixed padding to prevent menu moving up when meta tag is present */
         padding: 8px 0 8px;
-        /* Use margin-bottom for safe area instead of padding */
-        margin-bottom: env(safe-area-inset-bottom);
         z-index: 1000;
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -241,9 +239,8 @@ Purpose: Bottom navigation component with glassmorphism (frosted glass) design a
                 rgba(30, 30, 30, 0.55) 100%
             );
             border-top-color: rgba(255, 255, 255, 0.10);
-            /* Maintain consistent padding in dark mode */
+            /* Fixed padding to prevent menu moving up when meta tag is present */
             padding: 8px 0 8px;
-            margin-bottom: env(safe-area-inset-bottom);
         }
         
         .bottom-nav .nav-icon {
