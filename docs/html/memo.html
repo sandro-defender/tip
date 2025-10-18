@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.9.8
+Version: 1.10.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -709,6 +709,33 @@ Purpose: Blog/memo page with simplified type selection using title field
       height: 100%;
       object-fit: contain;
       background: #000;
+      cursor: zoom-in;
+      transition: transform 0.3s ease;
+    }
+
+    /* Prevent page zoom when modal is open */
+    body.modal-open {
+      overflow: hidden;
+      touch-action: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Image zoom functionality */
+    #imageGalleryModal .view-modal-images img.zoomed {
+      cursor: zoom-out;
+      transform: scale(2);
+      transform-origin: center;
+    }
+
+    /* Prevent text selection in modal */
+    #imageGalleryModal {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
 
     .view-modal-nav {
@@ -1607,7 +1634,7 @@ Purpose: Blog/memo page with simplified type selection using title field
             </div>
           ` : ''}
           <div class="post-content">
-            <div onclick="viewPostFromIndex(${index})">
+            <div onclick="${imageCount > 0 ? `openImageGalleryFromIndex(${index})` : ''}">
               <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
               <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
               ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
@@ -1967,6 +1994,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       
       // Show the gallery modal
       document.getElementById('imageGalleryModal').classList.add('active');
+      document.body.classList.add('modal-open'); // Prevent page zoom
       document.body.style.overflow = 'hidden';
       
       // Set up thumbnails
@@ -1983,6 +2011,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       
       // Display the first image
       showGalleryImage(0);
+      
+      // Add zoom event listeners
+      addImageZoomListeners();
     }
 
     // Index-based functions to avoid JSON.stringify issues
@@ -2062,7 +2093,7 @@ Purpose: Blog/memo page with simplified type selection using title field
             </div>
           ` : ''}
           <div class="post-content">
-            <div onclick="viewPostFromIndex(${index})">
+            <div onclick="${imageCount > 0 ? `openImageGalleryFromIndex(${index})` : ''}">
               <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
               <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
               ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
@@ -2086,9 +2117,13 @@ Purpose: Blog/memo page with simplified type selection using title field
     // Gallery functions
     function closeImageGallery() {
       document.getElementById('imageGalleryModal').classList.remove('active');
+      document.body.classList.remove('modal-open'); // Restore page zoom
       document.body.style.overflow = ''; // Restore scrolling
       currentGalleryImages = [];
       currentGalleryIndex = 0;
+      
+      // Remove zoom event listeners
+      removeImageZoomListeners();
     }
 
     function showGalleryImage(index) {
@@ -2098,7 +2133,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       const imageUrl = currentGalleryImages[index];
       
       // Update main image
-      document.getElementById('galleryModalMainImage').src = imageUrl;
+      const mainImage = document.getElementById('galleryModalMainImage');
+      mainImage.src = imageUrl;
+      
+      // Reset zoom when changing images
+      mainImage.classList.remove('zoomed');
       
       // Update counter
       document.getElementById('galleryImageCounter').textContent = `${index + 1} / ${currentGalleryImages.length}`;
@@ -2132,6 +2171,82 @@ Purpose: Blog/memo page with simplified type selection using title field
       if (!currentGalleryImages || currentGalleryImages.length === 0) return;
       currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
       showGalleryImage(currentGalleryIndex);
+    }
+
+    // Image zoom functionality
+    function addImageZoomListeners() {
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (!mainImage) return;
+      
+      // Click to zoom
+      mainImage.addEventListener('click', toggleImageZoom);
+      
+      // Prevent default zoom behavior
+      mainImage.addEventListener('wheel', preventPageZoom, { passive: false });
+      
+      // Touch events for mobile
+      mainImage.addEventListener('touchstart', handleTouchStart, { passive: false });
+      mainImage.addEventListener('touchmove', handleTouchMove, { passive: false });
+      mainImage.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+    
+    function removeImageZoomListeners() {
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (!mainImage) return;
+      
+      mainImage.removeEventListener('click', toggleImageZoom);
+      mainImage.removeEventListener('wheel', preventPageZoom);
+      mainImage.removeEventListener('touchstart', handleTouchStart);
+      mainImage.removeEventListener('touchmove', handleTouchMove);
+      mainImage.removeEventListener('touchend', handleTouchEnd);
+    }
+    
+    function toggleImageZoom(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const mainImage = document.getElementById('galleryModalMainImage');
+      if (!mainImage) return;
+      
+      mainImage.classList.toggle('zoomed');
+    }
+    
+    function preventPageZoom(event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Touch handling for mobile zoom prevention
+    let touchStartDistance = 0;
+    let touchStartTime = 0;
+    
+    function handleTouchStart(event) {
+      if (event.touches.length === 2) {
+        touchStartDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        touchStartTime = Date.now();
+      }
+    }
+    
+    function handleTouchMove(event) {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+    
+    function handleTouchEnd(event) {
+      if (event.touches.length === 0 && event.changedTouches.length === 2) {
+        const touchEndTime = Date.now();
+        const touchDuration = touchEndTime - touchStartTime;
+        
+        // If it's a quick pinch gesture, toggle zoom
+        if (touchDuration < 300) {
+          toggleImageZoom(event);
+        }
+      }
     }
 
     function showImage(index) {
@@ -2411,6 +2526,14 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.9.8 – Fixed password modal conflict between page and post authentication.
   Reason: User reported password modal showing twice - page password and post password were conflicting.
   Impact: Renamed functions to distinguish between page authentication and post action authentication.
+  Model: GPT-5
+  [2025-01-12] v1.9.9 – Changed post click behavior to open image gallery instead of post details.
+  Reason: User requested that clicking on posts should open image gallery like clicking on first image.
+  Impact: Post content clicks now open image gallery directly, bypassing post details modal with edit/delete buttons.
+  Model: GPT-5
+  [2025-01-12] v1.10.0 – Added image zoom functionality and prevented page zoom in gallery modal.
+  Reason: User requested that when modal is open, page zoom should be prevented and only image should zoom.
+  Impact: Added click-to-zoom for images, prevented page zoom with CSS and JavaScript, added touch gesture support for mobile.
   Model: GPT-5
   -->
 </body>
