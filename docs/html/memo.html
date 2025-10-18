@@ -1443,7 +1443,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           <input type="password" id="popupPassword" placeholder="Enter password" required>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+          <button type="button" class="btn btn-secondary" onclick="closePostPasswordModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Authenticate</button>
         </div>
       </form>
@@ -2631,6 +2631,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v1.10.7 – Fixed authorization modal cancel button functionality.
+  Reason: User reported that the cancel button in the authorization modal was not working.
+  Impact: Fixed function name mismatch - cancel button now properly calls closePostPasswordModal() instead of non-existent closePasswordModal().
+  Model: GPT-5
   [2025-01-12] v1.10.6 – Fixed page scrolling during image panning and allowed image to move outside boundaries.
   Reason: User reported that whole page was moving during image panning and wanted image to be able to move outside borders without zooming out unless double-tapped.
   Impact: Prevented page scrolling during image panning, allowed image to move freely outside container boundaries when zoomed, and ensured zoom out only happens on double-tap.
