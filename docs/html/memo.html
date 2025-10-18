@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.8.3
+Version: 1.9.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
@@ -250,7 +250,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-card {
-      background: white;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 15px;
       overflow: hidden;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
@@ -260,6 +260,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       display: flex;
       flex-direction: column;
       height: 100%;
+      min-height: 300px;
     }
 
     .post-card:hover {
@@ -291,8 +292,14 @@ Purpose: Blog/memo page with simplified type selection using title field
       grid-template-columns: repeat(2, 1fr);
       gap: 5px;
       width: 100%;
+      height: 100%;
       min-height: 300px;
       background: #f0f0f0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
     .post-images-grid img {
@@ -329,28 +336,32 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-content {
-      padding: 15px 15px 0 15px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding: 20px 15px 15px 15px;
+      z-index: 5;
     }
 
     @media (min-width: 768px) {
       .post-content {
-        padding: 20px 20px 0 20px;
+        padding: 25px 20px 20px 20px;
       }
     }
 
     @media (min-width: 1200px) {
       .post-content {
-        padding: 25px 25px 0 25px;
+        padding: 30px 25px 25px 25px;
       }
     }
 
     .post-title {
       font-size: 1.4em;
-      color: #333;
-      margin-bottom: 10px;
+      color: white;
+      margin-bottom: 8px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
 
     @media (min-width: 768px) {
@@ -366,58 +377,64 @@ Purpose: Blog/memo page with simplified type selection using title field
     }
 
     .post-date {
-      color: #999;
+      color: rgba(255,255,255,0.9);
       font-size: 0.9em;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
 
     .post-text {
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 20px;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.4;
+      margin-bottom: 12px;
       white-space: pre-wrap;
-      flex: 1;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      font-size: 0.9em;
     }
 
     .post-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      margin-top: auto;
-      padding: 15px;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      margin-top: 8px;
     }
 
     .post-actions button {
-      padding: 10px;
+      padding: 8px 12px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
       font-size: 14px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      color: white;
+      flex: 1;
     }
 
     .post-actions button:hover {
-      opacity: 0.8;
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-1px);
     }
 
     .pin-btn {
-      background: #ffd700;
-      color: #333;
+      background: rgba(255, 215, 0, 0.8) !important;
+      color: #333 !important;
     }
 
     .pin-btn.pinned {
-      background: #ffed4e;
+      background: rgba(255, 237, 78, 0.9) !important;
     }
 
     .edit-btn {
-      background: #4CAF50;
-      color: white;
+      background: rgba(76, 175, 80, 0.8) !important;
+      color: white !important;
     }
 
     .delete-btn {
-      background: #f44336;
-      color: white;
+      background: rgba(244, 67, 54, 0.8) !important;
+      color: white !important;
     }
 
     .loading {
@@ -1382,15 +1399,17 @@ Purpose: Blog/memo page with simplified type selection using title field
               }).join('')}
             </div>
           ` : ''}
-          <div class="post-content" onclick="viewPostFromIndex(${index})">
-            <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-            <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
-            ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
-          </div>
-          <div class="post-actions" onclick="event.stopPropagation()">
-            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
-            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
-            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
+          <div class="post-content">
+            <div onclick="viewPostFromIndex(${index})">
+              <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
+              <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
+              ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
+            </div>
+            <div class="post-actions" onclick="event.stopPropagation()">
+              <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
+              <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
+              <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
+            </div>
           </div>
         </div>
       `}).join('');
@@ -2148,6 +2167,10 @@ Purpose: Blog/memo page with simplified type selection using title field
   [2025-01-12] v1.8.3 – Replaced loading spinner with animated text loader.
   Reason: User requested custom text-based loading animation instead of circular spinner.
   Impact: Loading animation now shows animated "LOADING" text with progressive fill effect.
+  Model: GPT-5
+  [2025-01-12] v1.9.0 – Redesigned post appearance with full-image overlay layout.
+  Reason: User requested images to fill entire post area with content as overlay at bottom.
+  Impact: Posts now have full-image background with title, date, text, and actions overlaid in one line at bottom.
   Model: GPT-5
   -->
 </body>
