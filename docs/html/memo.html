@@ -1,11 +1,11 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.4.0
+Version: 1.5.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
-Purpose: Blog/memo page with integrated bottom navigation menu
+Purpose: Blog/memo page with integrated bottom navigation menu and dedicated image gallery
 -->
 
 <!DOCTYPE html>
@@ -26,7 +26,6 @@ Purpose: Blog/memo page with integrated bottom navigation menu
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 20px;
-      padding-bottom: 100px; /* Add space for bottom navigation */
     }
 
     .container {
@@ -702,6 +701,21 @@ Purpose: Blog/memo page with integrated bottom navigation menu
       border: 2px solid #667eea;
     }
 
+    .gallery-info {
+      text-align: center;
+      margin-top: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    #galleryImageCounter {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: 500;
+    }
+
     /* Touch-friendly improvements */
     @media (hover: none) and (pointer: coarse) {
       .post-card:active {
@@ -730,285 +744,20 @@ Purpose: Blog/memo page with integrated bottom navigation menu
       user-select: text;
       -webkit-user-select: text;
     }
-
-    /* Glass utility for reuse */
-    .glass {
-        background: linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.55) 0%,
-            rgba(255, 255, 255, 0.35) 100%
-        );
-        backdrop-filter: saturate(140%) blur(20px);
-        -webkit-backdrop-filter: saturate(140%) blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    }
-
-    /* Bottom Navigation Styles */
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.55) 0%,
-            rgba(255, 255, 255, 0.35) 100%
-        );
-        backdrop-filter: saturate(140%) blur(20px);
-        -webkit-backdrop-filter: saturate(140%) blur(20px);
-        border-top: 1px solid rgba(255, 255, 255, 0.25);
-        padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-        z-index: 1000;
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        /* Ensure minimum touch target size */
-        min-height: 60px;
-        /* Prepare for pseudo-element gloss */
-        position: fixed;
-        overflow: visible;
-    }
-
-    /* Subtle gloss highlight */
-    .bottom-nav::before {
-        content: '';
-        position: absolute;
-        top: -18px;
-        left: 0;
-        right: 0;
-        height: 18px;
-        pointer-events: none;
-        background: linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.26),
-            rgba(255, 255, 255, 0.10) 60%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
-        -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
-    }
-
-    .bottom-nav .nav-container {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        max-width: 500px;
-        margin: 0 auto;
-        padding: 0 20px;
-        /* Ensure equal distribution */
-        gap: 4px;
-    }
-
-    .bottom-nav .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px;
-        position: relative;
-        min-width: 60px;
-        min-height: 44px; /* Minimum touch target */
-        text-decoration: none;
-        color: inherit;
-        /* Better focus styles for accessibility */
-        outline: none;
-        /* Ensure consistent sizing */
-        flex: 1;
-        max-width: 80px;
-        box-sizing: border-box;
-        /* Glass hover surface */
-        background: rgba(255, 255, 255, 0.0);
-    }
-
-    .bottom-nav .nav-item:focus-visible {
-        outline: 2px solid #667eea;
-        outline-offset: 2px;
-    }
-
-    .bottom-nav .nav-item:hover {
-        background: rgba(103, 126, 234, 0.12);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(103, 126, 234, 0.15);
-    }
-
-    .bottom-nav .nav-item.active {
-        background: rgba(103, 126, 234, 0.16);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 22px rgba(103, 126, 234, 0.22);
-        border: 1px solid rgba(103, 126, 234, 0.25);
-    }
-
-    .bottom-nav .nav-item.active::before {
-        content: '';
-        position: absolute;
-        top: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 4px;
-        height: 4px;
-        background: #667eea;
-        border-radius: 50%;
-        animation: nav-pulse 2s infinite;
-    }
-
-    /* Notification badge */
-    .bottom-nav .nav-badge {
-        position: absolute;
-        top: 4px;
-        right: 8px;
-        background: #ff4757;
-        color: white;
-        border-radius: 10px;
-        padding: 2px 6px;
-        font-size: 10px;
-        font-weight: 600;
-        min-width: 16px;
-        height: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: badge-pulse 2s infinite;
-        z-index: 1;
-    }
-
-    .bottom-nav .nav-badge.hidden {
-        display: none;
-    }
-
-    @keyframes badge-pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-    }
-
-    @keyframes nav-pulse {
-        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-        50% { opacity: 0.7; transform: translateX(-50%) scale(1.2); }
-    }
-
-    .bottom-nav .nav-icon {
-        width: 24px;
-        height: 24px;
-        margin-bottom: 4px;
-        transition: all 0.3s ease;
-        fill: #666;
-    }
-
-    .bottom-nav .nav-item.active .nav-icon {
-        fill: #667eea;
-        transform: scale(1.1);
-    }
-
-    .bottom-nav .nav-label {
-        font-size: 11px;
-        font-weight: 500;
-        color: #666;
-        transition: all 0.3s ease;
-        letter-spacing: 0.5px;
-    }
-
-    .bottom-nav .nav-item.active .nav-label {
-        color: #667eea;
-        font-weight: 600;
-    }
-
-    /* Loading state */
-    .bottom-nav .nav-item.loading {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-
-    .bottom-nav .nav-item.loading .nav-icon {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 480px) {
-        .bottom-nav .nav-container {
-            padding: 0 10px;
-        }
-        
-        .bottom-nav .nav-item {
-            min-width: 50px;
-            padding: 6px 8px;
-        }
-        
-        .bottom-nav .nav-icon {
-            width: 22px;
-            height: 22px;
-        }
-        
-        .bottom-nav .nav-label {
-            font-size: 10px;
-        }
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-        .bottom-nav {
-            background: linear-gradient(
-                180deg,
-                rgba(30, 30, 30, 0.70) 0%,
-                rgba(30, 30, 30, 0.55) 100%
-            );
-            border-top-color: rgba(255, 255, 255, 0.10);
-        }
-        
-        .bottom-nav .nav-icon {
-            fill: #bbb;
-        }
-        
-        .bottom-nav .nav-label {
-            color: #bbb;
-        }
-        
-        .bottom-nav .nav-item:hover {
-            background: rgba(103, 126, 234, 0.22);
-        }
-    }
-
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-        .bottom-nav {
-            border-top: 2px solid #000;
-        }
-        
-        .bottom-nav .nav-item:focus-visible {
-            outline: 3px solid #000;
-        }
-    }
-
-    /* Reduced motion/transparency support */
-    @media (prefers-reduced-motion: reduce) {
-        .bottom-nav .nav-item,
-        .bottom-nav .nav-icon,
-        .bottom-nav .nav-label {
-            transition: none;
-        }
-        
-        .bottom-nav .nav-item.active::before,
-        .bottom-nav .nav-badge {
-            animation: none;
-        }
-    }
-
-    @media (prefers-reduced-transparency: reduce) {
-        .bottom-nav {
-            background: #ffffff;
-            -webkit-backdrop-filter: none;
-            backdrop-filter: none;
-        }
-    }
   </style>
 </head>
 <body>
+  <!-- Include Menu -->
+  <div id="menu-container"></div>
+  <script>
+    fetch('/includes/menu.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('menu-container').innerHTML = data;
+      })
+      .catch(error => console.error('Error loading menu:', error));
+  </script>
+
   <div class="container">
     <!-- Configuration Notice -->
     <div class="config-notice" id="configNotice">
@@ -1081,6 +830,26 @@ Purpose: Blog/memo page with integrated bottom navigation menu
     </div>
   </div>
 
+  <!-- Image Gallery Modal -->
+  <div id="imageGalleryModal" class="view-modal">
+    <div class="view-modal-content">
+      <button class="view-modal-close" onclick="closeImageGallery()">×</button>
+      
+      <div class="view-modal-images" id="galleryModalImages">
+        <button class="view-modal-nav prev" onclick="prevGalleryImage()">‹</button>
+        <img id="galleryModalMainImage" src="" alt="">
+        <button class="view-modal-nav next" onclick="nextGalleryImage()">›</button>
+      </div>
+
+      <div class="view-modal-body">
+        <div class="view-modal-thumbnails" id="galleryModalThumbnails"></div>
+        <div class="gallery-info">
+          <span id="galleryImageCounter"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- View Post Modal -->
   <div id="viewModal" class="view-modal">
     <div class="view-modal-content">
@@ -1115,6 +884,8 @@ Purpose: Blog/memo page with integrated bottom navigation menu
     let uploadedImages = [];
     let currentViewingPost = null;
     let currentImageIndex = 0;
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
 
     // Check if API URL is configured
     if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
@@ -1313,13 +1084,86 @@ Purpose: Blog/memo page with integrated bottom navigation menu
 
     // Open image gallery from card images
     function openImageGallery(post) {
-      viewPost(post);
+      if (!post.imageUrls || post.imageUrls.length === 0) return;
+      
+      currentGalleryImages = post.imageUrls;
+      currentGalleryIndex = 0;
+      
+      // Show the gallery modal
+      document.getElementById('imageGalleryModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // Set up thumbnails
+      const thumbnailsContainer = document.getElementById('galleryModalThumbnails');
+      if (post.imageUrls.length > 1) {
+        thumbnailsContainer.innerHTML = post.imageUrls.map((url, index) => `
+          <img src="${url}" alt="Thumbnail ${index + 1}" 
+               class="${index === 0 ? 'active' : ''}" 
+               onclick="showGalleryImage(${index})">
+        `).join('');
+      } else {
+        thumbnailsContainer.innerHTML = '';
+      }
+      
+      // Display the first image
+      showGalleryImage(0);
     }
 
     function closeViewModal() {
       document.getElementById('viewModal').classList.remove('active');
       document.body.style.overflow = ''; // Restore scrolling
       currentViewingPost = null;
+    }
+
+    // Gallery functions
+    function closeImageGallery() {
+      document.getElementById('imageGalleryModal').classList.remove('active');
+      document.body.style.overflow = ''; // Restore scrolling
+      currentGalleryImages = [];
+      currentGalleryIndex = 0;
+    }
+
+    function showGalleryImage(index) {
+      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+      
+      currentGalleryIndex = index;
+      const imageUrl = currentGalleryImages[index];
+      
+      // Update main image
+      document.getElementById('galleryModalMainImage').src = imageUrl;
+      
+      // Update counter
+      document.getElementById('galleryImageCounter').textContent = `${index + 1} / ${currentGalleryImages.length}`;
+      
+      // Update thumbnails
+      const thumbnails = document.querySelectorAll('#galleryModalThumbnails img');
+      thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+      });
+      
+      // Show/hide navigation buttons
+      const prevBtn = document.querySelector('#galleryModalImages .prev');
+      const nextBtn = document.querySelector('#galleryModalImages .next');
+      
+      if (currentGalleryImages.length > 1) {
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+      } else {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      }
+    }
+
+    function prevGalleryImage() {
+      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+      currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
+    }
+
+    function nextGalleryImage() {
+      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+      currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
     }
 
     function showImage(index) {
@@ -1513,6 +1357,8 @@ Purpose: Blog/memo page with integrated bottom navigation menu
     // Keyboard navigation for image gallery
     document.addEventListener('keydown', (e) => {
       const viewModal = document.getElementById('viewModal');
+      const galleryModal = document.getElementById('imageGalleryModal');
+      
       if (viewModal.classList.contains('active')) {
         if (e.key === 'ArrowLeft') {
           prevImage();
@@ -1521,6 +1367,14 @@ Purpose: Blog/memo page with integrated bottom navigation menu
         } else if (e.key === 'Escape') {
           closeViewModal();
         }
+      } else if (galleryModal.classList.contains('active')) {
+        if (e.key === 'ArrowLeft') {
+          prevGalleryImage();
+        } else if (e.key === 'ArrowRight') {
+          nextGalleryImage();
+        } else if (e.key === 'Escape') {
+          closeImageGallery();
+        }
       }
     });
 
@@ -1528,6 +1382,12 @@ Purpose: Blog/memo page with integrated bottom navigation menu
     document.getElementById('viewModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeViewModal();
+      }
+    });
+
+    document.getElementById('imageGalleryModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeImageGallery();
       }
     });
 
@@ -1544,6 +1404,15 @@ Purpose: Blog/memo page with integrated bottom navigation menu
       handleSwipe();
     });
 
+    document.getElementById('galleryModalImages').addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.getElementById('galleryModalImages').addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleGallerySwipe();
+    });
+
     function handleSwipe() {
       if (touchEndX < touchStartX - 50) {
         nextImage(); // Swipe left
@@ -1552,356 +1421,22 @@ Purpose: Blog/memo page with integrated bottom navigation menu
         prevImage(); // Swipe right
       }
     }
-  </script>
 
-  <!-- Bottom Navigation Menu -->
-  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
-    <div class="nav-container">
-      <a href="/" class="nav-item" data-page="home" aria-label="Home page" role="tab">
-        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-        <span class="nav-label">Home</span>
-      </a>
-
-      <a href="/tip" class="nav-item" data-page="tip" aria-label="Tips and advice" role="tab">
-        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
-        </svg>
-        <span class="nav-label">Tips</span>
-        <span class="nav-badge hidden" aria-label="New tips available">3</span>
-      </a>
-      
-      <a href="/statistics" class="nav-item" data-page="statistics" aria-label="Statistics and analytics" role="tab">
-        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-        </svg>
-        <span class="nav-label">Statistics</span>
-        <span class="nav-badge hidden" aria-label="New statistics available">1</span>
-      </a>
-      
-      <a href="/salary" class="nav-item" data-page="salary" aria-label="Salary information" role="tab">
-        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
-        </svg>
-        <span class="nav-label">Salary</span>
-        <span class="nav-badge hidden" aria-label="New salary updates available"></span>
-      </a>
-      
-      <a href="/shift" class="nav-item" data-page="shift" aria-label="Shift schedule" role="tab">
-        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-          <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-        </svg>
-        <span class="nav-label">Shift</span>
-        <span class="nav-badge hidden" aria-label="New shift updates available"></span>
-      </a>
-    </div>
-  </nav>
-
-  <script>
-    // Enhanced Bottom Navigation functionality
-    (function() {
-      'use strict';
-      
-      // Menu version
-      const MENU_VERSION = '0.0.3';
-      
-      class BottomNavigation {
-        constructor() {
-          this.navItems = document.querySelectorAll('.bottom-nav .nav-item');
-          this.currentPath = window.location.pathname;
-          this.isNavigating = false;
-          this.init();
-        }
-        
-        init() {
-          this.setActiveItem();
-          this.bindEvents();
-          this.checkNotifications();
-        }
-        
-        setActiveItem() {
-          this.navItems.forEach(item => {
-            const page = item.getAttribute('data-page');
-            const href = item.getAttribute('href');
-            
-            // Improved active state detection
-            const isActive = this.isCurrentPage(page, href);
-            
-            if (isActive) {
-              item.classList.add('active');
-              item.setAttribute('aria-selected', 'true');
-            } else {
-              item.classList.remove('active');
-              item.setAttribute('aria-selected', 'false');
-            }
-          });
-        }
-        
-        isCurrentPage(page, href) {
-          const currentPath = window.location.pathname;
-          const currentUrl = window.location.href;
-          const currentHost = window.location.origin;
-          
-          // Debug logging only for home page to reduce noise
-          if (page === 'home') {
-            console.log('Checking home page detection...');
-          }
-          
-          // Strict path based matching: only consider path segments and common extensions
-          const escapedPage = page.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const pathSegmentRegex = new RegExp(`(^|\\/)${escapedPage}(\\/|$|\\.html$|\\.php$)`);
-
-          // More robust page matching with better logic
-          const matches = [
-            // Direct path matches
-            currentPath === '/' + page,
-            currentPath === '/' + page + '/',
-            currentPath.endsWith('/' + page),
-            currentPath.endsWith('/' + page + '.php'),
-            currentPath.endsWith('/' + page + '.html'),
-
-            // Regex-based segment match (avoids matching "tips" host for "tip")
-            pathSegmentRegex.test(currentPath),
-
-            // Home page special cases - enhanced
-            (page === 'home' && (
-              currentPath === '/' || 
-              currentPath === '' || 
-              currentPath.includes('/home') ||
-              currentUrl === currentHost + '/' ||
-              currentUrl === currentHost ||
-              currentUrl === currentHost + '/index.html' ||
-              currentUrl === currentHost + '/index.php' ||
-              currentUrl.endsWith('/') && currentPath === '/' ||
-              currentUrl === href ||
-              currentUrl.replace(/\/$/, '') === href.replace(/\/$/, '') ||
-              // Handle case where URL is exactly the host without trailing slash
-              (currentUrl === currentHost && href === currentHost + '/') ||
-              (currentUrl === currentHost + '/' && href === currentHost)
-            )),
-
-            // Exact href match
-            href === currentUrl,
-            href === currentHost + currentPath,
-
-            // Handle trailing slashes
-            href.replace(/\/$/, '') === currentUrl.replace(/\/$/, ''),
-            href.replace(/\/$/, '') === (currentHost + currentPath).replace(/\/$/, ''),
-
-            // Handle query parameters
-            href.split('?')[0] === currentUrl.split('?')[0],
-            href.split('?')[0] === (currentHost + currentPath).split('?')[0]
-          ];
-          
-          const isActive = matches.some(match => match);
-          
-          // Only log for home page or if there's an issue
-          if (page === 'home') {
-            console.log('Home page active:', isActive);
-          }
-          
-          return isActive;
-        }
-        
-        bindEvents() {
-          this.navItems.forEach(item => {
-            // Click handling with loading state
-            item.addEventListener('click', (e) => this.handleClick(e, item));
-            
-            // Touch feedback
-            item.addEventListener('touchstart', (e) => this.handleTouchStart(e, item));
-            item.addEventListener('touchend', (e) => this.handleTouchEnd(e, item));
-            
-            // Prevent default on middle click
-            item.addEventListener('auxclick', (e) => {
-              if (e.button === 1) e.preventDefault();
-            });
-          });
-        }
-        
-        handleClick(e, item) {
-          if (this.isNavigating) {
-            e.preventDefault();
-            return;
-          }
-          
-          // Remove active class from all items
-          this.navItems.forEach(nav => {
-            nav.classList.remove('active');
-            nav.setAttribute('aria-selected', 'false');
-          });
-          
-          // Add active class to clicked item
-          item.classList.add('active');
-          item.setAttribute('aria-selected', 'true');
-          
-          // Add loading state
-          this.setLoadingState(item, true);
-          
-          // Haptic feedback
-          this.vibrate();
-          
-          // Navigate after a short delay to show loading state
-          setTimeout(() => {
-            this.isNavigating = true;
-            window.location.href = item.getAttribute('href');
-          }, 150);
-        }
-        
-        handleTouchStart(e, item) {
-          if (!this.isNavigating) {
-            item.style.transform = 'translateY(-1px) scale(0.98)';
-          }
-        }
-        
-        handleTouchEnd(e, item) {
-          setTimeout(() => {
-            item.style.transform = '';
-          }, 100);
-        }
-        
-        setLoadingState(item, loading) {
-          if (loading) {
-            item.classList.add('loading');
-          } else {
-            item.classList.remove('loading');
-          }
-        }
-        
-        vibrate() {
-          if ('vibrate' in navigator && !this.isReducedMotion()) {
-            navigator.vibrate(50);
-          }
-        }
-        
-        isReducedMotion() {
-          return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        }
-        
-        checkNotifications() {
-          // Simulate checking for notifications
-          // In a real app, this would fetch from your API
-          // Disabled demo notifications - uncomment to enable
-          /*
-          setTimeout(() => {
-            const tipBadge = document.querySelector('[data-page="tip"] .nav-badge');
-            const statsBadge = document.querySelector('[data-page="statistics"] .nav-badge');
-            
-            // Show badges for demo purposes
-            if (tipBadge) tipBadge.classList.remove('hidden');
-            if (statsBadge) statsBadge.classList.remove('hidden');
-          }, 2000);
-          */
-        }
-        
-        // Public method to update notifications
-        updateNotification(page, count) {
-          const item = document.querySelector(`[data-page="${page}"]`);
-          if (item) {
-            const badge = item.querySelector('.nav-badge');
-            if (badge) {
-              if (count > 0) {
-                badge.textContent = count;
-                badge.classList.remove('hidden');
-              } else {
-                badge.classList.add('hidden');
-              }
-            }
-          }
-        }
-        
-        // Public method to manually set active page
-        setActivePage(page) {
-          this.navItems.forEach(item => {
-            const itemPage = item.getAttribute('data-page');
-            if (itemPage === page) {
-              item.classList.add('active');
-              item.setAttribute('aria-selected', 'true');
-            } else {
-              item.classList.remove('active');
-              item.setAttribute('aria-selected', 'false');
-            }
-          });
-        }
-        
-        // Public method to force refresh active state
-        refreshActiveState() {
-          // Only log if there's an issue or for debugging
-          // console.log('Refreshing active state...');
-          this.setActiveItem();
-        }
+    function handleGallerySwipe() {
+      if (touchEndX < touchStartX - 50) {
+        nextGalleryImage(); // Swipe left
       }
-      
-      // Initialize when DOM is ready
-      function initBottomNav(activePage = null) {
-        try {
-          const nav = new BottomNavigation();
-          
-          // Store instance globally for debugging
-          window.bottomNav = nav;
-          
-          // If a specific page is provided, set it as active
-          if (activePage) {
-            nav.setActivePage(activePage);
-          } else {
-            // Force refresh after a short delay to ensure everything is loaded
-            setTimeout(() => {
-              nav.refreshActiveState();
-            }, 100);
-          }
-          
-          // Also refresh on window load to catch any late changes
-          window.addEventListener('load', () => {
-            if (activePage) {
-              nav.setActivePage(activePage);
-            } else {
-              nav.refreshActiveState();
-            }
-          });
-          
-          console.log('Bottom navigation initialized successfully', activePage ? `with active page: ${activePage}` : '');
-          console.log(`Menu version: ${MENU_VERSION}`);
-          return nav;
-        } catch (error) {
-          console.error('Failed to initialize bottom navigation:', error);
-          console.log(`Menu version: ${MENU_VERSION}`);
-          // Fallback: basic functionality
-          const navItems = document.querySelectorAll('.bottom-nav .nav-item');
-          navItems.forEach(item => {
-            item.addEventListener('click', function() {
-              navItems.forEach(nav => nav.classList.remove('active'));
-              this.classList.add('active');
-            });
-          });
-          return null;
-        }
+      if (touchEndX > touchStartX + 50) {
+        prevGalleryImage(); // Swipe right
       }
-      
-      let bottomNavInstance = null;
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          bottomNavInstance = initBottomNav();
-        });
-      } else {
-        bottomNavInstance = initBottomNav();
-      }
-      
-      // Expose API for external use
-      window.BottomNavigation = BottomNavigation;
-      window.bottomNav = bottomNavInstance;
-      window.initBottomNav = initBottomNav; // Expose the function globally
-      window.MENU_VERSION = MENU_VERSION; // Expose version globally
-    })();
+    }
   </script>
 
   <!--
   CHANGELOG
-  [2025-01-12] v1.4.0 – Added bottom navigation menu with glassmorphism design.
-  Reason: Integrate menu.html navigation component into memo.html for consistent navigation.
-  Impact: Users can now navigate between different sections of the app from the memo page.
+  [2025-01-12] v1.5.0 – Added dedicated image gallery modal with navigation.
+  Reason: Fix image viewing functionality - clicking post images now opens dedicated gallery.
+  Impact: Users can now view full-size images with proper navigation between multiple images.
   Model: GPT-5
   -->
 </body>
