@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Staff</title>
   <style>
     /* Reset and Base Styles */
@@ -1428,7 +1428,7 @@
       <button class="confirmation-btn primary" id="confirmationOkBtn" onclick="closeConfirmation()">OK</button>
     </div>
   </div>
-
+  <div id="menu-container"></div>
   <script>
     // ⚠️ IMPORTANT: Replace with your Google Apps Script URL
     const API_URL = 'https://script.google.com/macros/s/AKfycby0Ky6mXn4Rkr12V0YtEsJunHb1UhbQakEvjo5a5Cy2H_HFkUhslz6-r6nbNYRs07CsNw/exec';
@@ -1541,7 +1541,49 @@
         await processPendingAction(password);
       }
     });
+        //---> მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                console.log('Menu HTML loaded, inserting into DOM...');
+                document.getElementById('menu-container').innerHTML = data;
+                console.log('Menu HTML inserted, executing scripts...');
+                
+                // Execute any script tags that were inserted
+                const scripts = document.getElementById('menu-container').querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent) {
+                        console.log('Executing script from menu...');
+                        eval(script.textContent);
+                    }
+                });
+                
+                // Wait for the script to execute and function to be available
+                let attempts = 0;
+                const maxAttempts = 20; // Reduced to 2 seconds since we're executing scripts immediately
+                
+                const waitForInit = () => {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    
+                    if (typeof window.initBottomNav === 'function') {
+                        console.log('initBottomNav function found! Calling it...');
+                        window.initBottomNav('home');
+                        console.log('Bottom navigation initialized successfully');
+                    } else if (attempts < maxAttempts) {
+                        console.log('Function not found yet, retrying...');
+                        setTimeout(waitForInit, 100);
+                    } else {
+                        console.error('initBottomNav function not found after 2 seconds. Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function'));
+                    }
+                };
+                
+                // Start waiting for the function to be available
+                setTimeout(waitForInit, 50); // Reduced delay since scripts are executed immediately
+            })
+            .catch(error => console.error('Error loading menu:', error));
 
+            // <--- მენიუს ჩატვირთვა
     // ==================== API Functions ====================
     async function loadPosts() {
       showLoading('Loading posts...');
