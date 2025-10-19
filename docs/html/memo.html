@@ -1,25 +1,17 @@
-<!--
-Project: Tip Tracker
-File: html/memo.html
-Version: 1.10.3
-Author: Cursor AI
-Model: GPT-5
-Last Modified: 2025-01-12
-Purpose: Blog/memo page with simplified type selection using title field
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <script>
-    fetch("/includes/head.html")
-        .then(response => response.text())
-        .then(data => document.head.innerHTML += data)
-        .catch(error => console.error("Ошибка загрузки head:", error));
-</script>
   <title>My Staff</title>
   <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     :root {
       /* Modern Light Theme */
       --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
@@ -68,7 +60,6 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     @media (prefers-color-scheme: dark) {
       :root {
-        /* Modern Dark Theme */
         --bg-primary: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
         --bg-secondary: rgba(30, 30, 46, 0.95);
         --bg-glass: rgba(255, 255, 255, 0.05);
@@ -107,15 +98,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       }
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     html {
       height: 100%;
       background: var(--bg-primary);
+      scroll-behavior: smooth;
     }
 
     body {
@@ -128,22 +114,34 @@ Purpose: Blog/memo page with simplified type selection using title field
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       margin: 0;
       overflow-x: hidden;
-      font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      margin-bottom: 20px; /* Additional spacing from bottom menu */
+    body.password-protected .container {
+      display: none;
     }
 
+    body.modal-open {
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
+      height: 100% !important;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto 20px;
+    }
+
+    /* Header */
     header {
       text-align: center;
       color: var(--text-white);
       margin-bottom: 48px;
-      position: relative;
     }
 
     h1 {
@@ -165,6 +163,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       letter-spacing: 0.01em;
     }
 
+    /* Buttons */
     .add-post-btn {
       background: var(--bg-secondary);
       color: var(--text-primary);
@@ -234,10 +233,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     .filter-btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: var(--filter-active-bg);
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -265,24 +261,256 @@ Purpose: Blog/memo page with simplified type selection using title field
       z-index: 1;
     }
 
-    .modal {
-      display: none;
-      position: fixed;
+    /* Posts Grid */
+    .posts-grid {
+      display: grid;
+      gap: 30px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .posts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .container {
+        max-width: 1400px;
+      }
+    }
+
+    /* Post Cards */
+    .post-card {
+      background: var(--post-gradient);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--post-shadow);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .post-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .post-card:hover::before {
+      opacity: 1;
+    }
+
+    .post-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--post-hover-shadow);
+    }
+
+    .post-card:active {
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    .post-card.pinned {
+      border: 2px solid var(--pin-bg);
+      box-shadow: var(--post-shadow), 0 0 0 1px var(--pin-bg);
+    }
+
+    .post-card.pinned::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: var(--pin-bg);
+      border-radius: var(--radius-lg);
+      z-index: -1;
+      opacity: 0.1;
+    }
+
+    .pin-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--pin-bg);
+      color: var(--pin-text);
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 13px;
+      z-index: 10;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .post-images-grid {
+      display: grid;
+      gap: 5px;
+      width: 100%;
+      background: #f0f0f0;
+      position: relative;
+    }
+
+    .post-images-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .post-images-grid.multiple {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .post-images-grid img {
+      width: 100%;
+      height: auto;
+      max-height: 50vh;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .post-images-grid img:hover {
+      opacity: 0.9;
+    }
+
+    .post-images-grid.single img {
+      grid-column: 1 / -1;
+      height: 100%;
+    }
+
+    .post-content {
+      position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      right: 0;
+      padding: 20px;
+      z-index: 5;
+    }
+
+    .post-title {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .post-date {
+      color: var(--text-white);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      opacity: 0.9;
+    }
+
+    .post-text {
+      color: var(--text-white);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      font-size: 0.875rem;
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 6;
+    }
+
+    .post-actions button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: var(--blur-md);
+      color: var(--text-white);
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .post-actions button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .post-actions button:hover::before {
+      opacity: 1;
+    }
+
+    .post-actions button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .post-actions button:active {
+      transform: translateY(0);
+    }
+
+    .pin-btn {
+      background: rgba(251, 191, 36, 0.2) !important;
+      color: var(--pin-text) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
+    }
+
+    .pin-btn.pinned {
+      background: rgba(251, 191, 36, 0.3) !important;
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5) !important;
+    }
+
+    .edit-btn {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: rgba(34, 197, 94, 0.3) !important;
+    }
+
+    .delete-btn {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* Modals */
+    .modal, .view-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
       background: var(--overlay-bg);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
 
-    .modal.active {
+    .modal.active, .view-modal.active {
       display: flex;
     }
 
-    .modal-content {
+    .modal-content, .view-modal-content {
       background: var(--modal-bg);
       padding: 32px;
       border-radius: var(--radius-xl);
@@ -296,13 +524,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       position: relative;
     }
 
-    .modal-content::before {
+    .modal-content::before, .view-modal-content::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
       border-radius: var(--radius-xl);
       pointer-events: none;
@@ -316,6 +541,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       letter-spacing: -0.01em;
     }
 
+    /* Form Elements */
     .form-group {
       margin-bottom: 24px;
     }
@@ -358,7 +584,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       min-height: 120px;
     }
 
-    .btn-group {
+    .btn-group, .form-actions {
       display: flex;
       gap: 16px;
       margin-top: 32px;
@@ -430,295 +656,36 @@ Purpose: Blog/memo page with simplified type selection using title field
       color: white;
     }
 
-    .posts-grid {
-      display: grid;
-      gap: 30px;
-      grid-template-columns: 1fr;
-    }
-
-    /* Responsive columns for larger screens */
-    @media (min-width: 768px) {
-      .posts-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .posts-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .container {
-        max-width: 1400px;
-      }
-    }
-
-    .post-card {
-      background: var(--post-gradient);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: var(--post-shadow);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      height: auto;
-      min-height: 200px;
-      backdrop-filter: var(--blur-sm);
-      border: 1px solid var(--border-color);
-    }
-
-    .post-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-
-    .post-card:hover::before {
-      opacity: 1;
-    }
-
-    .post-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: var(--post-hover-shadow);
-    }
-
-    .post-card:active {
-      transform: translateY(-4px) scale(1.01);
-    }
-
-    .post-card.pinned {
-      border: 2px solid var(--pin-bg);
-      box-shadow: var(--post-shadow), 0 0 0 1px var(--pin-bg);
-      position: relative;
-    }
-
-    .post-card.pinned::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: var(--pin-bg);
-      border-radius: var(--radius-lg);
-      z-index: -1;
-      opacity: 0.1;
-    }
-
-    .pin-badge {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: var(--pin-bg);
-      color: var(--pin-text);
-      padding: 8px 16px;
-      border-radius: var(--radius-lg);
-      font-weight: 700;
-      font-size: 13px;
-      z-index: 10;
-      box-shadow: var(--shadow-md);
-      backdrop-filter: var(--blur-sm);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .post-images-grid {
-      display: grid;
-      gap: 5px;
-      width: 100%;
-      background: #f0f0f0;
-      position: relative;
-    }
-
-    .post-images-grid.single {
-      grid-template-columns: 1fr;
-    }
-
-    .post-images-grid.multiple {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .post-images-grid img {
-      width: 100%;
-      height: auto;
-      max-height: 50vh;
-      object-fit: cover;
-      cursor: pointer;
-    }
-
-    .post-images-grid img:hover {
-      opacity: 0.9;
-    }
-
-    .post-images-grid.single img {
-      grid-column: 1 / -1;
-      height: 100%;
-    }
-
-    .image-more-overlay {
-      position: relative;
-    }
-
-    .image-more-overlay::after {
-      content: attr(data-more);
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .post-content {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      /* background: var(--post-overlay); */
-      padding: 20px 20px 24px 20px;
-      z-index: 5;
-      /* backdrop-filter: var(--blur-sm); */
-    }
-
-    .post-title {
-      font-size: clamp(1.25rem, 4vw, 1.5rem);
-      font-weight: 700;
-      color: var(--text-white);
-      margin-bottom: 8px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-      letter-spacing: -0.01em;
-      line-height: 1.2;
-    }
-
-    .post-date {
-      color: var(--text-white);
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: 12px;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-      opacity: 0.9;
-    }
-
-    .post-text {
-      color: var(--text-white);
-      line-height: 1.5;
-      margin-bottom: 16px;
-      white-space: pre-wrap;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-      font-size: 0.875rem;
-      font-weight: 400;
-      opacity: 0.95;
-    }
-
-    .post-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      margin-top: 12px;
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      z-index: 6;
-    }
-
-    .post-actions button {
-      padding: 12px 16px;
-      border: none;
+    /* Drop Zone */
+    .drop-zone {
+      border: 3px dashed var(--border-color);
       border-radius: var(--radius-md);
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: var(--blur-md);
-      color: var(--text-white);
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg-secondary);
     }
 
-    .post-actions button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.1);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .post-actions button:hover::before {
-      opacity: 1;
-    }
-
-    .post-actions button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .post-actions button:active {
-      transform: translateY(0);
-    }
-
-    .pin-btn {
-      background: rgba(251, 191, 36, 0.2) !important;
-      color: var(--pin-text) !important;
-      border-color: rgba(251, 191, 36, 0.3) !important;
-    }
-
-    .pin-btn.pinned {
-      background: rgba(251, 191, 36, 0.3) !important;
-      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5) !important;
-    }
-
-    .edit-btn {
-      background: rgba(34, 197, 94, 0.2) !important;
-      color: var(--text-white) !important;
-      border-color: rgba(34, 197, 94, 0.3) !important;
-    }
-
-    .delete-btn {
-      background: rgba(239, 68, 68, 0.2) !important;
-      color: var(--text-white) !important;
-      border-color: rgba(239, 68, 68, 0.3) !important;
-    }
-
-    .loading {
-      text-align: center;
-      color: var(--text-white);
-      font-size: 1.5em;
-      padding: 50px;
-    }
-
-    .no-posts {
-      text-align: center;
-      color: var(--text-white);
-      font-size: 1.2em;
-      padding: 50px;
+    .drop-zone:hover {
+      border-color: var(--button-primary);
       background: var(--filter-bg);
-      border-radius: 15px;
     }
 
-    .image-preview {
-      max-width: 150px;
-      max-height: 150px;
-      margin: 5px;
-      border-radius: 8px;
-      object-fit: cover;
+    .drop-zone.drag-over {
+      border-color: var(--button-primary);
+      background: var(--filter-active-bg);
+      transform: scale(1.02);
+    }
+
+    .drop-zone-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .drop-zone-text {
+      color: var(--text-secondary);
+      font-size: 16px;
     }
 
     .preview-container {
@@ -733,7 +700,11 @@ Purpose: Blog/memo page with simplified type selection using title field
       display: inline-block;
     }
 
-    .preview-item img {
+    .image-preview {
+      max-width: 150px;
+      max-height: 150px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
       display: block;
     }
 
@@ -758,124 +729,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       background: #d32f2f;
     }
 
-    .drop-zone {
-      border: 3px dashed var(--border-color);
-      border-radius: 8px;
-      padding: 40px;
-      text-align: center;
-      transition: all 0.3s;
-      cursor: pointer;
-      background: var(--bg-secondary);
-    }
-
-    .drop-zone:hover {
-      border-color: var(--button-bg);
-      background: var(--filter-bg);
-    }
-
-    .drop-zone.drag-over {
-      border-color: var(--button-bg);
-      background: var(--filter-active-bg);
-      transform: scale(1.02);
-    }
-
-    .drop-zone-text {
-      color: var(--text-secondary);
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-
-    .drop-zone-icon {
-      font-size: 48px;
-      margin-bottom: 10px;
-    }
-
-    .error {
-      background: var(--error-bg);
-      color: var(--error-text);
-      padding: 15px;
-      border-radius: 8px;
-      margin: 20px 0;
-      text-align: center;
-      border: 1px solid var(--error-border);
-    }
-
-    .config-notice {
-      background: var(--bg-secondary);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border-left: 4px solid var(--error-text);
-    }
-
-    .config-notice h3 {
-      color: var(--error-text);
-      margin-bottom: 10px;
-    }
-
-    .config-notice code {
-      background: var(--filter-bg);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: monospace;
-      color: var(--text-primary);
-    }
-
-    .password-prompt {
-      background: var(--filter-bg);
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .password-prompt input {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 16px;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-    }
-
-    /* View Post Modal */
-    .view-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--overlay-bg);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      overflow-y: auto;
-    }
-
-    .view-modal.active {
-      display: flex;
-    }
-
-    .view-modal-content {
-      background: var(--modal-bg);
-      border-radius: 15px;
-      max-width: 900px;
-      width: 95%;
-      max-height: 95vh;
-      overflow-y: auto;
-      position: relative;
-      margin: 10px;
-    }
-
-    @media (min-width: 768px) {
-      .view-modal-content {
-        width: 90%;
-        margin: 20px;
-      }
-    }
-
-    /* Fullscreen gallery modal styles */
+    /* Gallery Modal */
     #imageGalleryModal .view-modal-content {
       background: #000;
       border-radius: 0;
@@ -896,30 +750,38 @@ Purpose: Blog/memo page with simplified type selection using title field
       position: relative;
     }
 
-    #imageGalleryModal .view-modal-body {
-      background: rgba(0,0,0,0.8);
-      padding: 10px 20px;
-      border-radius: 0;
+    .view-modal-images {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background: #000;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     }
 
-    #imageGalleryModal .view-modal-close {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 2px solid rgba(255,255,255,0.3);
+    .view-modal-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
-    #imageGalleryModal .view-modal-close:hover {
-      background: rgba(255,255,255,0.3);
+    #imageGalleryModal .view-modal-images img {
+      cursor: zoom-in;
+      transition: transform 0.3s ease;
     }
 
-    #imageGalleryModal .view-modal-nav {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 2px solid rgba(255,255,255,0.3);
+    #imageGalleryModal .view-modal-images img.zoomed {
+      cursor: grab;
+      transform: scale(2);
+      transform-origin: center;
+      transition: transform 0.3s ease;
     }
 
-    #imageGalleryModal .view-modal-nav:hover {
-      background: rgba(255,255,255,0.3);
+    #imageGalleryModal .view-modal-images img.zoomed:active {
+      cursor: grabbing;
+    }
+
+    #imageGalleryModal .view-modal-images img.panning {
+      transition: none;
     }
 
     .view-modal-close {
@@ -942,72 +804,13 @@ Purpose: Blog/memo page with simplified type selection using title field
       background: rgba(0,0,0,0.9);
     }
 
-    .view-modal-images {
-      position: relative;
-      width: 100%;
-      height: 250px;
-      background: #000;
-      border-radius: 15px 15px 0 0;
+    #imageGalleryModal .view-modal-close {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
     }
 
-    @media (min-width: 768px) {
-      .view-modal-images {
-        height: 400px;
-      }
-    }
-
-    .view-modal-images img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    /* Gallery modal specific image styling */
-    #imageGalleryModal .view-modal-images img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-      cursor: zoom-in;
-      transition: transform 0.3s ease;
-      overflow: visible;
-    }
-
-    /* Prevent page zoom when modal is open */
-    body.modal-open {
-      overflow: hidden !important;
-      position: fixed !important;
-      width: 100% !important;
-      height: 100% !important;
-      touch-action: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-
-    /* Image zoom functionality */
-    #imageGalleryModal .view-modal-images img.zoomed {
-      cursor: grab;
-      transform: scale(2);
-      transform-origin: center;
-      transition: transform 0.3s ease;
-    }
-
-    #imageGalleryModal .view-modal-images img.zoomed:active {
-      cursor: grabbing;
-    }
-
-    #imageGalleryModal .view-modal-images img.panning {
-      transition: none;
-    }
-
-    /* Prevent text selection in modal */
-    #imageGalleryModal {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
+    #imageGalleryModal .view-modal-close:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     .view-modal-nav {
@@ -1025,70 +828,36 @@ Purpose: Blog/memo page with simplified type selection using title field
       z-index: 10;
     }
 
-    @media (min-width: 768px) {
-      .view-modal-nav {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-      }
-    }
-
     .view-modal-nav:hover {
       background: rgba(0,0,0,0.8);
     }
 
     .view-modal-nav.prev {
-      left: 5px;
+      left: 10px;
     }
 
     .view-modal-nav.next {
-      right: 5px;
+      right: 10px;
     }
 
-    @media (min-width: 768px) {
-      .view-modal-nav.prev {
-        left: 10px;
-      }
+    #imageGalleryModal .view-modal-nav {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
 
-      .view-modal-nav.next {
-        right: 10px;
-      }
+    #imageGalleryModal .view-modal-nav:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     .view-modal-body {
       padding: 20px;
+      background: rgba(0,0,0,0.8);
+      border-radius: 0;
     }
 
-    @media (min-width: 768px) {
-      .view-modal-body {
-        padding: 30px;
-      }
-    }
-
-    .view-modal-title {
-      font-size: 1.8em;
-      color: var(--text-primary);
-      margin-bottom: 15px;
-    }
-
-    @media (min-width: 768px) {
-      .view-modal-title {
-        font-size: 2.5em;
-      }
-    }
-
-    .view-modal-date {
-      color: var(--text-secondary);
-      font-size: 1em;
-      margin-bottom: 25px;
-    }
-
-    .view-modal-text {
-      color: var(--text-secondary);
-      line-height: 1.8;
-      font-size: 1.1em;
-      white-space: pre-wrap;
-      margin-bottom: 30px;
+    #imageGalleryModal .view-modal-body {
+      background: rgba(0,0,0,0.8);
+      padding: 10px 20px;
     }
 
     .view-modal-thumbnails {
@@ -1103,7 +872,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       width: 60px;
       height: 60px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       cursor: pointer;
       opacity: 0.6;
       transition: opacity 0.2s;
@@ -1111,17 +880,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       flex-shrink: 0;
     }
 
-    @media (min-width: 768px) {
-      .view-modal-thumbnails img {
-        width: 80px;
-        height: 80px;
-      }
-    }
-
     .view-modal-thumbnails img:hover,
     .view-modal-thumbnails img.active {
       opacity: 1;
-      border: 2px solid var(--button-bg);
+      border: 2px solid var(--button-primary);
     }
 
     .gallery-info {
@@ -1129,6 +891,10 @@ Purpose: Blog/memo page with simplified type selection using title field
       margin-top: 15px;
       color: var(--text-secondary);
       font-size: 14px;
+    }
+
+    #imageGalleryModal .gallery-info {
+      color: white;
     }
 
     #galleryImageCounter {
@@ -1139,300 +905,9 @@ Purpose: Blog/memo page with simplified type selection using title field
       font-weight: 500;
     }
 
-    /* Gallery modal specific info styling */
-    #imageGalleryModal .gallery-info {
-      color: white;
-    }
-
     #imageGalleryModal #galleryImageCounter {
       background: rgba(255,255,255,0.2);
-      color: white;
       border: 1px solid rgba(255,255,255,0.3);
-    }
-
-    /* Touch-friendly improvements */
-    @media (hover: none) and (pointer: coarse) {
-      .post-card:active {
-        transform: scale(0.98);
-      }
-
-      .view-modal-nav {
-        width: 50px;
-        height: 50px;
-        font-size: 28px;
-      }
-
-      button {
-        min-height: 44px;
-      }
-    }
-
-    /* Smooth scrolling */
-    html {
-      scroll-behavior: smooth;
-    }
-
-    /* Better text selection on mobile */
-    .post-text,
-    .view-modal-text {
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    /* Password Modal Styles */
-    #passwordModal .modal-content {
-      max-width: 400px;
-      width: 90%;
-    }
-
-    #passwordModal .form-group {
-      margin-bottom: 20px;
-    }
-
-    #passwordModal .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    #passwordModal .form-group input {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e1e5e9;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: border-color 0.3s ease;
-    }
-
-    #passwordModal .form-group input:focus {
-      outline: none;
-      border-color: #007bff;
-    }
-
-    #passwordModal .form-group input[readonly] {
-      background-color: #f8f9fa;
-      color: #6c757d;
-    }
-
-    #passwordModal .form-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 24px;
-    }
-
-    #passwordModal .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    #passwordModal .btn-secondary {
-      background-color: #6c757d;
-      color: white;
-    }
-
-    #passwordModal .btn-secondary:hover {
-      background-color: #5a6268;
-    }
-
-    #passwordModal .btn-primary {
-      background-color: #007bff;
-      color: white;
-    }
-
-    #passwordModal .btn-primary:hover {
-      background-color: #0056b3;
-    }
-
-    /* Loading Animation */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .loader {
-      width: fit-content;
-      font-size: 40px;
-      font-family: monospace;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #0000;
-      -webkit-text-stroke: 1px #fff;
-      --g:conic-gradient(#fff 0 0) no-repeat text;
-      background:var(--g) 0,var(--g) 1ch,var(--g) 2ch,var(--g) 3ch,var(--g) 4ch,var(--g) 5ch,var(--g) 6ch;
-      background-position-y: 100%;
-      animation: l19 1.5s linear infinite alternate;
-    }
-    .loader:before {
-      content: "Loading";
-    }
-    @keyframes l19 {
-      0%  {background-size: 1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
-      25% {background-size: 1ch 100%,1ch 50% ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 50% ,1ch 100%}
-      50% {background-size: 1ch 100%,1ch 100%,1ch 50% ,1ch 0   ,1ch 50% ,1ch 100%,1ch 100%}
-      75% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 50% ,1ch 100%,1ch 100%,1ch 100%}
-      to  {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%}
-    }
-
-    .loading-text {
-      color: white;
-      margin-top: 20px;
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    /* Custom Confirmation Messages */
-    .confirmation-message {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      z-index: 10000;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .confirmation-message.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .confirmation-icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-
-    .confirmation-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    .confirmation-text {
-      color: #666;
-      margin-bottom: 25px;
-      line-height: 1.5;
-    }
-
-    .confirmation-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .confirmation-btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      min-width: 100px;
-    }
-
-    .confirmation-btn.primary {
-      background: #007bff;
-      color: white;
-    }
-
-    .confirmation-btn.primary:hover {
-      background: #0056b3;
-    }
-
-    .confirmation-btn.secondary {
-      background: #6c757d;
-      color: white;
-    }
-
-    .confirmation-btn.secondary:hover {
-      background: #5a6268;
-    }
-
-    .confirmation-btn.success {
-      background: #28a745;
-      color: white;
-    }
-
-    .confirmation-btn.success:hover {
-      background: #218838;
-    }
-
-    .confirmation-btn.danger {
-      background: #dc3545;
-      color: white;
-    }
-
-    .confirmation-btn.danger:hover {
-      background: #c82333;
-    }
-
-    /* iPhone and mobile viewport fixes */
-    @supports (-webkit-touch-callout: none) {
-      body {
-        min-height: -webkit-fill-available;
-        background-attachment: fixed;
-      }
-    }
-
-    /* Prevent white gaps on iOS Safari */
-    @media screen and (max-width: 768px) {
-      html, body {
-        background: var(--bg-primary);
-        background-attachment: fixed;
-        background-size: cover;
-        background-repeat: no-repeat;
-      }
-      
-      body {
-        padding-bottom: 120px; /* Extra space on mobile for menu */
-        position: relative;
-      }
-      
-      .container {
-        margin-bottom: 30px; /* More spacing on mobile */
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding-bottom: 130px; /* Even more space on small mobile */
-      }
-      
-      .container {
-        margin-bottom: 40px; /* Maximum spacing on small screens */
-      }
     }
 
     /* Password Protection Modal */
@@ -1443,7 +918,7 @@ Purpose: Blog/memo page with simplified type selection using title field
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.8);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 10000;
@@ -1542,14 +1017,262 @@ Purpose: Blog/memo page with simplified type selection using title field
       font-size: 1.2em;
     }
 
-    /* Hide main content when password protection is active */
-    body.password-protected .container,
-    body.password-protected #menu-container {
-      display: none;
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
     }
 
-    body.password-protected .password-modal {
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loader {
+      width: fit-content;
+      font-size: 40px;
+      font-family: monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #0000;
+      -webkit-text-stroke: 1px #fff;
+      --g:conic-gradient(#fff 0 0) no-repeat text;
+      background:var(--g) 0,var(--g) 1ch,var(--g) 2ch,var(--g) 3ch,var(--g) 4ch,var(--g) 5ch,var(--g) 6ch;
+      background-position-y: 100%;
+      animation: l19 1.5s linear infinite alternate;
+    }
+
+    .loader:before {
+      content: "Loading";
+    }
+
+    @keyframes l19 {
+      0%  {background-size: 1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+      25% {background-size: 1ch 100%,1ch 50% ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 50% ,1ch 100%}
+      50% {background-size: 1ch 100%,1ch 100%,1ch 50% ,1ch 0   ,1ch 50% ,1ch 100%,1ch 100%}
+      75% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 50% ,1ch 100%,1ch 100%,1ch 100%}
+      to  {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%}
+    }
+
+    .loading-text {
+      color: white;
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* Confirmation Message */
+    .confirmation-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .confirmation-message.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .confirmation-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .confirmation-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .confirmation-text {
+      color: #666;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .confirmation-actions {
       display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .confirmation-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 100px;
+    }
+
+    .confirmation-btn.primary {
+      background: #007bff;
+      color: white;
+    }
+
+    .confirmation-btn.primary:hover {
+      background: #0056b3;
+    }
+
+    .confirmation-btn.secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .confirmation-btn.secondary:hover {
+      background: #5a6268;
+    }
+
+    .confirmation-btn.success {
+      background: #28a745;
+      color: white;
+    }
+
+    .confirmation-btn.success:hover {
+      background: #218838;
+    }
+
+    .confirmation-btn.danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .confirmation-btn.danger:hover {
+      background: #c82333;
+    }
+
+    /* Utility Classes */
+    .loading {
+      text-align: center;
+      color: var(--text-white);
+      font-size: 1.5em;
+      padding: 50px;
+    }
+
+    .no-posts {
+      text-align: center;
+      color: var(--text-white);
+      font-size: 1.2em;
+      padding: 50px;
+      background: var(--filter-bg);
+      border-radius: 15px;
+    }
+
+    .error {
+      background: var(--error-bg);
+      color: var(--error-text);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+      border: 1px solid var(--error-border);
+    }
+
+    /* Mobile Optimizations */
+    @media screen and (max-width: 768px) {
+      html, body {
+        background: var(--bg-primary);
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+      
+      body {
+        padding-bottom: 120px;
+        position: relative;
+      }
+      
+      .container {
+        margin-bottom: 30px;
+      }
+
+      .view-modal-images {
+        height: 400px;
+      }
+
+      .view-modal-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+      }
+
+      .view-modal-thumbnails img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding-bottom: 130px;
+      }
+      
+      .container {
+        margin-bottom: 40px;
+      }
+    }
+
+    /* iOS Safari fixes */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        min-height: -webkit-fill-available;
+        background-attachment: fixed;
+      }
+    }
+
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .post-card:active {
+        transform: scale(0.98);
+      }
+
+      .view-modal-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+      }
+
+      button {
+        min-height: 44px;
+      }
+    }
+
+    /* Text selection */
+    .post-text,
+    .view-modal-text {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* Prevent selection in modal */
+    #imageGalleryModal {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
   </style>
 </head>
@@ -1574,35 +1297,28 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
-  <!-- Include Menu -->
-  <div id="menu-container" style="display: none;"></div>
-  <script>
-    fetch('/includes/menu.html')
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('menu-container').innerHTML = data;
-      })
-      .catch(error => console.error('Error loading menu:', error));
-  </script>
-
   <div class="container">
-    <!-- Configuration Notice -->
-    <div class="config-notice" id="configNotice">
-      <h3>⚠️ Configuration Required</h3>
-      <p>Please update the <code>API_URL</code> in the script section with your Google Apps Script web app URL.</p>
-    </div>
-
     <header>
       <h1>📝 My Staff</h1>
       <p class="subtitle">Share memos with staff</p>
       
       <!-- Filter Buttons -->
       <div class="filter-buttons">
-        <button class="filter-btn active" onclick="filterPosts('all')" data-filter="all">All</button>
-        <button class="filter-btn" onclick="filterPosts('memo')" data-filter="memo">📝 Memo</button>
-        <button class="filter-btn" onclick="filterPosts('shift')" data-filter="shift">⏰ Shift</button>
-        <button class="filter-btn" onclick="filterPosts('tip')" data-filter="tip">💡 Tip</button>
-        <button class="filter-btn" onclick="filterPosts('other')" data-filter="other">📄 Other</button>
+        <button class="filter-btn active" onclick="filterPosts('all')" data-filter="all">
+          <span>All</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('memo')" data-filter="memo">
+          <span>📝 Memo</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('shift')" data-filter="shift">
+          <span>⏰ Shift</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('tip')" data-filter="tip">
+          <span>💡 Tip</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('other')" data-filter="other">
+          <span>📄 Other</span>
+        </button>
       </div>
       
       <button class="add-post-btn" onclick="openNewPostModal()">➕ Add New Post</button>
@@ -1613,17 +1329,16 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
-  <!-- Modal for Add/Edit Post -->
+  <!-- Add/Edit Post Modal -->
   <div id="postModal" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Add New Post</h2>
       <form id="postForm">
         <input type="hidden" id="postId">
         
-
         <div class="form-group">
-          <label for="postTitle">Type</label>
-          <select id="postTitle" required>
+          <label for="postType">Type *</label>
+          <select id="postType" required>
             <option value="">Select type...</option>
             <option value="memo">📝 Memo</option>
             <option value="shift">⏰ Shift</option>
@@ -1655,7 +1370,6 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
-
   <!-- Image Gallery Modal -->
   <div id="imageGalleryModal" class="view-modal">
     <div class="view-modal-content">
@@ -1671,31 +1385,6 @@ Purpose: Blog/memo page with simplified type selection using title field
         <div class="view-modal-thumbnails" id="galleryModalThumbnails"></div>
         <div class="gallery-info">
           <span id="galleryImageCounter"></span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- View Post Modal -->
-  <div id="viewModal" class="view-modal">
-    <div class="view-modal-content">
-      <button class="view-modal-close" onclick="closeViewModal()">×</button>
-      
-      <div class="view-modal-images" id="viewModalImages" style="display:none;">
-        <button class="view-modal-nav prev" onclick="prevImage()">‹</button>
-        <img id="viewModalMainImage" src="" alt="">
-        <button class="view-modal-nav next" onclick="nextImage()">›</button>
-      </div>
-
-      <div class="view-modal-body">
-        <div class="view-modal-thumbnails" id="viewModalThumbnails"></div>
-        <h1 class="view-modal-title" id="viewModalTitle"></h1>
-        <div class="view-modal-date" id="viewModalDate"></div>
-        <p class="view-modal-text" id="viewModalContent"></p>
-        <div class="post-actions">
-          <button class="pin-btn" id="viewModalPinBtn" onclick="togglePinFromView()" title="Pin/Unpin">📌</button>
-          <button class="edit-btn" onclick="editPostFromView()" title="Edit">✏️</button>
-          <button class="delete-btn" onclick="deletePostFromView()" title="Delete">🗑️</button>
         </div>
       </div>
     </div>
@@ -1730,7 +1419,7 @@ Purpose: Blog/memo page with simplified type selection using title field
     </div>
   </div>
 
-  <!-- Custom Confirmation Message -->
+  <!-- Confirmation Message -->
   <div id="confirmationMessage" class="confirmation-message">
     <div class="confirmation-icon" id="confirmationIcon">✅</div>
     <div class="confirmation-title" id="confirmationTitle">Success!</div>
@@ -1741,25 +1430,42 @@ Purpose: Blog/memo page with simplified type selection using title field
   </div>
 
   <script>
-    // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
+    // ⚠️ IMPORTANT: Replace with your Google Apps Script URL
+    const API_URL = 'https://script.google.com/macros/s/AKfycby0Ky6mXn4Rkr12V0YtEsJunHb1UhbQakEvjo5a5Cy2H_HFkUhslz6-r6nbNYRs07CsNw/exec';
 
-    let currentEditingPost = null;
-    let pendingAction = null;
-    let uploadedImages = [];
-    let currentViewingPost = null;
-    let currentImageIndex = 0;
-    let currentGalleryImages = [];
-    let currentGalleryIndex = 0;
+    // Configuration
+    const PAGE_PASSWORD = '4545'; // Page access password
+    const ADMIN_PASSWORD = 'Sandro4545'; // Admin password for CRUD operations
+
+    // State management
     let allPosts = [];
     let currentFilter = 'all';
+    let uploadedImages = [];
+    let currentEditingPost = null;
     let pendingFormData = null;
-
-    // Password Protection
-    const PAGE_PASSWORD = '4545'; // Change this to your desired password
+    let pendingAction = null;
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
     let authTimeout = null;
-    
-    // Check if user is already authenticated
+
+    // Zoom and pan state
+    let currentX = 0;
+    let currentY = 0;
+    let isMousePanning = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchPanning = false;
+    let lastTapTime = 0;
+    let tapCount = 0;
+    let hasMoved = false;
+    const panThreshold = 10;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+    // ==================== Authentication ====================
     function checkAuthentication() {
       const isAuthenticated = localStorage.getItem('memoAuthenticated');
       if (isAuthenticated === 'true') {
@@ -1769,193 +1475,254 @@ Purpose: Blog/memo page with simplified type selection using title field
         startAuthTimeout();
       }
     }
-    
+
     function showPagePasswordModal() {
       document.body.classList.add('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'flex';
       document.getElementById('pagePassword').focus();
     }
-    
+
     function showMainContent() {
       clearAuthTimeout();
       document.body.classList.remove('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'none';
-      document.getElementById('menu-container').style.display = 'block';
-      // Load posts after showing main content with small delay to ensure DOM is ready
-      setTimeout(() => {
-        loadPosts();
-      }, 100);
+      setTimeout(loadPosts, 100);
     }
-    
+
     function startAuthTimeout() {
       clearAuthTimeout();
       authTimeout = setTimeout(() => {
         window.location.href = '/index.html';
-      }, 10000); // 10 seconds
+      }, 10000);
     }
-    
+
     function clearAuthTimeout() {
       if (authTimeout) {
         clearTimeout(authTimeout);
         authTimeout = null;
       }
     }
-    
-    function hidePasswordError() {
-      document.getElementById('passwordError').style.display = 'none';
-    }
-    
+
     function showPasswordError() {
-      document.getElementById('passwordError').style.display = 'flex';
-      setTimeout(hidePasswordError, 3000); // Hide error after 3 seconds
+      const errorEl = document.getElementById('passwordError');
+      errorEl.style.display = 'flex';
+      setTimeout(() => errorEl.style.display = 'none', 3000);
     }
-    
-    // Password form submission
+
+    // Page password form
     document.getElementById('passwordProtectionForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      const password = document.getElementById('pagePassword').value;
       
-      const enteredPassword = document.getElementById('pagePassword').value;
-      
-      if (enteredPassword === PAGE_PASSWORD) {
+      if (password === PAGE_PASSWORD) {
         localStorage.setItem('memoAuthenticated', 'true');
         showMainContent();
       } else {
         showPasswordError();
         document.getElementById('pagePassword').value = '';
         document.getElementById('pagePassword').focus();
-        // Restart timeout after failed attempt
         startAuthTimeout();
       }
     });
-    
-    // Initialize authentication check when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      checkAuthentication();
+
+    // Admin password form
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const password = document.getElementById('popupPassword').value.trim();
+      
+      if (!password) {
+        showConfirmation('⚠️', 'Authentication Required', 'Please enter your password.', 'OK', 'secondary');
+        return;
+      }
+      
+      if (pendingFormData) {
+        await processPostSubmission(password);
+      } else if (pendingAction) {
+        await processPendingAction(password);
+      }
     });
 
-    // Date formatting function
-    function formatDate(dateString) {
-      try {
-        const date = new Date(dateString);
-        
-        // Check if date is valid
-        if (isNaN(date.getTime())) {
-          return dateString; // Return original if invalid
-        }
-        
-        // Format for mobile-friendly display
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        // If same day, show time
-        if (diffDays === 1) {
-          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        }
-        
-        // If within a week, show day and time
-        if (diffDays <= 7) {
-          return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        }
-        
-        // If within a year, show month and day
-        if (date.getFullYear() === now.getFullYear()) {
-          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        }
-        
-        // Otherwise show full date
-        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
-      } catch (error) {
-        return dateString; // Return original if error
-      }
-    }
-
-    // Check if API URL is configured
-    if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-      console.error('Please configure your API_URL');
-    } else {
-      document.getElementById('configNotice').style.display = 'none';
-      // loadPosts() will be called after authentication
-    }
-
+    // ==================== API Functions ====================
     async function loadPosts() {
-      console.log('Loading posts...'); // Debug log
       showLoading('Loading posts...');
       
       try {
-        console.log('Fetching from API:', API_URL); // Debug log
         const response = await fetch(`${API_URL}?action=getPosts`);
-        console.log('Response received:', response.status); // Debug log
         const result = await response.json();
-        console.log('Result:', result); // Debug log
         
         hideLoading();
         
         if (result.success) {
-          displayPosts(result.data);
+          allPosts = result.data;
+          applyCurrentFilter();
         } else {
-          showError('Failed to load posts');
+          showError('Failed to load posts: ' + result.message);
         }
       } catch (error) {
-        console.error('Error loading posts:', error); // Debug log
         hideLoading();
         showError('Error connecting to server: ' + error.message);
       }
     }
 
+    async function processPostSubmission(password) {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      
+      showLoading(pendingFormData.id ? 'Updating post...' : 'Creating post...');
+      
+      try {
+        const data = {
+          action: pendingFormData.id ? 'updatePost' : 'createPost',
+          type: pendingFormData.type,
+          content: pendingFormData.content || null,
+          password: password
+        };
+        
+        if (!pendingFormData.id || uploadedImages.length > 0) {
+          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
+        }
+        
+        if (pendingFormData.id) {
+          data.id = pendingFormData.id;
+        }
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+          closePostPasswordModal();
+          closeModal();
+          loadPosts();
+          showConfirmation('✅', 'Success!', result.message, 'OK', 'success');
+        } else {
+          showConfirmation('❌', 'Error', result.message, 'OK', 'danger');
+        }
+      } catch (error) {
+        hideLoading();
+        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Post';
+        pendingFormData = null;
+      }
+    }
+
+    async function processPendingAction(password) {
+      const actionText = pendingAction.action === 'delete' ? 'Deleting post...' : 'Updating pin status...';
+      showLoading(actionText);
+      
+      try {
+        const data = {
+          password: password,
+          action: pendingAction.action === 'delete' ? 'deletePost' : 'togglePin',
+          id: pendingAction.id
+        };
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+          closePostPasswordModal();
+          loadPosts();
+          
+          const icon = pendingAction.action === 'delete' ? '🗑️' : '📌';
+          const title = pendingAction.action === 'delete' ? 'Post Deleted' : 'Pin Updated';
+          showConfirmation(icon, title, result.message, 'OK', 'success');
+        } else {
+          showConfirmation('❌', 'Error', result.message, 'OK', 'danger');
+        }
+      } catch (error) {
+        hideLoading();
+        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+      } finally {
+        pendingAction = null;
+      }
+    }
+
+    // ==================== Display Functions ====================
     function displayPosts(posts) {
       const container = document.getElementById('postsContainer');
-      allPosts = posts; // Store posts globally
       
       if (posts.length === 0) {
-        container.innerHTML = '<div class="no-posts">No posts yet. Click "Add New Post" to create your first post!</div>';
+        const typeNames = {
+          'memo': 'memos', 'shift': 'shifts', 'tip': 'tips', 'other': 'other posts'
+        };
+        const filterText = currentFilter === 'all' ? 'posts' : typeNames[currentFilter];
+        container.innerHTML = `<div class="no-posts">No ${filterText} yet. Click "Add New Post" to create your first post!</div>`;
         return;
       }
 
-      container.innerHTML = posts.map((post, index) => {
-        const imageCount = post.imageUrls ? post.imageUrls.length : 0;
-        const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
-        const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
-        
-        const typeIcon = {
-          'memo': '📝',
-          'shift': '⏰', 
-          'tip': '💡',
-          'other': '📄'
-        };
-        
-        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
-        const displayContent = post.content || '';
-        
-        return `
+      container.innerHTML = posts.map((post, index) => createPostCard(post, index)).join('');
+    }
+
+    function createPostCard(post, index) {
+      const imageCount = post.imageUrls ? post.imageUrls.length : 0;
+      const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
+      const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
+      
+      const typeIcons = { 'memo': '📝', 'shift': '⏰', 'tip': '💡', 'other': '📄' };
+      const displayTitle = post.title || `${typeIcons[post.type] || '📄'} ${post.type || 'Post'}`;
+      const displayContent = post.content || '';
+      
+      return `
         <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
           ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
           ${imageCount > 0 ? `
-            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
-              ${displayImages.map((url, idx) => {
-                return `<div>
-                  <img src="${url}" alt="${escapeHtml(displayTitle)}" 
-                       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
-                </div>`;
-              }).join('')}
+            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGallery(${index})">
+              ${displayImages.map(url => `
+                <div><img src="${url}" alt="${escapeHtml(displayTitle)}" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
+                </div>
+              `).join('')}
             </div>
           ` : ''}
           <div class="post-content">
-            <div onclick="${imageCount > 0 ? `openImageGalleryFromIndex(${index})` : ''}">
+            <div onclick="${imageCount > 0 ? `openImageGallery(${index})` : ''}">
               <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-              <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
+              <div class="post-date">📅 ${formatDate(post.date)}</div>
               ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
             </div>
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
             <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
-            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
+            <button class="edit-btn" onclick="editPost(${index})" title="Edit">✏️</button>
             <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
           </div>
         </div>
-      `}).join('');
+      `;
     }
 
+    // ==================== Filter Functions ====================
+    function filterPosts(type) {
+      currentFilter = type;
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-filter="${type}"]`).classList.add('active');
+      
+      applyCurrentFilter();
+    }
+
+    function applyCurrentFilter() {
+      const filteredPosts = currentFilter === 'all' 
+        ? allPosts 
+        : allPosts.filter(post => post.type === currentFilter);
+      displayPosts(filteredPosts);
+    }
+
+    // ==================== Modal Functions ====================
     function openNewPostModal() {
       document.getElementById('modalTitle').textContent = 'Add New Post';
       document.getElementById('postForm').reset();
@@ -1966,31 +1733,52 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('postModal').classList.add('active');
     }
 
-    // Drag and drop functionality
+    function editPost(index) {
+      const post = allPosts[index];
+      currentEditingPost = post;
+      
+      document.getElementById('modalTitle').textContent = 'Edit Post';
+      document.getElementById('postId').value = post.id;
+      document.getElementById('postType').value = post.type || 'other';
+      document.getElementById('postContent').value = post.content || '';
+      
+      uploadedImages = [];
+      displayPreviews();
+      
+      document.getElementById('postModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('postModal').classList.remove('active');
+    }
+
+    function showPostPasswordModal() {
+      document.getElementById('passwordModal').classList.add('active');
+      document.getElementById('popupPassword').value = '';
+      document.getElementById('popupPassword').focus();
+    }
+
+    function closePostPasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+      pendingFormData = null;
+    }
+
+    // ==================== Image Functions ====================
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('postImage');
 
     dropZone.addEventListener('click', () => fileInput.click());
-
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropZone.classList.add('drag-over');
     });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('drag-over');
-    });
-
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropZone.classList.remove('drag-over');
-      const files = e.dataTransfer.files;
-      handleFiles(files);
+      handleFiles(e.dataTransfer.files);
     });
-
-    fileInput.addEventListener('change', (e) => {
-      handleFiles(e.target.files);
-    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
     function handleFiles(files) {
       Array.from(files).forEach(file => {
@@ -2020,36 +1808,250 @@ Purpose: Blog/memo page with simplified type selection using title field
       displayPreviews();
     }
 
-    function editPost(post) {
-      currentEditingPost = post;
-      document.getElementById('modalTitle').textContent = 'Edit Post';
-      document.getElementById('postId').value = post.id;
-      document.getElementById('postTitle').value = post.type || 'other';
-      document.getElementById('postContent').value = post.content || '';
+    // ==================== Gallery Functions ====================
+    function openImageGallery(index) {
+      const post = allPosts[index];
+      if (!post.imageUrls || post.imageUrls.length === 0) return;
       
-      // Clear uploaded images array for editing - existing images will be preserved on backend
-      uploadedImages = [];
-      displayPreviews();
+      currentGalleryImages = post.imageUrls;
+      currentGalleryIndex = 0;
       
-      document.getElementById('postModal').classList.add('active');
+      document.getElementById('imageGalleryModal').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      setupGalleryThumbnails();
+      showGalleryImage(0);
+      addImageZoomListeners();
     }
 
-    function closeModal() {
-      document.getElementById('postModal').classList.remove('active');
+    function setupGalleryThumbnails() {
+      const container = document.getElementById('galleryModalThumbnails');
+      if (currentGalleryImages.length > 1) {
+        container.innerHTML = currentGalleryImages.map((url, index) => `
+          <img src="${url}" alt="Thumbnail ${index + 1}" 
+               class="${index === 0 ? 'active' : ''}" 
+               onclick="showGalleryImage(${index})">
+        `).join('');
+      } else {
+        container.innerHTML = '';
+      }
     }
 
-    function showPostPasswordModal() {
-      document.getElementById('passwordModal').classList.add('active');
-      document.getElementById('popupPassword').value = '';
-      document.getElementById('popupPassword').focus();
+    function showGalleryImage(index) {
+      currentGalleryIndex = index;
+      const mainImage = document.getElementById('galleryModalMainImage');
+      mainImage.src = currentGalleryImages[index];
+      
+      mainImage.classList.remove('zoomed');
+      mainImage.style.transform = '';
+      currentX = 0;
+      currentY = 0;
+      
+      document.getElementById('galleryImageCounter').textContent = 
+        `${index + 1} / ${currentGalleryImages.length}`;
+      
+      document.querySelectorAll('#galleryModalThumbnails img').forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+      });
     }
 
-    function closePostPasswordModal() {
-      document.getElementById('passwordModal').classList.remove('active');
-      pendingFormData = null;
+    function prevGalleryImage() {
+      currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
     }
 
-    // Loading and Confirmation Functions
+    function nextGalleryImage() {
+      currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
+    }
+
+    function closeImageGallery() {
+      document.getElementById('imageGalleryModal').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      removeImageZoomListeners();
+    }
+
+    // ==================== Zoom Functions ====================
+    function addImageZoomListeners() {
+      const img = document.getElementById('galleryModalMainImage');
+      img.addEventListener('click', handleImageClick);
+      img.addEventListener('wheel', preventPageZoom, { passive: false });
+      img.addEventListener('touchstart', handleTouchStart, { passive: false });
+      img.addEventListener('touchmove', handleTouchMove, { passive: false });
+      img.addEventListener('touchend', handleTouchEnd, { passive: false });
+      img.addEventListener('mousedown', handleMouseDown);
+      img.addEventListener('mousemove', handleMouseMove);
+      img.addEventListener('mouseup', handleMouseUp);
+      img.addEventListener('mouseleave', handleMouseUp);
+    }
+
+    function removeImageZoomListeners() {
+      const img = document.getElementById('galleryModalMainImage');
+      img.removeEventListener('click', handleImageClick);
+      img.removeEventListener('wheel', preventPageZoom);
+      img.removeEventListener('touchstart', handleTouchStart);
+      img.removeEventListener('touchmove', handleTouchMove);
+      img.removeEventListener('touchend', handleTouchEnd);
+      img.removeEventListener('mousedown', handleMouseDown);
+      img.removeEventListener('mousemove', handleMouseMove);
+      img.removeEventListener('mouseup', handleMouseUp);
+      img.removeEventListener('mouseleave', handleMouseUp);
+    }
+
+    function handleImageClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function handleMouseDown(e) {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        isMousePanning = true;
+        mouseStartX = e.clientX - currentX;
+        mouseStartY = e.clientY - currentY;
+        img.classList.add('panning');
+        e.preventDefault();
+      }
+    }
+
+    function handleMouseMove(e) {
+      if (isMousePanning) {
+        currentX = e.clientX - mouseStartX;
+        currentY = e.clientY - mouseStartY;
+        updateImageTransform();
+        e.preventDefault();
+      }
+    }
+
+    function handleMouseUp() {
+      if (isMousePanning) {
+        isMousePanning = false;
+        document.getElementById('galleryModalMainImage').classList.remove('panning');
+      }
+    }
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 1) {
+        const img = document.getElementById('galleryModalMainImage');
+        if (img.classList.contains('zoomed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          hasMoved = false;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches.length === 1) {
+        const img = document.getElementById('galleryModalMainImage');
+        if (img.classList.contains('zoomed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const deltaX = e.touches[0].clientX - touchStartX;
+          const deltaY = e.touches[0].clientY - touchStartY;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          
+          if (!hasMoved && distance > panThreshold) {
+            hasMoved = true;
+            isTouchPanning = true;
+            img.classList.add('panning');
+          }
+          
+          if (isTouchPanning) {
+            currentX = deltaX;
+            currentY = deltaY;
+            updateImageTransform();
+          }
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (e.touches.length === 0) {
+        if (isTouchPanning) {
+          isTouchPanning = false;
+          document.getElementById('galleryModalMainImage').classList.remove('panning');
+          return;
+        }
+        
+        const currentTime = Date.now();
+        const tapTime = currentTime - lastTapTime;
+        
+        if (tapTime < 500 && tapTime > 0) {
+          tapCount++;
+          if (tapCount === 2) {
+            toggleImageZoom();
+            tapCount = 0;
+          }
+        } else {
+          tapCount = 1;
+        }
+        
+        lastTapTime = currentTime;
+        setTimeout(() => tapCount = 0, 500);
+      }
+    }
+
+    function toggleImageZoom() {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        currentX = 0;
+        currentY = 0;
+      } else {
+        img.classList.add('zoomed');
+        img.style.transform = 'scale(2)';
+        currentX = 0;
+        currentY = 0;
+      }
+    }
+
+    function updateImageTransform() {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        img.style.transform = `scale(2) translate(${currentX}px, ${currentY}px)`;
+      }
+    }
+
+    function preventPageZoom(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // ==================== Form Handlers ====================
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const type = document.getElementById('postType').value.trim();
+      if (!type) {
+        showConfirmation('⚠️', 'Validation Error', 'Please select a post type.', 'OK', 'secondary');
+        return;
+      }
+      
+      pendingFormData = {
+        id: document.getElementById('postId').value,
+        type: type,
+        content: document.getElementById('postContent').value.trim()
+      };
+      
+      showPostPasswordModal();
+    });
+
+    function confirmDelete(id) {
+      pendingAction = { action: 'delete', id: id };
+      showPostPasswordModal();
+    }
+
+    function togglePin(id, currentPinned) {
+      pendingAction = { action: 'togglePin', id: id, currentPinned: currentPinned };
+      showPostPasswordModal();
+    }
+
+    // ==================== UI Helpers ====================
     function showLoading(text = 'Processing...') {
       document.getElementById('loadingText').textContent = text;
       document.getElementById('loadingOverlay').classList.add('active');
@@ -2075,768 +2077,6 @@ Purpose: Blog/memo page with simplified type selection using title field
       document.getElementById('confirmationMessage').classList.remove('active');
     }
 
-    // Handle password form submission
-    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const password = document.getElementById('popupPassword').value.trim();
-      
-      if (!password) {
-        showConfirmation(
-          '⚠️', 
-          'Authentication Required', 
-          'Please enter your password to continue.',
-          'OK',
-          'secondary'
-        );
-        return;
-      }
-      
-      // If we have pending form data, process the post
-      if (pendingFormData) {
-        await processPostSubmission(password);
-      } else if (pendingAction) {
-        await processPendingAction(password);
-      }
-    });
-
-    async function processPostSubmission(password) {
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
-      
-      showLoading(pendingFormData.id ? 'Updating post...' : 'Creating post...');
-      
-      try {
-        const data = {
-          action: pendingFormData.id ? 'updatePost' : 'createPost',
-          type: pendingFormData.type,
-          title: pendingFormData.type, // Send type as title to backend
-          content: pendingFormData.content || null,
-          password: password
-        };
-        
-        // Only send imageData for new posts or when adding new images to existing posts
-        if (!pendingFormData.id || uploadedImages.length > 0) {
-          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
-        }
-        
-        if (pendingFormData.id) {
-          data.id = pendingFormData.id;
-        }
-        
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        hideLoading();
-        
-        if (result.success) {
-          closePostPasswordModal();
-          closeModal();
-          loadPosts();
-          showConfirmation(
-            '✅', 
-            'Success!', 
-            result.message || (pendingFormData.id ? 'Post updated successfully!' : 'Post created successfully!'),
-            'OK',
-            'success'
-          );
-        } else {
-          showConfirmation(
-            '❌', 
-            'Error', 
-            result.message || 'Something went wrong. Please try again.',
-            'OK',
-            'danger'
-          );
-        }
-      } catch (error) {
-        hideLoading();
-        showConfirmation(
-          '❌', 
-          'Error', 
-          'Network error. Please check your connection and try again.',
-          'OK',
-          'danger'
-        );
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Post';
-        pendingFormData = null;
-      }
-    }
-
-    async function processPendingAction(password) {
-      const actionText = pendingAction.action === 'delete' ? 'Deleting post...' : 'Updating pin status...';
-      showLoading(actionText);
-      
-      try {
-        let data = {
-          password: password
-        };
-        
-        if (pendingAction.action === 'delete') {
-          data.action = 'deletePost';
-          data.id = pendingAction.id;
-        } else if (pendingAction.action === 'togglePin') {
-          data.action = 'togglePin';
-          data.id = pendingAction.id;
-          data.pinned = !pendingAction.currentPinned;
-        }
-        
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        hideLoading();
-        
-        if (result.success) {
-          closePostPasswordModal();
-          loadPosts();
-          
-          if (pendingAction.action === 'delete') {
-            showConfirmation(
-              '🗑️', 
-              'Post Deleted', 
-              'The post has been successfully deleted.',
-              'OK',
-              'success'
-            );
-          } else {
-            const pinText = pendingAction.currentPinned ? 'unpinned' : 'pinned';
-            showConfirmation(
-              '📌', 
-              'Pin Updated', 
-              `Post has been ${pinText} successfully.`,
-              'OK',
-              'success'
-            );
-          }
-        } else {
-          showConfirmation(
-            '❌', 
-            'Error', 
-            result.message || 'Something went wrong. Please try again.',
-            'OK',
-            'danger'
-          );
-        }
-      } catch (error) {
-        hideLoading();
-        showConfirmation(
-          '❌', 
-          'Error', 
-          'Network error. Please check your connection and try again.',
-          'OK',
-          'danger'
-        );
-      } finally {
-        pendingAction = null;
-      }
-    }
-
-    // View post in modal
-    function viewPost(post) {
-      currentViewingPost = post;
-      currentImageIndex = 0;
-
-      document.getElementById('viewModalTitle').textContent = post.title;
-      document.getElementById('viewModalDate').textContent = '📅 ' + formatDate(post.date);
-      document.getElementById('viewModalContent').textContent = post.content;
-
-      const pinBtn = document.getElementById('viewModalPinBtn');
-      pinBtn.textContent = '📌';
-      pinBtn.title = post.pinned ? 'Unpin' : 'Pin';
-      pinBtn.className = post.pinned ? 'pin-btn pinned' : 'pin-btn';
-
-      // Display images
-      if (post.imageUrls && post.imageUrls.length > 0) {
-        document.getElementById('viewModalMainImage').src = post.imageUrls[0];
-        document.getElementById('viewModalImages').style.display = 'block';
-
-        // Show/hide navigation buttons
-        const prevBtn = document.querySelector('.view-modal-nav.prev');
-        const nextBtn = document.querySelector('.view-modal-nav.next');
-        if (post.imageUrls.length > 1) {
-          prevBtn.style.display = 'block';
-          nextBtn.style.display = 'block';
-        } else {
-          prevBtn.style.display = 'none';
-          nextBtn.style.display = 'none';
-        }
-
-        // Display thumbnails
-        const thumbnailsContainer = document.getElementById('viewModalThumbnails');
-        if (post.imageUrls.length > 1) {
-          thumbnailsContainer.innerHTML = post.imageUrls.map((url, index) => `
-            <img src="${url}" alt="Thumbnail ${index + 1}" 
-                 class="${index === 0 ? 'active' : ''}" 
-                 onclick="showImage(${index})">
-          `).join('');
-        } else {
-          thumbnailsContainer.innerHTML = '';
-        }
-      } else {
-        document.getElementById('viewModalImages').style.display = 'none';
-        document.getElementById('viewModalThumbnails').innerHTML = '';
-      }
-
-      document.getElementById('viewModal').classList.add('active');
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
-
-    // Open image gallery from card images
-    function openImageGallery(post) {
-      if (!post.imageUrls || post.imageUrls.length === 0) return;
-      
-      currentGalleryImages = post.imageUrls;
-      currentGalleryIndex = 0;
-      
-      // Show the gallery modal
-      document.getElementById('imageGalleryModal').classList.add('active');
-      document.body.classList.add('modal-open'); // Prevent page zoom
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-      
-      // Set up thumbnails
-      const thumbnailsContainer = document.getElementById('galleryModalThumbnails');
-      if (post.imageUrls.length > 1) {
-        thumbnailsContainer.innerHTML = post.imageUrls.map((url, index) => `
-          <img src="${url}" alt="Thumbnail ${index + 1}" 
-               class="${index === 0 ? 'active' : ''}" 
-               onclick="showGalleryImage(${index})">
-        `).join('');
-      } else {
-        thumbnailsContainer.innerHTML = '';
-      }
-      
-      // Display the first image
-      showGalleryImage(0);
-      
-      // Add zoom event listeners
-      addImageZoomListeners();
-    }
-
-    // Index-based functions to avoid JSON.stringify issues
-    function openImageGalleryFromIndex(index) {
-      if (allPosts[index] && allPosts[index].imageUrls && allPosts[index].imageUrls.length > 0) {
-        openImageGallery(allPosts[index]);
-      }
-    }
-
-    function viewPostFromIndex(index) {
-      if (allPosts[index]) {
-        viewPost(allPosts[index]);
-      }
-    }
-
-    function editPostFromIndex(index) {
-      if (allPosts[index]) {
-        editPost(allPosts[index]);
-      }
-    }
-
-    // Filter functions
-    function filterPosts(type) {
-      currentFilter = type;
-      
-      // Update active button
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.querySelector(`[data-filter="${type}"]`).classList.add('active');
-      
-      // Filter and display posts
-      const filteredPosts = type === 'all' ? allPosts : allPosts.filter(post => post.type === type);
-      displayFilteredPosts(filteredPosts);
-    }
-
-    function displayFilteredPosts(posts) {
-      const container = document.getElementById('postsContainer');
-      
-      if (posts.length === 0) {
-        const typeNames = {
-          'memo': 'memos',
-          'shift': 'shifts', 
-          'tip': 'tips',
-          'other': 'other posts'
-        };
-        container.innerHTML = `<div class="no-posts">No ${typeNames[currentFilter] || 'posts'} found. Click "Add New Post" to create your first ${currentFilter}!</div>`;
-        return;
-      }
-
-      container.innerHTML = posts.map((post, index) => {
-        const imageCount = post.imageUrls ? post.imageUrls.length : 0;
-        const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
-        const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
-        
-        const typeIcon = {
-          'memo': '📝',
-          'shift': '⏰', 
-          'tip': '💡',
-          'other': '📄'
-        };
-        
-        const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
-        const displayContent = post.content || '';
-
-        return `
-        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
-          ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
-          ${imageCount > 0 ? `
-            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGalleryFromIndex(${index})">
-              ${displayImages.map((url, idx) => {
-                return `<div>
-                  <img src="${url}" alt="${escapeHtml(displayTitle)}" 
-                       onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Arial%22 font-size=%2214%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
-                </div>`;
-              }).join('')}
-            </div>
-          ` : ''}
-          <div class="post-content">
-            <div onclick="${imageCount > 0 ? `openImageGalleryFromIndex(${index})` : ''}">
-              <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
-              <div class="post-date">📅 ${escapeHtml(formatDate(post.date))}</div>
-              ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
-            </div>
-          </div>
-          <div class="post-actions" onclick="event.stopPropagation()">
-            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
-            <button class="edit-btn" onclick="editPostFromIndex(${index})" title="Edit">✏️</button>
-            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
-          </div>
-        </div>
-      `}).join('');
-    }
-
-    function closeViewModal() {
-      document.getElementById('viewModal').classList.remove('active');
-      document.body.style.overflow = ''; // Restore scrolling
-      currentViewingPost = null;
-    }
-
-    // Gallery functions
-    function closeImageGallery() {
-      document.getElementById('imageGalleryModal').classList.remove('active');
-      document.body.classList.remove('modal-open'); // Restore page zoom
-      document.body.style.overflow = ''; // Restore scrolling
-      document.body.style.position = ''; // Restore position
-      document.body.style.width = ''; // Restore width
-      document.body.style.height = ''; // Restore height
-      currentGalleryImages = [];
-      currentGalleryIndex = 0;
-      
-      // Remove zoom event listeners
-      removeImageZoomListeners();
-    }
-
-    function showGalleryImage(index) {
-      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
-      
-      currentGalleryIndex = index;
-      const imageUrl = currentGalleryImages[index];
-      
-      // Update main image
-      const mainImage = document.getElementById('galleryModalMainImage');
-      mainImage.src = imageUrl;
-      
-      // Reset zoom and panning when changing images
-      mainImage.classList.remove('zoomed');
-      mainImage.style.transform = '';
-      currentX = 0;
-      currentY = 0;
-      
-      // Update counter
-      document.getElementById('galleryImageCounter').textContent = `${index + 1} / ${currentGalleryImages.length}`;
-      
-      // Update thumbnails
-      const thumbnails = document.querySelectorAll('#galleryModalThumbnails img');
-      thumbnails.forEach((thumb, i) => {
-        thumb.classList.toggle('active', i === index);
-      });
-      
-      // Show/hide navigation buttons
-      const prevBtn = document.querySelector('#galleryModalImages .prev');
-      const nextBtn = document.querySelector('#galleryModalImages .next');
-      
-      if (currentGalleryImages.length > 1) {
-        prevBtn.style.display = 'block';
-        nextBtn.style.display = 'block';
-      } else {
-        prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
-      }
-    }
-
-    function prevGalleryImage() {
-      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
-      currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
-      showGalleryImage(currentGalleryIndex);
-    }
-
-    function nextGalleryImage() {
-      if (!currentGalleryImages || currentGalleryImages.length === 0) return;
-      currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
-      showGalleryImage(currentGalleryIndex);
-    }
-
-    // Image zoom functionality
-    function addImageZoomListeners() {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (!mainImage) return;
-      
-      // Click to zoom
-      mainImage.addEventListener('click', handleImageClick);
-      
-      // Prevent default zoom behavior
-      mainImage.addEventListener('wheel', preventPageZoom, { passive: false });
-      
-      // Touch events for mobile
-      mainImage.addEventListener('touchstart', handleTouchStart, { passive: false });
-      mainImage.addEventListener('touchmove', handleTouchMove, { passive: false });
-      mainImage.addEventListener('touchend', handleTouchEnd, { passive: false });
-      
-      // Mouse events for desktop panning
-      mainImage.addEventListener('mousedown', handleMouseDown);
-      mainImage.addEventListener('mousemove', handleMouseMove);
-      mainImage.addEventListener('mouseup', handleMouseUp);
-      mainImage.addEventListener('mouseleave', handleMouseUp);
-    }
-    
-    function removeImageZoomListeners() {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (!mainImage) return;
-      
-      mainImage.removeEventListener('click', handleImageClick);
-      mainImage.removeEventListener('wheel', preventPageZoom);
-      mainImage.removeEventListener('touchstart', handleTouchStart);
-      mainImage.removeEventListener('touchmove', handleTouchMove);
-      mainImage.removeEventListener('touchend', handleTouchEnd);
-      mainImage.removeEventListener('mousedown', handleMouseDown);
-      mainImage.removeEventListener('mousemove', handleMouseMove);
-      mainImage.removeEventListener('mouseup', handleMouseUp);
-      mainImage.removeEventListener('mouseleave', handleMouseUp);
-    }
-    
-    // Panning variables
-    let currentX = 0;
-    let currentY = 0;
-    let isMousePanning = false;
-    let mouseStartX = 0;
-    let mouseStartY = 0;
-    
-    function handleImageClick(event) {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (!mainImage) return;
-      
-      // Prevent single click zoom - now only double-tap works
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    function handleMouseDown(event) {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (mainImage && mainImage.classList.contains('zoomed')) {
-        isMousePanning = true;
-        mouseStartX = event.clientX - currentX;
-        mouseStartY = event.clientY - currentY;
-        mainImage.classList.add('panning');
-        event.preventDefault();
-      }
-    }
-    
-    function handleMouseMove(event) {
-      if (isMousePanning) {
-        currentX = event.clientX - mouseStartX;
-        currentY = event.clientY - mouseStartY;
-        updateImageTransform();
-        event.preventDefault();
-      }
-    }
-    
-    function handleMouseUp(event) {
-      if (isMousePanning) {
-        isMousePanning = false;
-        const mainImage = document.getElementById('galleryModalMainImage');
-        if (mainImage) {
-          mainImage.classList.remove('panning');
-        }
-      }
-    }
-    
-    function updateImageTransform() {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (!mainImage) return;
-      
-      if (mainImage.classList.contains('zoomed')) {
-        // Allow image to move outside boundaries - no clamping
-        mainImage.style.transform = `scale(2) translate(${currentX}px, ${currentY}px)`;
-        mainImage.style.transformOrigin = 'center center';
-      }
-    }
-    
-    function toggleImageZoom() {
-      const mainImage = document.getElementById('galleryModalMainImage');
-      if (!mainImage) return;
-      
-      if (mainImage.classList.contains('zoomed')) {
-        // Unzoom
-        mainImage.classList.remove('zoomed');
-        mainImage.style.transform = '';
-        mainImage.style.transformOrigin = '';
-        currentX = 0;
-        currentY = 0;
-      } else {
-        // Zoom
-        mainImage.classList.add('zoomed');
-        mainImage.style.transform = 'scale(2)';
-        mainImage.style.transformOrigin = 'center center';
-        currentX = 0;
-        currentY = 0;
-      }
-    }
-    
-    function preventPageZoom(event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
-    // Touch handling for mobile zoom prevention and panning
-    let touchStartDistance = 0;
-    let touchStartTime = 0;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isTouchPanning = false;
-    let lastTapTime = 0;
-    let tapCount = 0;
-    let initialDistance = 0;
-    let initialScale = 1;
-    let hasMoved = false;
-    let panThreshold = 10; // Minimum pixels to move before considering it a pan
-    
-    function handleTouchStart(event) {
-      if (event.touches.length === 2) {
-        // Two finger pinch-to-zoom
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const distance = Math.hypot(
-          event.touches[0].clientX - event.touches[1].clientX,
-          event.touches[0].clientY - event.touches[1].clientY
-        );
-        
-        initialDistance = distance;
-        initialScale = document.getElementById('galleryModalMainImage').classList.contains('zoomed') ? 2 : 1;
-        
-        touchStartTime = Date.now();
-      } else if (event.touches.length === 1) {
-        const mainImage = document.getElementById('galleryModalMainImage');
-        if (mainImage && mainImage.classList.contains('zoomed')) {
-          // Always prevent default to stop page scrolling
-          event.preventDefault();
-          event.stopPropagation();
-          
-          // Reset movement tracking
-          hasMoved = false;
-          touchStartX = event.touches[0].clientX;
-          touchStartY = event.touches[0].clientY;
-          // Don't set isTouchPanning yet - wait for movement
-        }
-      }
-    }
-    
-    function handleTouchMove(event) {
-      if (event.touches.length === 2) {
-        // Handle pinch-to-zoom
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const distance = Math.hypot(
-          event.touches[0].clientX - event.touches[1].clientX,
-          event.touches[0].clientY - event.touches[1].clientY
-        );
-        
-        const scale = initialScale * (distance / initialDistance);
-        const mainImage = document.getElementById('galleryModalMainImage');
-        
-        if (scale >= 1.5) {
-          // Zoom in
-          if (!mainImage.classList.contains('zoomed')) {
-            mainImage.classList.add('zoomed');
-            mainImage.style.transform = 'scale(2)';
-            currentX = 0;
-            currentY = 0;
-          }
-        } else if (scale <= 1.2) {
-          // Zoom out
-          if (mainImage.classList.contains('zoomed')) {
-            mainImage.classList.remove('zoomed');
-            mainImage.style.transform = '';
-            currentX = 0;
-            currentY = 0;
-          }
-        }
-      } else if (event.touches.length === 1) {
-        const mainImage = document.getElementById('galleryModalMainImage');
-        if (mainImage && mainImage.classList.contains('zoomed')) {
-          // Always prevent default to stop page scrolling when image is zoomed
-          event.preventDefault();
-          event.stopPropagation();
-          
-          const deltaX = event.touches[0].clientX - touchStartX;
-          const deltaY = event.touches[0].clientY - touchStartY;
-          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-          
-          // If we've moved enough, start panning
-          if (!hasMoved && distance > panThreshold) {
-            hasMoved = true;
-            isTouchPanning = true;
-            mainImage.classList.add('panning');
-          }
-          
-          // If we're panning, update position
-          if (isTouchPanning) {
-            currentX = deltaX;
-            currentY = deltaY;
-            updateImageTransform();
-          }
-        }
-      }
-    }
-    
-    function handleTouchEnd(event) {
-      if (event.touches.length === 0 && event.changedTouches.length === 1) {
-        // Always stop panning when touch ends
-        if (isTouchPanning) {
-          isTouchPanning = false;
-          const mainImage = document.getElementById('galleryModalMainImage');
-          if (mainImage) {
-            mainImage.classList.remove('panning');
-          }
-          // Don't check for double tap if we were panning
-          return;
-        }
-        
-        // Only check for double tap if we weren't panning
-        const currentTime = Date.now();
-        const tapTime = currentTime - lastTapTime;
-        
-        if (tapTime < 500 && tapTime > 0) {
-          // Double tap detected
-          tapCount++;
-          if (tapCount === 2) {
-            toggleImageZoom();
-            tapCount = 0;
-          }
-        } else {
-          tapCount = 1;
-        }
-        
-        lastTapTime = currentTime;
-        
-        // Reset tap count after delay
-        setTimeout(() => {
-          tapCount = 0;
-        }, 500);
-      }
-    }
-
-    function showImage(index) {
-      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
-      
-      currentImageIndex = index;
-      document.getElementById('viewModalMainImage').src = currentViewingPost.imageUrls[index];
-      
-      // Update thumbnail active state
-      const thumbnails = document.querySelectorAll('#viewModalThumbnails img');
-      thumbnails.forEach((thumb, i) => {
-        thumb.classList.toggle('active', i === index);
-      });
-    }
-
-    function prevImage() {
-      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
-      currentImageIndex = (currentImageIndex - 1 + currentViewingPost.imageUrls.length) % currentViewingPost.imageUrls.length;
-      showImage(currentImageIndex);
-    }
-
-    function nextImage() {
-      if (!currentViewingPost || !currentViewingPost.imageUrls) return;
-      currentImageIndex = (currentImageIndex + 1) % currentViewingPost.imageUrls.length;
-      showImage(currentImageIndex);
-    }
-
-    function togglePinFromView() {
-      if (currentViewingPost) {
-        closeViewModal();
-        togglePin(currentViewingPost.id, currentViewingPost.pinned);
-      }
-    }
-
-    function editPostFromView() {
-      closeViewModal();
-      if (currentViewingPost) {
-        editPost(currentViewingPost);
-      }
-    }
-
-    function deletePostFromView() {
-      closeViewModal();
-      if (currentViewingPost) {
-        confirmDelete(currentViewingPost.id);
-      }
-    }
-
-    document.getElementById('postForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const id = document.getElementById('postId').value;
-      const type = document.getElementById('postTitle').value.trim();
-      const content = document.getElementById('postContent').value.trim();
-      
-      if (!type) {
-        showConfirmation(
-          '⚠️', 
-          'Validation Error', 
-          'Please select a post type before submitting.',
-          'OK',
-          'secondary'
-        );
-        return;
-      }
-      
-      // Store form data for later use
-      pendingFormData = {
-        id: id,
-        type: type,
-        content: content
-      };
-      
-      // Show password popup
-      showPostPasswordModal();
-    });
-
-    function confirmDelete(id) {
-      pendingAction = { action: 'delete', id: id };
-      showPostPasswordModal();
-    }
-
-    function togglePin(id, currentPinned) {
-      pendingAction = { action: 'togglePin', id: id, currentPinned: currentPinned };
-      showPostPasswordModal();
-    }
-
-
-
     function showError(message) {
       const container = document.getElementById('postsContainer');
       container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
@@ -2848,244 +2088,86 @@ Purpose: Blog/memo page with simplified type selection using title field
       return div.innerHTML;
     }
 
-    // Keyboard navigation for image gallery
+    function formatDate(dateString) {
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        if (diffDays <= 7) {
+          return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + 
+                 date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        if (date.getFullYear() === now.getFullYear()) {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+        
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch (error) {
+        return dateString;
+      }
+    }
+
+    // ==================== Keyboard Navigation ====================
     document.addEventListener('keydown', (e) => {
-      const viewModal = document.getElementById('viewModal');
       const galleryModal = document.getElementById('imageGalleryModal');
       
-      if (viewModal.classList.contains('active')) {
-        if (e.key === 'ArrowLeft') {
-          prevImage();
-        } else if (e.key === 'ArrowRight') {
-          nextImage();
-        } else if (e.key === 'Escape') {
-          closeViewModal();
-        }
-      } else if (galleryModal.classList.contains('active')) {
-        if (e.key === 'ArrowLeft') {
-          prevGalleryImage();
-        } else if (e.key === 'ArrowRight') {
-          nextGalleryImage();
-        } else if (e.key === 'Escape') {
-          closeImageGallery();
-        }
+      if (galleryModal.classList.contains('active')) {
+        if (e.key === 'ArrowLeft') prevGalleryImage();
+        else if (e.key === 'ArrowRight') nextGalleryImage();
+        else if (e.key === 'Escape') closeImageGallery();
       }
     });
 
-    // Close modal when clicking outside
-    document.getElementById('viewModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeViewModal();
-      }
-    });
-
+    // Close modal on outside click
     document.getElementById('imageGalleryModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeImageGallery();
-      }
+      if (e.target === this) closeImageGallery();
     });
 
-    // Touch swipe for mobile
-    let swipeTouchStartX = 0;
-    let swipeTouchEndX = 0;
-
-    document.getElementById('viewModalImages').addEventListener('touchstart', (e) => {
-      swipeTouchStartX = e.changedTouches[0].screenX;
+    document.getElementById('postModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
     });
 
-    document.getElementById('viewModalImages').addEventListener('touchend', (e) => {
-      swipeTouchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
+    document.getElementById('passwordModal').addEventListener('click', function(e) {
+      if (e.target === this) closePostPasswordModal();
     });
+
+    // Touch swipe for gallery navigation
+    let swipeStartX = 0;
+    let swipeEndX = 0;
 
     document.getElementById('galleryModalImages').addEventListener('touchstart', (e) => {
-      swipeTouchStartX = e.changedTouches[0].screenX;
+      const img = document.getElementById('galleryModalMainImage');
+      if (!img.classList.contains('zoomed')) {
+        swipeStartX = e.changedTouches[0].screenX;
+      }
     });
 
     document.getElementById('galleryModalImages').addEventListener('touchend', (e) => {
-      swipeTouchEndX = e.changedTouches[0].screenX;
-      handleGallerySwipe();
+      const img = document.getElementById('galleryModalMainImage');
+      if (!img.classList.contains('zoomed')) {
+        swipeEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }
     });
 
     function handleSwipe() {
-      if (swipeTouchEndX < swipeTouchStartX - 50) {
-        nextImage(); // Swipe left
+      const swipeThreshold = 50;
+      if (swipeEndX < swipeStartX - swipeThreshold) {
+        nextGalleryImage();
       }
-      if (swipeTouchEndX > swipeTouchStartX + 50) {
-        prevImage(); // Swipe right
-      }
-    }
-
-    function handleGallerySwipe() {
-      if (swipeTouchEndX < swipeTouchStartX - 50) {
-        nextGalleryImage(); // Swipe left
-      }
-      if (swipeTouchEndX > swipeTouchStartX + 50) {
-        prevGalleryImage(); // Swipe right
+      if (swipeEndX > swipeStartX + swipeThreshold) {
+        prevGalleryImage();
       }
     }
   </script>
-
-  <!--
-  CHANGELOG
-  [2025-01-12] v1.10.3 – Added 10-second timeout redirect to main page if user doesn't authenticate.
-  Reason: User requested automatic redirect to main page after 10 seconds if authentication is not completed.
-  Impact: Users who don't authenticate within 10 seconds will be automatically redirected to index.html, improving security and user experience.
-  Model: GPT-5
-  [2025-01-12] v1.10.2 – Fixed password authentication to use localStorage instead of sessionStorage.
-  Reason: User reported that password was always being asked at login - authentication should persist across browser sessions.
-  Impact: Authentication now persists using localStorage, so users won't need to re-enter password every time they visit the page.
-  Model: GPT-5
-  [2025-01-12] v1.11.0 – Complete modern styling overhaul with glassmorphism and contemporary design.
-  Reason: User requested to upgrade all styles to make the page look modern.
-  Impact: Implemented modern design system with glassmorphism effects, improved typography, enhanced animations, better color palette, and contemporary UI patterns throughout the application.
-  Model: GPT-5
-  [2025-01-12] v1.10.10 – Fixed white gaps at top and bottom when scrolling on iPhone.
-  Reason: User reported white gaps appearing at top and bottom when scrolling on iPhone Safari.
-  Impact: Added proper viewport meta tag with viewport-fit=cover, fixed background attachment, and iOS-specific CSS to prevent white gaps during scrolling.
-  Model: GPT-5
-  [2025-01-12] v1.10.9 – Added automatic dark theme support based on device preference.
-  Reason: User requested dark theme support like in index.html that automatically changes based on device theme preference.
-  Impact: Added CSS variables for light/dark themes with @media (prefers-color-scheme: dark) to automatically switch themes based on device settings.
-  Model: GPT-5
-  [2025-01-12] v1.10.8 – Fixed background page scrolling while viewing pictures in gallery modal.
-  Reason: User reported that background page was still scrolling while viewing pictures in the gallery modal.
-  Impact: Added stronger scroll prevention by setting body position to fixed and using !important CSS rules to completely prevent background scrolling when gallery is open.
-  Model: GPT-5
-  [2025-01-12] v1.10.7 – Fixed authorization modal cancel button functionality.
-  Reason: User reported that the cancel button in the authorization modal was not working.
-  Impact: Fixed function name mismatch - cancel button now properly calls closePostPasswordModal() instead of non-existent closePasswordModal().
-  Model: GPT-5
-  [2025-01-12] v1.10.6 – Fixed page scrolling during image panning and allowed image to move outside boundaries.
-  Reason: User reported that whole page was moving during image panning and wanted image to be able to move outside borders without zooming out unless double-tapped.
-  Impact: Prevented page scrolling during image panning, allowed image to move freely outside container boundaries when zoomed, and ensured zoom out only happens on double-tap.
-  Model: GPT-5
-  [2025-01-12] v1.10.5 – Fixed zoom out issue when finishing pan gesture with improved movement detection.
-  [2025-01-12] v1.10.4 – Fixed zoom out issue when finishing pan gesture.
-  Reason: User reported that removing finger after panning was triggering zoom out instead of just stopping pan.
-  Impact: Double-tap zoom now only triggers on actual double-taps, not when finishing pan gestures.
-  Model: GPT-5
-  [2025-01-12] v1.10.3 – Updated zoom controls to use double-tap and pinch-to-zoom.
-  Reason: User requested double-tap instead of single-click for zoom and added two-finger pinch-to-zoom functionality.
-  Impact: Images now zoom with double-tap on mobile and pinch gestures, providing more intuitive touch controls.
-  Model: GPT-5
-  [2025-01-12] v1.10.2 – Fixed JavaScript variable redeclaration error.
-  Reason: User reported "Cannot redeclare block-scoped variable 'touchStartX'" error on line 2318.
-  Impact: Renamed touch swipe variables to avoid conflict with touch panning variables, eliminating JavaScript error.
-  Model: GPT-5
-  [2025-01-12] v1.6.1 – Simplified form by using title field as type selection.
-  Reason: Streamline user interface - title field now serves as type selector instead of separate field.
-  Impact: Cleaner form design with type selection integrated into title field, reducing form complexity.
-  Model: GPT-5
-  [2025-01-12] v1.6.0 – Added post type filtering system and made title/content optional.
-  Reason: Implement post categorization with memo/shift/tip/other types and filtering functionality.
-  Impact: Users can now categorize posts and filter by type, with optional title/content for flexibility.
-  Model: GPT-5
-  [2025-01-12] v1.5.5 – Added proper spacing/gap between content and bottom navigation menu.
-  Reason: Prevent content from being hidden behind fixed bottom menu - ensure proper spacing on all devices.
-  Impact: Content is now properly visible and accessible on all screen sizes with adequate spacing from menu.
-  Model: GPT-5
-  [2025-01-12] v1.5.4 – Updated action buttons to show only icons with tooltips.
-  Reason: Cleaner UI design - buttons now display only icons with hover tooltips for better space usage.
-  Impact: More compact button design while maintaining usability through tooltips.
-  Model: GPT-5
-  [2025-01-12] v1.5.3 – Updated image gallery to fullscreen mode for maximum image display.
-  Reason: Improve image viewing experience - gallery now opens in fullscreen with black background.
-  Impact: Users can now see images at maximum size with better contrast and viewing experience.
-  Model: GPT-5
-  [2025-01-12] v1.5.2 – Fixed JavaScript syntax error when opening posts.
-  Reason: Replaced JSON.stringify in HTML templates with index-based approach to avoid syntax errors.
-  Impact: Posts can now be opened without JavaScript syntax errors.
-  Model: GPT-5
-  [2025-01-12] v1.5.1 – Fixed image sizing in posts to fit container height.
-  Reason: Improve image display in post cards - images now properly fill their containers.
-  Impact: Better visual consistency and image display in post cards.
-  Model: GPT-5
-  [2025-01-12] v1.5.0 – Added dedicated image gallery modal with navigation.
-  Reason: Fix image viewing functionality - clicking post images now opens dedicated gallery.
-  Impact: Users can now view full-size images with proper navigation between multiple images.
-  Model: GPT-5
-  [2025-01-12] v1.6.2 – Fixed image handling error when editing posts with existing images.
-  Reason: Prevent "Could not decode string" error by properly handling existing images during edit.
-  Impact: Users can now edit posts with existing images without encountering decode errors.
-  Model: GPT-5
-  [2025-01-12] v1.7.0 – Replaced password field with popup authentication modal.
-  Reason: Improve UX by removing password field from form and showing popup with prefilled username "admin".
-  Impact: Cleaner form interface with password prompt appearing only when needed for authentication.
-  Model: GPT-5
-  [2025-01-12] v1.7.1 – Fixed JavaScript errors in editPost function and removed duplicate password modal.
-  Reason: Remove references to non-existent adminPassword element and duplicate password modal HTML.
-  Impact: Edit functionality now works without JavaScript errors and password popup functions correctly.
-  Model: GPT-5
-  [2025-01-12] v1.7.2 – Fixed post card layout to ensure action buttons are always at bottom.
-  Reason: Small images on large screens caused action buttons to float in middle instead of bottom.
-  Impact: Action buttons now consistently appear at bottom of post cards regardless of image size.
-  Model: GPT-5
-  [2025-01-12] v1.8.0 – Added loading animations and custom confirmation messages.
-  Reason: Replace browser alerts with professional loading states and custom confirmation dialogs.
-  Impact: Better user experience with visual feedback during operations and polished confirmation messages.
-  Model: GPT-5
-  [2025-01-12] v1.8.1 – Fixed date formatting for mobile devices.
-  Reason: Dates were showing in ISO format (2025-10-18T02:57:25.000Z) instead of user-friendly format.
-  Impact: Dates now display in mobile-friendly format (time for today, day+time for this week, etc.).
-  Model: GPT-5
-  [2025-01-12] v1.8.2 – Updated date formatting to use 24-hour format.
-  Reason: User requested 24-hour time format instead of 12-hour AM/PM format.
-  Impact: Time displays now show in 24-hour format (e.g., "14:57" instead of "2:57 PM").
-  Model: GPT-5
-  [2025-01-12] v1.8.3 – Replaced loading spinner with animated text loader.
-  Reason: User requested custom text-based loading animation instead of circular spinner.
-  Impact: Loading animation now shows animated "LOADING" text with progressive fill effect.
-  Model: GPT-5
-  [2025-01-12] v1.9.0 – Redesigned post appearance with full-image overlay layout.
-  Reason: User requested images to fill entire post area with content as overlay at bottom.
-  Impact: Posts now have full-image background with title, date, text, and actions overlaid in one line at bottom.
-  Model: GPT-5
-  [2025-01-12] v1.9.1 – Made posts fit image size and increased overlay transparency.
-  Reason: User requested posts to fit image dimensions and more transparent overlay for better image visibility.
-  Impact: Post cards now auto-size to image height and overlay is more transparent (40% opacity vs 80%).
-  Model: GPT-5
-  [2025-01-12] v1.9.2 – Simplified image display to show only 1 or 2 images maximum.
-  Reason: User requested to show only one image when there's one, and only two images when there are multiple.
-  Impact: Single images display in full width, multiple images display in 2-column grid, removed "+X more" overlay.
-  Model: GPT-5
-  [2025-01-12] v1.9.3 – Added maximum height limit for large images.
-  Reason: User requested to limit image height to 50% of viewport height for very large images.
-  Impact: Images now have max-height: 50vh to prevent extremely tall images while maintaining aspect ratio.
-  Model: GPT-5
-  [2025-01-12] v1.9.4 – Fixed filtering logic to use new 1-2 image display.
-  Reason: User reported that post type filtering was showing all images instead of new 1-2 image logic.
-  Impact: displayFilteredPosts function now uses same logic as displayPosts for consistent image display.
-  Model: GPT-5
-  [2025-01-12] v1.9.5 – Moved type/title to top and made buttons more transparent.
-  Reason: User requested to move type/title to top of post and make action buttons more transparent.
-  Impact: Title/date now at top with dark gradient, buttons at bottom with increased transparency (5% opacity).
-  Model: GPT-5
-  [2025-01-12] v1.9.6 – Added password protection to page access.
-  Reason: User requested password protection similar to statistics.html for page security.
-  Impact: Page now requires password authentication before showing content, with session-based persistence.
-  Model: GPT-5
-  [2025-01-12] v1.9.7 – Fixed posts not loading after authentication.
-  Reason: User reported posts weren't loading after password authentication.
-  Impact: Added proper loadPosts() call in showMainContent() with DOM ready delay and debug logging.
-  Model: GPT-5
-  [2025-01-12] v1.9.8 – Fixed password modal conflict between page and post authentication.
-  Reason: User reported password modal showing twice - page password and post password were conflicting.
-  Impact: Renamed functions to distinguish between page authentication and post action authentication.
-  Model: GPT-5
-  [2025-01-12] v1.9.9 – Changed post click behavior to open image gallery instead of post details.
-  Reason: User requested that clicking on posts should open image gallery like clicking on first image.
-  Impact: Post content clicks now open image gallery directly, bypassing post details modal with edit/delete buttons.
-  Model: GPT-5
-  [2025-01-12] v1.10.0 – Added image zoom functionality and prevented page zoom in gallery modal.
-  Reason: User requested that when modal is open, page zoom should be prevented and only image should zoom.
-  Impact: Added click-to-zoom for images, prevented page zoom with CSS and JavaScript, added touch gesture support for mobile.
-  Model: GPT-5
-  [2025-01-12] v1.10.1 – Added image panning when zoomed to prevent image switching.
-  Reason: User requested that when image is zoomed, clicking should move/pan the image instead of switching to next image.
-  Impact: Added mouse and touch panning functionality, changed cursor to grab/grabbing, prevented image switching when zoomed.
-  Model: GPT-5
-  -->
 </body>
-</html>
 </html>
