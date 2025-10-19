@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>My Staff</title>
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Modern Light Theme */
+      --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --bg-secondary: rgba(255, 255, 255, 0.95);
+      --bg-glass: rgba(255, 255, 255, 0.1);
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b7280;
+      --text-white: #ffffff;
+      --text-muted: #9ca3af;
+      --border-color: rgba(255, 255, 255, 0.2);
+      --border-light: rgba(0, 0, 0, 0.1);
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+      --overlay-bg: rgba(0, 0, 0, 0.8);
+      --modal-bg: rgba(255, 255, 255, 0.95);
+      --button-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --button-secondary: rgba(255, 255, 255, 0.2);
+      --button-hover: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      --filter-bg: rgba(255, 255, 255, 0.15);
+      --filter-border: rgba(255, 255, 255, 0.3);
+      --filter-active-bg: rgba(255, 255, 255, 0.25);
+      --filter-active-text: #667eea;
+      --post-gradient: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+      --post-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
+      --post-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --post-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      --pin-bg: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      --pin-text: #1f2937;
+      --error-bg: rgba(254, 226, 226, 0.8);
+      --error-border: rgba(252, 165, 165, 0.5);
+      --error-text: #dc2626;
+      --success-bg: rgba(220, 252, 231, 0.8);
+      --success-border: rgba(134, 239, 172, 0.5);
+      --success-text: #059669;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --blur-sm: blur(4px);
+      --blur-md: blur(8px);
+      --blur-lg: blur(16px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        --bg-secondary: rgba(30, 30, 46, 0.95);
+        --bg-glass: rgba(255, 255, 255, 0.05);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-white: #ffffff;
+        --text-muted: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-light: rgba(255, 255, 255, 0.1);
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        --shadow-glow: 0 0 20px rgba(66, 153, 225, 0.3);
+        --overlay-bg: rgba(0, 0, 0, 0.9);
+        --modal-bg: rgba(30, 30, 46, 0.95);
+        --button-primary: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        --button-secondary: rgba(255, 255, 255, 0.1);
+        --button-hover: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+        --filter-bg: rgba(255, 255, 255, 0.08);
+        --filter-border: rgba(255, 255, 255, 0.15);
+        --filter-active-bg: rgba(255, 255, 255, 0.15);
+        --filter-active-text: #4299e1;
+        --post-gradient: linear-gradient(135deg, rgba(45, 55, 72, 0.9) 0%, rgba(74, 85, 104, 0.9) 100%);
+        --post-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%);
+        --post-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        --post-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        --pin-bg: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        --pin-text: #1a202c;
+        --error-bg: rgba(254, 215, 215, 0.8);
+        --error-border: rgba(252, 178, 178, 0.5);
+        --error-text: #e53e3e;
+        --success-bg: rgba(198, 246, 213, 0.8);
+        --success-border: rgba(154, 230, 180, 0.5);
+        --success-text: #38a169;
+      }
+    }
+
+    html {
+      height: 100%;
+      background: var(--bg-primary);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: 24px;
+      padding-bottom: 120px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body.password-protected .container {
+      display: none;
+    }
+
+    body.modal-open {
+      overflow: hidden !important;
+      position: fixed !important;
+      width: 100% !important;
+      height: 100% !important;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto 20px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      color: var(--text-white);
+      margin-bottom: 48px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      margin-bottom: 16px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      opacity: 0.9;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    /* Buttons */
+    .add-post-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin: 24px 0;
+      backdrop-filter: var(--blur-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-post-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .add-post-btn:hover::before {
+      left: 100%;
+    }
+
+    .add-post-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--button-primary);
+    }
+
+    .add-post-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Filter Buttons */
+    .filter-buttons {
+      display: flex;
+      gap: 12px;
+      margin: 32px 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--filter-bg);
+      color: var(--text-white);
+      border: 1px solid var(--filter-border);
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: var(--blur-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .filter-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--filter-active-bg);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .filter-btn:hover::before {
+      opacity: 1;
+    }
+
+    .filter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .filter-btn.active {
+      background: var(--filter-active-bg);
+      color: var(--filter-active-text);
+      border-color: var(--filter-active-bg);
+      font-weight: 600;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .filter-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Posts Grid */
+    .posts-grid {
+      display: grid;
+      gap: 30px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .posts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .container {
+        max-width: 1400px;
+      }
+    }
+
+    /* Post Cards */
+    .post-card {
+      background: var(--post-gradient);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--post-shadow);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .post-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .post-card:hover::before {
+      opacity: 1;
+    }
+
+    .post-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--post-hover-shadow);
+    }
+
+    .post-card:active {
+      transform: translateY(-4px) scale(1.01);
+    }
+
+    .post-card.pinned {
+      border: 2px solid var(--pin-bg);
+      box-shadow: var(--post-shadow), 0 0 0 1px var(--pin-bg);
+    }
+
+    .post-card.pinned::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: var(--pin-bg);
+      border-radius: var(--radius-lg);
+      z-index: -1;
+      opacity: 0.1;
+    }
+
+    .pin-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--pin-bg);
+      color: var(--pin-text);
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 13px;
+      z-index: 10;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: var(--blur-sm);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .post-images-grid {
+      display: grid;
+      gap: 5px;
+      width: 100%;
+      background: #f0f0f0;
+      position: relative;
+    }
+
+    .post-images-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .post-images-grid.multiple {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .post-images-grid img {
+      width: 100%;
+      height: auto;
+      max-height: 50vh;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .post-images-grid img:hover {
+      opacity: 0.9;
+    }
+
+    .post-images-grid.single img {
+      grid-column: 1 / -1;
+      height: 100%;
+    }
+
+    .post-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      z-index: 5;
+    }
+
+    .post-title {
+      font-size: clamp(1.25rem, 4vw, 1.5rem);
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .post-date {
+      color: var(--text-white);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      opacity: 0.9;
+    }
+
+    .post-text {
+      color: var(--text-white);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      font-size: 0.875rem;
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 6;
+    }
+
+    .post-actions button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: var(--blur-md);
+      color: var(--text-white);
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .post-actions button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .post-actions button:hover::before {
+      opacity: 1;
+    }
+
+    .post-actions button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .post-actions button:active {
+      transform: translateY(0);
+    }
+
+    .pin-btn {
+      background: rgba(251, 191, 36, 0.2) !important;
+      color: var(--pin-text) !important;
+      border-color: rgba(251, 191, 36, 0.3) !important;
+    }
+
+    .pin-btn.pinned {
+      background: rgba(251, 191, 36, 0.3) !important;
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5) !important;
+    }
+
+    .edit-btn {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: rgba(34, 197, 94, 0.3) !important;
+    }
+
+    .delete-btn {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
+    }
+
+    /* Modals */
+    .modal, .view-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--overlay-bg);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active, .view-modal.active {
+      display: flex;
+    }
+
+    .modal-content, .view-modal-content {
+      background: var(--modal-bg);
+      padding: 32px;
+      border-radius: var(--radius-xl);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: var(--blur-lg);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .modal-content::before, .view-modal-content::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: var(--radius-xl);
+      pointer-events: none;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 24px;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      letter-spacing: 0.01em;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      backdrop-filter: var(--blur-sm);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--button-primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .btn-group, .form-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 16px 24px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--button-primary);
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      background: var(--button-hover);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .btn-secondary {
+      background: var(--button-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: var(--blur-md);
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 3px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: var(--bg-secondary);
+    }
+
+    .drop-zone:hover {
+      border-color: var(--button-primary);
+      background: var(--filter-bg);
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--button-primary);
+      background: var(--filter-active-bg);
+      transform: scale(1.02);
+    }
+
+    .drop-zone-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .drop-zone-text {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .preview-item {
+      position: relative;
+      display: inline-block;
+    }
+
+    .image-preview {
+      max-width: 150px;
+      max-height: 150px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      display: block;
+    }
+
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .remove-image:hover {
+      background: #d32f2f;
+    }
+
+    /* Gallery Modal */
+    #imageGalleryModal .view-modal-content {
+      background: #000;
+      border-radius: 0;
+      max-width: 100vw;
+      width: 100vw;
+      max-height: 100vh;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #imageGalleryModal .view-modal-images {
+      flex: 1;
+      height: calc(100vh - 120px);
+      border-radius: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view-modal-images {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background: #000;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+
+    .view-modal-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #imageGalleryModal .view-modal-images img {
+      cursor: zoom-in;
+      transition: transform 0.3s ease;
+    }
+
+    #imageGalleryModal .view-modal-images img.zoomed {
+      cursor: grab;
+      transform: scale(2);
+      transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    #imageGalleryModal .view-modal-images img.zoomed:active {
+      cursor: grabbing;
+    }
+
+    #imageGalleryModal .view-modal-images img.panning {
+      transition: none;
+    }
+
+    .view-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 10;
+      line-height: 1;
+    }
+
+    .view-modal-close:hover {
+      background: rgba(0,0,0,0.9);
+    }
+
+    #imageGalleryModal .view-modal-close {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    #imageGalleryModal .view-modal-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .view-modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .view-modal-nav:hover {
+      background: rgba(0,0,0,0.8);
+    }
+
+    .view-modal-nav.prev {
+      left: 10px;
+    }
+
+    .view-modal-nav.next {
+      right: 10px;
+    }
+
+    #imageGalleryModal .view-modal-nav {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    #imageGalleryModal .view-modal-nav:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .view-modal-body {
+      padding: 20px;
+      background: rgba(0,0,0,0.8);
+      border-radius: 0;
+    }
+
+    #imageGalleryModal .view-modal-body {
+      background: rgba(0,0,0,0.8);
+      padding: 10px 20px;
+    }
+
+    .view-modal-thumbnails {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .view-modal-thumbnails img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+    }
+
+    .view-modal-thumbnails img:hover,
+    .view-modal-thumbnails img.active {
+      opacity: 1;
+      border: 2px solid var(--button-primary);
+    }
+
+    .gallery-info {
+      text-align: center;
+      margin-top: 15px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    #imageGalleryModal .gallery-info {
+      color: white;
+    }
+
+    #galleryImageCounter {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: 500;
+    }
+
+    #imageGalleryModal #galleryImageCounter {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* Password Protection Modal */
+    .password-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    }
+
+    .password-modal-content {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .password-header h2 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.8em;
+    }
+
+    .password-header p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1em;
+    }
+
+    .password-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .password-form input {
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .password-form input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .password-form button {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .password-form button:hover {
+      transform: translateY(-2px);
+    }
+
+    .password-error {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      color: #c33;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .error-icon {
+      font-size: 1.2em;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loader {
+      width: fit-content;
+      font-size: 40px;
+      font-family: monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #0000;
+      -webkit-text-stroke: 1px #fff;
+      --g:conic-gradient(#fff 0 0) no-repeat text;
+      background:var(--g) 0,var(--g) 1ch,var(--g) 2ch,var(--g) 3ch,var(--g) 4ch,var(--g) 5ch,var(--g) 6ch;
+      background-position-y: 100%;
+      animation: l19 1.5s linear infinite alternate;
+    }
+
+    .loader:before {
+      content: "Loading";
+    }
+
+    @keyframes l19 {
+      0%  {background-size: 1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+      25% {background-size: 1ch 100%,1ch 50% ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 50% ,1ch 100%}
+      50% {background-size: 1ch 100%,1ch 100%,1ch 50% ,1ch 0   ,1ch 50% ,1ch 100%,1ch 100%}
+      75% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 50% ,1ch 100%,1ch 100%,1ch 100%}
+      to  {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%}
+    }
+
+    .loading-text {
+      color: white;
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* Confirmation Message */
+    .confirmation-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .confirmation-message.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .confirmation-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .confirmation-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .confirmation-text {
+      color: #666;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+
+    .confirmation-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .confirmation-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 100px;
+    }
+
+    .confirmation-btn.primary {
+      background: #007bff;
+      color: white;
+    }
+
+    .confirmation-btn.primary:hover {
+      background: #0056b3;
+    }
+
+    .confirmation-btn.secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .confirmation-btn.secondary:hover {
+      background: #5a6268;
+    }
+
+    .confirmation-btn.success {
+      background: #28a745;
+      color: white;
+    }
+
+    .confirmation-btn.success:hover {
+      background: #218838;
+    }
+
+    .confirmation-btn.danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .confirmation-btn.danger:hover {
+      background: #c82333;
+    }
+
+    /* Utility Classes */
+    .loading {
+      text-align: center;
+      color: var(--text-white);
+      font-size: 1.5em;
+      padding: 50px;
+    }
+
+    .no-posts {
+      text-align: center;
+      color: var(--text-white);
+      font-size: 1.2em;
+      padding: 50px;
+      background: var(--filter-bg);
+      border-radius: 15px;
+    }
+
+    .error {
+      background: var(--error-bg);
+      color: var(--error-text);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+      border: 1px solid var(--error-border);
+    }
+
+    /* Mobile Optimizations */
+    @media screen and (max-width: 768px) {
+      html, body {
+        background: var(--bg-primary);
+        background-attachment: fixed;
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+      
+      body {
+        padding-bottom: 120px;
+        position: relative;
+      }
+      
+      .container {
+        margin-bottom: 30px;
+      }
+
+      .view-modal-images {
+        height: 400px;
+      }
+
+      .view-modal-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+      }
+
+      .view-modal-thumbnails img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding-bottom: 130px;
+      }
+      
+      .container {
+        margin-bottom: 40px;
+      }
+    }
+
+    /* iOS Safari fixes */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        min-height: -webkit-fill-available;
+        background-attachment: fixed;
+      }
+    }
+
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .post-card:active {
+        transform: scale(0.98);
+      }
+
+      .view-modal-nav {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+      }
+
+      button {
+        min-height: 44px;
+      }
+    }
+
+    /* Text selection */
+    .post-text,
+    .view-modal-text {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* Prevent selection in modal */
+    #imageGalleryModal {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Password Protection Modal -->
+  <div id="passwordProtectionModal" class="password-modal">
+    <div class="password-modal-content">
+      <div class="password-header">
+        <h2>🔒 Access Required</h2>
+        <p>Please enter the password to access this page</p>
+      </div>
+      <form id="passwordProtectionForm" class="password-form">
+        <div class="form-group">
+          <input type="password" id="pagePassword" placeholder="Enter password" required>
+          <button type="submit" class="btn btn-primary">Access</button>
+        </div>
+      </form>
+      <div id="passwordError" class="password-error" style="display: none;">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">Incorrect password. Please try again.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>📝 My Staff</h1>
+      <p class="subtitle">Share memos with staff</p>
+      
+      <!-- Filter Buttons -->
+      <div class="filter-buttons">
+        <button class="filter-btn active" onclick="filterPosts('all')" data-filter="all">
+          <span>All</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('memo')" data-filter="memo">
+          <span>📝 Memo</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('shift')" data-filter="shift">
+          <span>⏰ Shift</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('tip')" data-filter="tip">
+          <span>💡 Tip</span>
+        </button>
+        <button class="filter-btn" onclick="filterPosts('other')" data-filter="other">
+          <span>📄 Other</span>
+        </button>
+      </div>
+      
+      <button class="add-post-btn" onclick="openNewPostModal()">➕ Add New Post</button>
+    </header>
+
+    <div id="postsContainer" class="posts-grid">
+      <div class="loading">Loading posts...</div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Post Modal -->
+  <div id="postModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add New Post</h2>
+      <form id="postForm">
+        <input type="hidden" id="postId">
+        
+        <div class="form-group">
+          <label for="postType">Type *</label>
+          <select id="postType" required>
+            <option value="">Select type...</option>
+            <option value="memo">📝 Memo</option>
+            <option value="shift">⏰ Shift</option>
+            <option value="tip">💡 Tip</option>
+            <option value="other">📄 Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="postContent">Content (Optional)</label>
+          <textarea id="postContent" placeholder="Leave empty if not needed"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Images (Multiple)</label>
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon">📸</div>
+            <div class="drop-zone-text">Drag & drop images here or click to browse</div>
+            <input type="file" id="postImage" accept="image/*" multiple style="display: none;">
+          </div>
+          <div class="preview-container" id="previewContainer"></div>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary" id="saveBtn">Save Post</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Gallery Modal -->
+  <div id="imageGalleryModal" class="view-modal">
+    <div class="view-modal-content">
+      <button class="view-modal-close" onclick="closeImageGallery()">×</button>
+      
+      <div class="view-modal-images" id="galleryModalImages">
+        <button class="view-modal-nav prev" onclick="prevGalleryImage()">‹</button>
+        <img id="galleryModalMainImage" src="" alt="">
+        <button class="view-modal-nav next" onclick="nextGalleryImage()">›</button>
+      </div>
+
+      <div class="view-modal-body">
+        <div class="view-modal-thumbnails" id="galleryModalThumbnails"></div>
+        <div class="gallery-info">
+          <span id="galleryImageCounter"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Popup Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <h2>Admin Authentication</h2>
+      <form id="passwordForm">
+        <div class="form-group">
+          <label for="popupUsername">Username</label>
+          <input type="text" id="popupUsername" value="Staff_User" readonly>
+        </div>
+        <div class="form-group">
+          <label for="popupPassword">Password</label>
+          <input type="password" id="popupPassword" placeholder="Enter password" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closePostPasswordModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Authenticate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div>
+      <div class="loader"></div>
+      <div class="loading-text" id="loadingText">Processing...</div>
+    </div>
+  </div>
+
+  <!-- Confirmation Message -->
+  <div id="confirmationMessage" class="confirmation-message">
+    <div class="confirmation-icon" id="confirmationIcon">✅</div>
+    <div class="confirmation-title" id="confirmationTitle">Success!</div>
+    <div class="confirmation-text" id="confirmationText">Your action has been completed successfully.</div>
+    <div class="confirmation-actions">
+      <button class="confirmation-btn primary" id="confirmationOkBtn" onclick="closeConfirmation()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ IMPORTANT: Replace with your Google Apps Script URL
+    const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
+    // Configuration
+    const PAGE_PASSWORD = '4545'; // Page access password
+    const ADMIN_PASSWORD = 'Sandro4545'; // Admin password for CRUD operations
+
+    // State management
+    let allPosts = [];
+    let currentFilter = 'all';
+    let uploadedImages = [];
+    let currentEditingPost = null;
+    let pendingFormData = null;
+    let pendingAction = null;
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
+    let authTimeout = null;
+
+    // Zoom and pan state
+    let currentX = 0;
+    let currentY = 0;
+    let isMousePanning = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchPanning = false;
+    let lastTapTime = 0;
+    let tapCount = 0;
+    let hasMoved = false;
+    const panThreshold = 10;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', checkAuthentication);
+
+    // ==================== Authentication ====================
+    function checkAuthentication() {
+      const isAuthenticated = localStorage.getItem('memoAuthenticated');
+      if (isAuthenticated === 'true') {
+        showMainContent();
+      } else {
+        showPagePasswordModal();
+        startAuthTimeout();
+      }
+    }
+
+    function showPagePasswordModal() {
+      document.body.classList.add('password-protected');
+      document.getElementById('passwordProtectionModal').style.display = 'flex';
+      document.getElementById('pagePassword').focus();
+    }
+
+    function showMainContent() {
+      clearAuthTimeout();
+      document.body.classList.remove('password-protected');
+      document.getElementById('passwordProtectionModal').style.display = 'none';
+      setTimeout(loadPosts, 100);
+    }
+
+    function startAuthTimeout() {
+      clearAuthTimeout();
+      authTimeout = setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 10000);
+    }
+
+    function clearAuthTimeout() {
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+        authTimeout = null;
+      }
+    }
+
+    function showPasswordError() {
+      const errorEl = document.getElementById('passwordError');
+      errorEl.style.display = 'flex';
+      setTimeout(() => errorEl.style.display = 'none', 3000);
+    }
+
+    // Page password form
+    document.getElementById('passwordProtectionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const password = document.getElementById('pagePassword').value;
+      
+      if (password === PAGE_PASSWORD) {
+        localStorage.setItem('memoAuthenticated', 'true');
+        showMainContent();
+      } else {
+        showPasswordError();
+        document.getElementById('pagePassword').value = '';
+        document.getElementById('pagePassword').focus();
+        startAuthTimeout();
+      }
+    });
+
+    // Admin password form
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const password = document.getElementById('popupPassword').value.trim();
+      
+      if (!password) {
+        showConfirmation('⚠️', 'Authentication Required', 'Please enter your password.', 'OK', 'secondary');
+        return;
+      }
+      
+      if (pendingFormData) {
+        await processPostSubmission(password);
+      } else if (pendingAction) {
+        await processPendingAction(password);
+      }
+    });
+
+    // ==================== API Functions ====================
+    async function loadPosts() {
+      showLoading('Loading posts...');
+      
+      try {
+        const response = await fetch(`${API_URL}?action=getPosts`);
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+          allPosts = result.data;
+          applyCurrentFilter();
+        } else {
+          showError('Failed to load posts: ' + result.message);
+        }
+      } catch (error) {
+        hideLoading();
+        showError('Error connecting to server: ' + error.message);
+      }
+    }
+
+    async function processPostSubmission(password) {
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      
+      showLoading(pendingFormData.id ? 'Updating post...' : 'Creating post...');
+      
+      try {
+        const data = {
+          action: pendingFormData.id ? 'updatePost' : 'createPost',
+          type: pendingFormData.type,
+          content: pendingFormData.content || null,
+          password: password
+        };
+        
+        if (!pendingFormData.id || uploadedImages.length > 0) {
+          data.imageData = uploadedImages.length > 0 ? uploadedImages : null;
+        }
+        
+        if (pendingFormData.id) {
+          data.id = pendingFormData.id;
+        }
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+          closePostPasswordModal();
+          closeModal();
+          loadPosts();
+          showConfirmation('✅', 'Success!', result.message, 'OK', 'success');
+        } else {
+          showConfirmation('❌', 'Error', result.message, 'OK', 'danger');
+        }
+      } catch (error) {
+        hideLoading();
+        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Post';
+        pendingFormData = null;
+      }
+    }
+
+    async function processPendingAction(password) {
+      const actionText = pendingAction.action === 'delete' ? 'Deleting post...' : 'Updating pin status...';
+      showLoading(actionText);
+      
+      try {
+        const data = {
+          password: password,
+          action: pendingAction.action === 'delete' ? 'deletePost' : 'togglePin',
+          id: pendingAction.id
+        };
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        hideLoading();
+        
+        if (result.success) {
+          closePostPasswordModal();
+          loadPosts();
+          
+          const icon = pendingAction.action === 'delete' ? '🗑️' : '📌';
+          const title = pendingAction.action === 'delete' ? 'Post Deleted' : 'Pin Updated';
+          showConfirmation(icon, title, result.message, 'OK', 'success');
+        } else {
+          showConfirmation('❌', 'Error', result.message, 'OK', 'danger');
+        }
+      } catch (error) {
+        hideLoading();
+        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+      } finally {
+        pendingAction = null;
+      }
+    }
+
+    // ==================== Display Functions ====================
+    function displayPosts(posts) {
+      const container = document.getElementById('postsContainer');
+      
+      if (posts.length === 0) {
+        const typeNames = {
+          'memo': 'memos', 'shift': 'shifts', 'tip': 'tips', 'other': 'other posts'
+        };
+        const filterText = currentFilter === 'all' ? 'posts' : typeNames[currentFilter];
+        container.innerHTML = `<div class="no-posts">No ${filterText} yet. Click "Add New Post" to create your first post!</div>`;
+        return;
+      }
+
+      container.innerHTML = posts.map((post, index) => createPostCard(post, index)).join('');
+    }
+
+    function createPostCard(post, index) {
+      const imageCount = post.imageUrls ? post.imageUrls.length : 0;
+      const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
+      const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
+      
+      const typeIcons = { 'memo': '📝', 'shift': '⏰', 'tip': '💡', 'other': '📄' };
+      const displayTitle = post.title || `${typeIcons[post.type] || '📄'} ${post.type || 'Post'}`;
+      const displayContent = post.content || '';
+      
+      return `
+        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
+          ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
+          ${imageCount > 0 ? `
+            <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGallery(${index})">
+              ${displayImages.map(url => `
+                <div><img src="${url}" alt="${escapeHtml(displayTitle)}" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          <div class="post-content">
+            <div onclick="${imageCount > 0 ? `openImageGallery(${index})` : ''}">
+              <h2 class="post-title">${escapeHtml(displayTitle)}</h2>
+              <div class="post-date">📅 ${formatDate(post.date)}</div>
+              ${displayContent ? `<p class="post-text">${escapeHtml(displayContent.substring(0, 150))}${displayContent.length > 150 ? '...' : ''}</p>` : ''}
+            </div>
+          </div>
+          <div class="post-actions" onclick="event.stopPropagation()">
+            <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
+            <button class="edit-btn" onclick="editPost(${index})" title="Edit">✏️</button>
+            <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== Filter Functions ====================
+    function filterPosts(type) {
+      currentFilter = type;
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-filter="${type}"]`).classList.add('active');
+      
+      applyCurrentFilter();
+    }
+
+    function applyCurrentFilter() {
+      const filteredPosts = currentFilter === 'all' 
+        ? allPosts 
+        : allPosts.filter(post => post.type === currentFilter);
+      displayPosts(filteredPosts);
+    }
+
+    // ==================== Modal Functions ====================
+    function openNewPostModal() {
+      document.getElementById('modalTitle').textContent = 'Add New Post';
+      document.getElementById('postForm').reset();
+      document.getElementById('postId').value = '';
+      document.getElementById('previewContainer').innerHTML = '';
+      uploadedImages = [];
+      currentEditingPost = null;
+      document.getElementById('postModal').classList.add('active');
+    }
+
+    function editPost(index) {
+      const post = allPosts[index];
+      currentEditingPost = post;
+      
+      document.getElementById('modalTitle').textContent = 'Edit Post';
+      document.getElementById('postId').value = post.id;
+      document.getElementById('postType').value = post.type || 'other';
+      document.getElementById('postContent').value = post.content || '';
+      
+      uploadedImages = [];
+      displayPreviews();
+      
+      document.getElementById('postModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('postModal').classList.remove('active');
+    }
+
+    function showPostPasswordModal() {
+      document.getElementById('passwordModal').classList.add('active');
+      document.getElementById('popupPassword').value = '';
+      document.getElementById('popupPassword').focus();
+    }
+
+    function closePostPasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+      pendingFormData = null;
+    }
+
+    // ==================== Image Functions ====================
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('postImage');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            uploadedImages.push(e.target.result);
+            displayPreviews();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function displayPreviews() {
+      const container = document.getElementById('previewContainer');
+      container.innerHTML = uploadedImages.map((img, index) => `
+        <div class="preview-item">
+          <img src="${img}" class="image-preview" alt="Preview ${index + 1}">
+          <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      uploadedImages.splice(index, 1);
+      displayPreviews();
+    }
+
+    // ==================== Gallery Functions ====================
+    function openImageGallery(index) {
+      const post = allPosts[index];
+      if (!post.imageUrls || post.imageUrls.length === 0) return;
+      
+      currentGalleryImages = post.imageUrls;
+      currentGalleryIndex = 0;
+      
+      document.getElementById('imageGalleryModal').classList.add('active');
+      document.body.classList.add('modal-open');
+      
+      setupGalleryThumbnails();
+      showGalleryImage(0);
+      addImageZoomListeners();
+    }
+
+    function setupGalleryThumbnails() {
+      const container = document.getElementById('galleryModalThumbnails');
+      if (currentGalleryImages.length > 1) {
+        container.innerHTML = currentGalleryImages.map((url, index) => `
+          <img src="${url}" alt="Thumbnail ${index + 1}" 
+               class="${index === 0 ? 'active' : ''}" 
+               onclick="showGalleryImage(${index})">
+        `).join('');
+      } else {
+        container.innerHTML = '';
+      }
+    }
+
+    function showGalleryImage(index) {
+      currentGalleryIndex = index;
+      const mainImage = document.getElementById('galleryModalMainImage');
+      mainImage.src = currentGalleryImages[index];
+      
+      mainImage.classList.remove('zoomed');
+      mainImage.style.transform = '';
+      currentX = 0;
+      currentY = 0;
+      
+      document.getElementById('galleryImageCounter').textContent = 
+        `${index + 1} / ${currentGalleryImages.length}`;
+      
+      document.querySelectorAll('#galleryModalThumbnails img').forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+      });
+    }
+
+    function prevGalleryImage() {
+      currentGalleryIndex = (currentGalleryIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
+    }
+
+    function nextGalleryImage() {
+      currentGalleryIndex = (currentGalleryIndex + 1) % currentGalleryImages.length;
+      showGalleryImage(currentGalleryIndex);
+    }
+
+    function closeImageGallery() {
+      document.getElementById('imageGalleryModal').classList.remove('active');
+      document.body.classList.remove('modal-open');
+      removeImageZoomListeners();
+    }
+
+    // ==================== Zoom Functions ====================
+    function addImageZoomListeners() {
+      const img = document.getElementById('galleryModalMainImage');
+      img.addEventListener('click', handleImageClick);
+      img.addEventListener('wheel', preventPageZoom, { passive: false });
+      img.addEventListener('touchstart', handleTouchStart, { passive: false });
+      img.addEventListener('touchmove', handleTouchMove, { passive: false });
+      img.addEventListener('touchend', handleTouchEnd, { passive: false });
+      img.addEventListener('mousedown', handleMouseDown);
+      img.addEventListener('mousemove', handleMouseMove);
+      img.addEventListener('mouseup', handleMouseUp);
+      img.addEventListener('mouseleave', handleMouseUp);
+    }
+
+    function removeImageZoomListeners() {
+      const img = document.getElementById('galleryModalMainImage');
+      img.removeEventListener('click', handleImageClick);
+      img.removeEventListener('wheel', preventPageZoom);
+      img.removeEventListener('touchstart', handleTouchStart);
+      img.removeEventListener('touchmove', handleTouchMove);
+      img.removeEventListener('touchend', handleTouchEnd);
+      img.removeEventListener('mousedown', handleMouseDown);
+      img.removeEventListener('mousemove', handleMouseMove);
+      img.removeEventListener('mouseup', handleMouseUp);
+      img.removeEventListener('mouseleave', handleMouseUp);
+    }
+
+    function handleImageClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function handleMouseDown(e) {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        isMousePanning = true;
+        mouseStartX = e.clientX - currentX;
+        mouseStartY = e.clientY - currentY;
+        img.classList.add('panning');
+        e.preventDefault();
+      }
+    }
+
+    function handleMouseMove(e) {
+      if (isMousePanning) {
+        currentX = e.clientX - mouseStartX;
+        currentY = e.clientY - mouseStartY;
+        updateImageTransform();
+        e.preventDefault();
+      }
+    }
+
+    function handleMouseUp() {
+      if (isMousePanning) {
+        isMousePanning = false;
+        document.getElementById('galleryModalMainImage').classList.remove('panning');
+      }
+    }
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 1) {
+        const img = document.getElementById('galleryModalMainImage');
+        if (img.classList.contains('zoomed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          hasMoved = false;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches.length === 1) {
+        const img = document.getElementById('galleryModalMainImage');
+        if (img.classList.contains('zoomed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          const deltaX = e.touches[0].clientX - touchStartX;
+          const deltaY = e.touches[0].clientY - touchStartY;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          
+          if (!hasMoved && distance > panThreshold) {
+            hasMoved = true;
+            isTouchPanning = true;
+            img.classList.add('panning');
+          }
+          
+          if (isTouchPanning) {
+            currentX = deltaX;
+            currentY = deltaY;
+            updateImageTransform();
+          }
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (e.touches.length === 0) {
+        if (isTouchPanning) {
+          isTouchPanning = false;
+          document.getElementById('galleryModalMainImage').classList.remove('panning');
+          return;
+        }
+        
+        const currentTime = Date.now();
+        const tapTime = currentTime - lastTapTime;
+        
+        if (tapTime < 500 && tapTime > 0) {
+          tapCount++;
+          if (tapCount === 2) {
+            toggleImageZoom();
+            tapCount = 0;
+          }
+        } else {
+          tapCount = 1;
+        }
+        
+        lastTapTime = currentTime;
+        setTimeout(() => tapCount = 0, 500);
+      }
+    }
+
+    function toggleImageZoom() {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        currentX = 0;
+        currentY = 0;
+      } else {
+        img.classList.add('zoomed');
+        img.style.transform = 'scale(2)';
+        currentX = 0;
+        currentY = 0;
+      }
+    }
+
+    function updateImageTransform() {
+      const img = document.getElementById('galleryModalMainImage');
+      if (img.classList.contains('zoomed')) {
+        img.style.transform = `scale(2) translate(${currentX}px, ${currentY}px)`;
+      }
+    }
+
+    function preventPageZoom(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // ==================== Form Handlers ====================
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const type = document.getElementById('postType').value.trim();
+      if (!type) {
+        showConfirmation('⚠️', 'Validation Error', 'Please select a post type.', 'OK', 'secondary');
+        return;
+      }
+      
+      pendingFormData = {
+        id: document.getElementById('postId').value,
+        type: type,
+        content: document.getElementById('postContent').value.trim()
+      };
+      
+      showPostPasswordModal();
+    });
+
+    function confirmDelete(id) {
+      pendingAction = { action: 'delete', id: id };
+      showPostPasswordModal();
+    }
+
+    function togglePin(id, currentPinned) {
+      pendingAction = { action: 'togglePin', id: id, currentPinned: currentPinned };
+      showPostPasswordModal();
+    }
+
+    // ==================== UI Helpers ====================
+    function showLoading(text = 'Processing...') {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function showConfirmation(icon, title, text, buttonText = 'OK', buttonClass = 'primary') {
+      document.getElementById('confirmationIcon').textContent = icon;
+      document.getElementById('confirmationTitle').textContent = title;
+      document.getElementById('confirmationText').textContent = text;
+      
+      const okBtn = document.getElementById('confirmationOkBtn');
+      okBtn.textContent = buttonText;
+      okBtn.className = `confirmation-btn ${buttonClass}`;
+      
+      document.getElementById('confirmationMessage').classList.add('active');
+    }
+
+    function closeConfirmation() {
+      document.getElementById('confirmationMessage').classList.remove('active');
+    }
+
+    function showError(message) {
+      const container = document.getElementById('postsContainer');
+      container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateString) {
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        if (diffDays <= 7) {
+          return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + 
+                 date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        
+        if (date.getFullYear() === now.getFullYear()) {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+        
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch (error) {
+        return dateString;
+      }
+    }
+
+    // ==================== Keyboard Navigation ====================
+    document.addEventListener('keydown', (e) => {
+      const galleryModal = document.getElementById('imageGalleryModal');
+      
+      if (galleryModal.classList.contains('active')) {
+        if (e.key === 'ArrowLeft') prevGalleryImage();
+        else if (e.key === 'ArrowRight') nextGalleryImage();
+        else if (e.key === 'Escape') closeImageGallery();
+      }
+    });
+
+    // Close modal on outside click
+    document.getElementById('imageGalleryModal').addEventListener('click', function(e) {
+      if (e.target === this) closeImageGallery();
+    });
+
+    document.getElementById('postModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    document.getElementById('passwordModal').addEventListener('click', function(e) {
+      if (e.target === this) closePostPasswordModal();
+    });
+
+    // Touch swipe for gallery navigation
+    let swipeStartX = 0;
+    let swipeEndX = 0;
+
+    document.getElementById('galleryModalImages').addEventListener('touchstart', (e) => {
+      const img = document.getElementById('galleryModalMainImage');
+      if (!img.classList.contains('zoomed')) {
+        swipeStartX = e.changedTouches[0].screenX;
+      }
+    });
+
+    document.getElementById('galleryModalImages').addEventListener('touchend', (e) => {
+      const img = document.getElementById('galleryModalMainImage');
+      if (!img.classList.contains('zoomed')) {
+        swipeEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }
+    });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      if (swipeEndX < swipeStartX - swipeThreshold) {
+        nextGalleryImage();
+      }
+      if (swipeEndX > swipeStartX + swipeThreshold) {
+        prevGalleryImage();
+      }
+    }
+  </script>
+</body>
+</html>
