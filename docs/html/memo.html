@@ -386,6 +386,58 @@
       height: 100%;
     }
 
+    .post-images-grid.multiple-landscape {
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      max-height: 200px;
+    }
+
+    .post-images-grid.multiple-landscape img {
+      height: 180px;
+      object-fit: cover;
+    }
+
+    /* Responsive adjustments for multiple landscape images */
+    @media (min-width: 768px) {
+      .post-images-grid.multiple-landscape {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        max-height: 220px;
+      }
+      
+      .post-images-grid.multiple-landscape img {
+        height: 200px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .post-images-grid.multiple-landscape {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        max-height: 240px;
+      }
+      
+      .post-images-grid.multiple-landscape img {
+        height: 220px;
+      }
+    }
+
+    /* More images overlay */
+    .more-images-overlay {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border-radius: 12px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .more-images-text {
+      display: block;
+    }
+
     .post-content {
       position: absolute;
       top: 0;
@@ -1465,6 +1517,13 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', checkAuthentication);
 
+    // Handle window resize to update image display
+    window.addEventListener('resize', () => {
+      if (allPosts.length > 0) {
+        applyCurrentFilter();
+      }
+    });
+
     // ==================== Authentication ====================
     function checkAuthentication() {
       const isAuthenticated = localStorage.getItem('memoAuthenticated');
@@ -1695,6 +1754,18 @@
     }
 
     // ==================== Display Functions ====================
+    function getMaxDisplayImages() {
+      // Determine max images to display based on screen size
+      const screenWidth = window.innerWidth;
+      if (screenWidth < 768) {
+        return 3; // Mobile: show up to 3 images
+      } else if (screenWidth < 1200) {
+        return 4; // Tablet: show up to 4 images
+      } else {
+        return 4; // Desktop: show up to 4 images
+      }
+    }
+
     function displayPosts(posts) {
       const container = document.getElementById('postsContainer');
       
@@ -1712,8 +1783,25 @@
 
     function createPostCard(post, index) {
       const imageCount = post.imageUrls ? post.imageUrls.length : 0;
-      const gridClass = imageCount === 1 ? 'single' : imageCount > 1 ? 'multiple' : '';
-      const displayImages = post.imageUrls ? post.imageUrls.slice(0, imageCount === 1 ? 1 : 2) : [];
+      let displayImages = [];
+      let gridClass = '';
+      
+      if (imageCount > 0) {
+        // Determine how many images to display based on count and layout
+        if (imageCount === 1) {
+          displayImages = post.imageUrls.slice(0, 1);
+          gridClass = 'single';
+        } else if (imageCount === 2) {
+          displayImages = post.imageUrls.slice(0, 2);
+          gridClass = 'multiple';
+        } else {
+          // For 3+ images, show more images in a compact grid
+          // Show up to 4 images in a responsive grid that fits within post bounds
+          const maxDisplayImages = getMaxDisplayImages();
+          displayImages = post.imageUrls.slice(0, maxDisplayImages);
+          gridClass = 'multiple-landscape';
+        }
+      }
       
       const typeIcons = { 'memo': '📝', 'shift': '⏰', 'tip': '💡', 'other': '📄' };
       const displayTitle = post.title || `${typeIcons[post.type] || '📄'} ${post.type || 'Post'}`;
@@ -1729,6 +1817,11 @@
                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
                 </div>
               `).join('')}
+              ${imageCount > displayImages.length ? `
+                <div class="more-images-overlay">
+                  <span class="more-images-text">+${imageCount - displayImages.length}</span>
+                </div>
+              ` : ''}
             </div>
           ` : ''}
           <div class="post-content">
