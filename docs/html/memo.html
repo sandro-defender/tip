@@ -2,8 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
   <title>My Staff</title>
+  
+  <!-- Load additional head content asynchronously -->
+  <script>
+    fetch("/includes/head.html")
+        .then(response => response.text())
+        .then(data => {
+          // Parse the head content and add only non-critical elements
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, 'text/html');
+          const headElements = doc.head.children;
+          
+          // Add elements that are not already present
+          Array.from(headElements).forEach(element => {
+            if (element.tagName === 'LINK' && element.rel === 'icon') {
+              // Add favicon and icons
+              document.head.appendChild(element.cloneNode(true));
+            } else if (element.tagName === 'META' && element.name === 'apple-mobile-web-app-capable') {
+              // Add PWA meta tags
+              document.head.appendChild(element.cloneNode(true));
+            } else if (element.tagName === 'LINK' && element.rel === 'apple-touch-icon') {
+              // Add Apple touch icons
+              document.head.appendChild(element.cloneNode(true));
+            }
+            // Skip viewport, charset, and theme-color as they're already added above
+          });
+        })
+        .catch(error => console.error("ოшибка загрузки head:", error));
+  </script>
   <style>
     /* Reset and Base Styles */
     * {
@@ -436,6 +465,12 @@
 
     .more-images-text {
       display: block;
+    }
+
+    /* Menu Container */
+    #menu-container {
+      position: relative;
+      z-index: 200;
     }
 
     .post-content {
@@ -1077,7 +1112,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      z-index: 100;
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s ease;
