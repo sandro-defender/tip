@@ -1629,6 +1629,9 @@
         return;
       }
       
+      // Immediately hide the password modal and show loading animation
+      closePostPasswordModal();
+      
       if (pendingFormData) {
         await processPostSubmission(password);
       } else if (pendingAction) {
@@ -1705,6 +1708,7 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
       
+      // Show loading animation immediately
       showLoading(pendingFormData.id ? 'Updating post...' : 'Creating post...');
       
       try {
@@ -1733,7 +1737,6 @@
         hideLoading();
         
         if (result.success) {
-          closePostPasswordModal();
           closeModal();
           loadPosts();
           showConfirmation('✅', 'Success!', result.message, 'OK', 'success');
@@ -1771,7 +1774,6 @@
         hideLoading();
         
         if (result.success) {
-          closePostPasswordModal();
           loadPosts();
           
           const icon = pendingAction.action === 'delete' ? '🗑️' : '📌';
@@ -1920,6 +1922,11 @@
 
     function closeModal() {
       document.getElementById('postModal').classList.remove('active');
+      
+      // Reset form button state
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Post';
     }
 
     function showPostPasswordModal() {
@@ -1931,6 +1938,11 @@
     function closePostPasswordModal() {
       document.getElementById('passwordModal').classList.remove('active');
       pendingFormData = null;
+      
+      // Reset form button state when password modal is cancelled
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Post';
     }
 
     // ==================== Image Functions ====================
@@ -2196,11 +2208,22 @@
     document.getElementById('postForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const saveBtn = document.getElementById('saveBtn');
+      
+      // Prevent double submission
+      if (saveBtn.disabled) {
+        return;
+      }
+      
       const type = document.getElementById('postType').value.trim();
       if (!type) {
         showConfirmation('⚠️', 'Validation Error', 'Please select a post type.', 'OK', 'secondary');
         return;
       }
+      
+      // Disable button immediately to prevent double submission
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Preparing...';
       
       pendingFormData = {
         id: document.getElementById('postId').value,
