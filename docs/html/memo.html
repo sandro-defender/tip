@@ -1,11 +1,11 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 1.10.3
+Version: 2.0.0
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
-Purpose: Blog/memo page with simplified type selection using title field
+Purpose: Blog/memo page optimized for new backend with enhanced error handling and validation
 -->
 
 <!DOCTYPE html>
@@ -1742,7 +1742,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <script>
     // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycby0Ky6mXn4Rkr12V0YtEsJunHb1UhbQakEvjo5a5Cy2H_HFkUhslz6-r6nbNYRs07CsNw/exec';
 
     let currentEditingPost = null;
     let pendingAction = null;
@@ -1757,6 +1757,7 @@ Purpose: Blog/memo page with simplified type selection using title field
 
     // Password Protection
     const PAGE_PASSWORD = '4545'; // Change this to your desired password
+    const ADMIN_PASSWORD = 'Sandro4545'; // Backend admin password
     let authTimeout = null;
     
     // Check if user is already authenticated
@@ -1886,6 +1887,11 @@ Purpose: Blog/memo page with simplified type selection using title field
         console.log('Fetching from API:', API_URL); // Debug log
         const response = await fetch(`${API_URL}?action=getPosts`);
         console.log('Response received:', response.status); // Debug log
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
         console.log('Result:', result); // Debug log
         
@@ -1894,7 +1900,7 @@ Purpose: Blog/memo page with simplified type selection using title field
         if (result.success) {
           displayPosts(result.data);
         } else {
-          showError('Failed to load posts');
+          showError(result.message || 'Failed to load posts');
         }
       } catch (error) {
         console.error('Error loading posts:', error); // Debug log
@@ -1924,6 +1930,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           'other': '📄'
         };
         
+        // Use backend-generated title or create one from type
         const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
         
@@ -2127,6 +2134,9 @@ Purpose: Blog/memo page with simplified type selection using title field
         
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(data)
         });
         
@@ -2185,11 +2195,13 @@ Purpose: Blog/memo page with simplified type selection using title field
         } else if (pendingAction.action === 'togglePin') {
           data.action = 'togglePin';
           data.id = pendingAction.id;
-          data.pinned = !pendingAction.currentPinned;
         }
         
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(data)
         });
         
@@ -2205,16 +2217,16 @@ Purpose: Blog/memo page with simplified type selection using title field
             showConfirmation(
               '🗑️', 
               'Post Deleted', 
-              'The post has been successfully deleted.',
+              result.message || 'The post has been successfully deleted.',
               'OK',
               'success'
             );
           } else {
-            const pinText = pendingAction.currentPinned ? 'unpinned' : 'pinned';
+            const pinText = result.pinned ? 'pinned' : 'unpinned';
             showConfirmation(
               '📌', 
               'Pin Updated', 
-              `Post has been ${pinText} successfully.`,
+              result.message || `Post has been ${pinText} successfully.`,
               'OK',
               'success'
             );
@@ -2386,6 +2398,7 @@ Purpose: Blog/memo page with simplified type selection using title field
           'other': '📄'
         };
         
+        // Use backend-generated title or create one from type
         const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
 
@@ -2928,6 +2941,10 @@ Purpose: Blog/memo page with simplified type selection using title field
 
   <!--
   CHANGELOG
+  [2025-01-12] v2.0.0 – Optimized frontend to work with new backend system.
+  Reason: Updated to work with new optimized backend that includes caching, enhanced error handling, validation, and performance improvements.
+  Impact: Better error handling, improved API communication, enhanced validation, and optimized performance with new backend features.
+  Model: GPT-5
   [2025-01-12] v1.10.3 – Added 10-second timeout redirect to main page if user doesn't authenticate.
   Reason: User requested automatic redirect to main page after 10 seconds if authentication is not completed.
   Impact: Users who don't authenticate within 10 seconds will be automatically redirected to index.html, improving security and user experience.
