@@ -1,11 +1,11 @@
 <!--
 Project: Tip Tracker
 File: html/memo.html
-Version: 2.0.1
+Version: 1.10.3
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-01-12
-Purpose: Blog/memo page with enhanced debugging and error handling for network issues
+Purpose: Blog/memo page with simplified type selection using title field
 -->
 
 <!DOCTYPE html>
@@ -1742,7 +1742,7 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
 
   <script>
     // ⚠️ IMPORTANT: Replace this URL with your Google Apps Script web app URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycby0Ky6mXn4Rkr12V0YtEsJunHb1UhbQakEvjo5a5Cy2H_HFkUhslz6-r6nbNYRs07CsNw/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxzhsG6zT1SKfxt8pPd77YFtcIrNwtA3qP8bQhveiW8Fhp6RM1ZdD4xVmxHYy8JKzOOlA/exec';
 
     let currentEditingPost = null;
     let pendingAction = null;
@@ -1757,7 +1757,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
 
     // Password Protection
     const PAGE_PASSWORD = '4545'; // Change this to your desired password
-    const ADMIN_PASSWORD = 'Sandro4545'; // Backend admin password
     let authTimeout = null;
     
     // Check if user is already authenticated
@@ -1879,27 +1878,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
       // loadPosts() will be called after authentication
     }
 
-    // Test API connection
-    async function testAPIConnection() {
-      try {
-        console.log('Testing API connection...');
-        const response = await fetch(`${API_URL}?action=health`);
-        console.log('Health check response:', response.status);
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Health check result:', result);
-          return true;
-        } else {
-          console.error('Health check failed:', response.status, response.statusText);
-          return false;
-        }
-      } catch (error) {
-        console.error('Health check error:', error);
-        return false;
-      }
-    }
-
     async function loadPosts() {
       console.log('Loading posts...'); // Debug log
       showLoading('Loading posts...');
@@ -1908,11 +1886,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
         console.log('Fetching from API:', API_URL); // Debug log
         const response = await fetch(`${API_URL}?action=getPosts`);
         console.log('Response received:', response.status); // Debug log
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const result = await response.json();
         console.log('Result:', result); // Debug log
         
@@ -1921,7 +1894,7 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
         if (result.success) {
           displayPosts(result.data);
         } else {
-          showError(result.message || 'Failed to load posts');
+          showError('Failed to load posts');
         }
       } catch (error) {
         console.error('Error loading posts:', error); // Debug log
@@ -1951,7 +1924,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
           'other': '📄'
         };
         
-        // Use backend-generated title or create one from type
         const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
         
@@ -2153,26 +2125,12 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
           data.id = pendingFormData.id;
         }
         
-        console.log('Sending post request to:', API_URL);
-        console.log('Post request data:', data);
-        
         const response = await fetch(API_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
           body: JSON.stringify(data)
         });
         
-        console.log('Post response status:', response.status);
-        console.log('Post response headers:', response.headers);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        
         const result = await response.json();
-        console.log('Post response result:', result);
         
         hideLoading();
         
@@ -2197,12 +2155,11 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
           );
         }
       } catch (error) {
-        console.error('Error in processPostSubmission:', error);
         hideLoading();
         showConfirmation(
           '❌', 
           'Error', 
-          `Network error: ${error.message}. Please check your connection and try again.`,
+          'Network error. Please check your connection and try again.',
           'OK',
           'danger'
         );
@@ -2228,28 +2185,15 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
         } else if (pendingAction.action === 'togglePin') {
           data.action = 'togglePin';
           data.id = pendingAction.id;
+          data.pinned = !pendingAction.currentPinned;
         }
-        
-        console.log('Sending request to:', API_URL);
-        console.log('Request data:', data);
         
         const response = await fetch(API_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
           body: JSON.stringify(data)
         });
         
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        
         const result = await response.json();
-        console.log('Response result:', result);
         
         hideLoading();
         
@@ -2261,16 +2205,16 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
             showConfirmation(
               '🗑️', 
               'Post Deleted', 
-              result.message || 'The post has been successfully deleted.',
+              'The post has been successfully deleted.',
               'OK',
               'success'
             );
           } else {
-            const pinText = result.pinned ? 'pinned' : 'unpinned';
+            const pinText = pendingAction.currentPinned ? 'unpinned' : 'pinned';
             showConfirmation(
               '📌', 
               'Pin Updated', 
-              result.message || `Post has been ${pinText} successfully.`,
+              `Post has been ${pinText} successfully.`,
               'OK',
               'success'
             );
@@ -2285,12 +2229,11 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
           );
         }
       } catch (error) {
-        console.error('Error in processPendingAction:', error);
         hideLoading();
         showConfirmation(
           '❌', 
           'Error', 
-          `Network error: ${error.message}. Please check your connection and try again.`,
+          'Network error. Please check your connection and try again.',
           'OK',
           'danger'
         );
@@ -2443,7 +2386,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
           'other': '📄'
         };
         
-        // Use backend-generated title or create one from type
         const displayTitle = post.title || `${typeIcon[post.type] || '📄'} ${post.type || 'Post'}`;
         const displayContent = post.content || '';
 
@@ -2986,14 +2928,6 @@ Purpose: Blog/memo page with enhanced debugging and error handling for network i
 
   <!--
   CHANGELOG
-  [2025-01-12] v2.0.1 – Added enhanced debugging and error handling for network issues.
-  Reason: User reported network errors when editing/pinning posts - added detailed logging and better error messages to diagnose issues.
-  Impact: Better error diagnostics with console logging, improved error messages showing specific HTTP status codes, and API health check function.
-  Model: GPT-5
-  [2025-01-12] v2.0.0 – Optimized frontend to work with new backend system.
-  Reason: Updated to work with new optimized backend that includes caching, enhanced error handling, validation, and performance improvements.
-  Impact: Better error handling, improved API communication, enhanced validation, and optimized performance with new backend features.
-  Model: GPT-5
   [2025-01-12] v1.10.3 – Added 10-second timeout redirect to main page if user doesn't authenticate.
   Reason: User requested automatic redirect to main page after 10 seconds if authentication is not completed.
   Impact: Users who don't authenticate within 10 seconds will be automatically redirected to index.html, improving security and user experience.
