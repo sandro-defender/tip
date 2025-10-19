@@ -1629,8 +1629,8 @@
         return;
       }
       
-      // Immediately hide the password modal and show loading animation
-      closePostPasswordModal();
+      // Immediately hide only the password modal UI (keep pendingFormData)
+      hidePasswordModalUI();
       
       if (pendingFormData) {
         await processPostSubmission(password);
@@ -1933,6 +1933,10 @@
       document.getElementById('passwordModal').classList.add('active');
       document.getElementById('popupPassword').value = '';
       document.getElementById('popupPassword').focus();
+    }
+
+    function hidePasswordModalUI() {
+      document.getElementById('passwordModal').classList.remove('active');
     }
 
     function closePostPasswordModal() {
