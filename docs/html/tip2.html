@@ -570,7 +570,7 @@
 
             /* Slightly reduce chart height inside grid for balance */
             #tablesGrid .chart-container {
-                height: 360px;
+                height: 340px;
                 max-width: 555px;
                 width: 100%;
                 justify-self: center;
@@ -627,7 +627,7 @@
             }
 
             .chart-container {
-                height: 300px;
+                height: 280px;
                 padding: 15px;
             }
         }
@@ -638,7 +638,7 @@
             }
 
             .chart-container {
-                height: 250px;
+                height: 280px;
                 padding: 10px;
             }
 
@@ -3067,6 +3067,49 @@
             font-size: 1.5em;
             font-weight: bold;
         }
+        
+        /* Sticky header on desktop */
+        @media (min-width: 1100px) {
+            .header-container {
+                position: sticky;
+                top: 0;
+                z-index: 900;
+            }
+        }
+
+        /* ≥1400px: three columns grid */
+        @media (min-width: 1400px) {
+            #tablesGrid {
+                grid-template-columns: repeat(3, minmax(0, 480px));
+                column-gap: 24px;
+            }
+            #tablesGrid > * {
+                max-width: 480px;
+            }
+        }
+
+        /* Table scroll wrapper and sticky header */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-top: 20px;
+        }
+        .table-scroll table {
+            margin-top: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        @media (min-width: 1100px) {
+            thead th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 </head>
@@ -3093,28 +3136,30 @@
     </div>
     <div class="main-content-hidden" id="mainContent">
         <div class="header-container">
-            <div class="header-center">
-                <h1 class="title">𝕋𝕚𝕡 𝕋𝕣𝕒𝕔𝕜𝕖𝕤</h1>
+            <div class="header-left">
                 <div class="month-selector">
-                    <button class="month-nav-btn" onclick="navigateMonth(1)">◀</button>
+                    <button class="month-nav-btn" aria-label="Previous month" onclick="navigateMonth(-1)">◀</button>
                     <select id="monthSelect" onchange="loadSelectedMonth()">
                         <option value="current">მიმდინარე თვე</option>
                     </select>
-                    <button class="month-nav-btn" onclick="navigateMonth(-1)">▶</button>
+                    <button class="month-nav-btn" aria-label="Next month" onclick="navigateMonth(1)">▶</button>
+                </div>
+            </div>
+            <div class="header-center">
+                <h1 class="title">𝕋𝕚𝕡 𝕋𝕣𝕒𝕔𝕜𝕖𝕤</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-menu-wrapper">
+                    <button class="user-btn" type="button" title="User" onclick="toggleUserMenu(event)">👤</button>
+                    <div class="user-dropdown" id="userDropdown" onclick="event.stopPropagation()">
+                        <a href="/?admin=1" style="text-decoration: none;">🔄 Sync</a>
+                        <button type="button" onclick="logout()">🔒 Logout</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="auth-controls">
-            <!-- <button class="theme-toggle" onclick="toggleTheme()" type="button" title="Toggle"> ☯ </button> -->
-            <div class="user-menu-wrapper">
-                <button class="user-btn" type="button" title="User" onclick="toggleUserMenu(event)">👤</button>
-                <div class="user-dropdown" id="userDropdown" onclick="event.stopPropagation()">
-                    <a href="/?admin=1" style="text-decoration: none;">🔄 Sync</a>
-                    <button type="button" onclick="logout()">🔒 Logout</button>
-                </div>
-            </div>
-        </div>
+        
 
         <div id="cardControls">
             <button onclick="setCurrentCard('total')">Ⓣ</button>
@@ -3127,28 +3172,9 @@
             <button onclick="setCurrentCard('i2')">ი ②</button>
             <button onclick="setCurrentCard('i1')">ი ①</button>
             <button onclick="setCurrentCard('ti')">ი Ⓣ</button>
-        </div>
-          </div>
+            
           <div class="result-grid" id="results"></div>
-          <!-- აქ გამოჩნდება არჩეული ბარათი -->
-
-        <!-- Notification container -->
-        <div id="notificationContainer" class="notification-container"></div>
-
-        <!-- Layout anchor and large-screen grid wrapper -->
-        <div id="layoutAnchor"></div>
-        <div id="tablesGrid">
-            <div id="tablesColLeft" class="tablesColumn"></div>
-            <div id="tablesColRight" class="tablesColumn"></div>
-        </div>
-
-        <!-- გრაფიკის კონტეინერი -->
-        <div class="chart-container">
-            <div class="chart-title">მიმდინარე თვის ჩანაწერები</div>
-            <canvas id="tipChart"></canvas>
-        </div>
-
-        <div class="input-group">
+          <div class="input-group">
             <input type="date" id="dateInput" required>
             <input type="number" 
                    id="amountInput" 
@@ -3161,18 +3187,39 @@
                    required>
             <button onclick="saveEntry()">შენახვა</button>
             <button onclick="shareLastEntry()" class="share-button">📤 გაზიარება</button>
+          </div>
+        
+          <!-- აქ გამოჩნდება არჩეული ბარათი -->
+
+        <!-- Notification container -->
+        <div id="notificationContainer" class="notification-container"></div>
+
+        <!-- Layout anchor and large-screen grid wrapper -->
+        <div id="layoutAnchor"></div>
+        <div id="tablesGrid">
+            <div id="tablesColLeft" class="tablesColumn"></div>
+            <div id="tablesColMiddle" class="tablesColumn"></div>
+            <div id="tablesColRight" class="tablesColumn"></div>
+        </div>
+
+        <!-- გრაფიკის კონტეინერი -->
+        <div class="chart-container">
+            <div class="chart-title">მიმდინარე თვის ჩანაწერები</div>
+            <canvas id="tipChart"></canvas>
         </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>თარიღი</th>
-                    <th>თანხა</th>
-                    <th>მოქმედებები</th>
-                </tr>
-            </thead>
-            <tbody id="entriesBody"></tbody>
-        </table>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>თარიღი</th>
+                        <th>თანხა</th>
+                        <th>მოქმედებები</th>
+                    </tr>
+                </thead>
+                <tbody id="entriesBody"></tbody>
+            </table>
+        </div>
     </div>
     <div class="bottom-spacer"></div>
     <script>
@@ -3364,30 +3411,40 @@
                     grid: document.getElementById('tablesGrid'),
                     anchor: document.getElementById('layoutAnchor'),
                     colLeft: document.getElementById('tablesColLeft'),
+                    colMiddle: document.getElementById('tablesColMiddle'),
                     colRight: document.getElementById('tablesColRight'),
                     cardControls: document.getElementById('cardControls'),
                     results: document.getElementById('results'),
                     chart: document.querySelector('.chart-container'),
                     inputGroup: document.querySelector('.input-group'),
-                    table: document.querySelector('table')
+                    tableWrapper: document.querySelector('.table-scroll')
                 };
             }
 
             function moveIntoGrid() {
-                const { colLeft, colRight, cardControls, results, chart, inputGroup, table } = getElements();
+                const { colLeft, colMiddle, colRight, cardControls, results, chart, inputGroup, tableWrapper } = getElements();
                 if (!colLeft || !colRight) return;
-                // Left column order: cardControls -> result-grid -> input-group -> chart-container (chart at end)
-                [cardControls, results, inputGroup, chart].forEach(node => {
-                    if (node && node.parentElement !== colLeft) {
-                        colLeft.appendChild(node);
-                    }
-                });
-                // Right column order: table
-                [table].forEach(node => {
-                    if (node && node.parentElement !== colRight) {
-                        colRight.appendChild(node);
-                    }
-                });
+                const wide3 = window.matchMedia('(min-width: 1400px)').matches;
+                if (wide3 && colMiddle) {
+                    // 3-column layout: left = controls + results, middle = chart, right = inputs + table
+                    [cardControls, results].forEach(node => {
+                        if (node && node.parentElement !== colLeft) colLeft.appendChild(node);
+                    });
+                    [chart].forEach(node => {
+                        if (node && node.parentElement !== colMiddle) colMiddle.appendChild(node);
+                    });
+                    [inputGroup, tableWrapper].forEach(node => {
+                        if (node && node.parentElement !== colRight) colRight.appendChild(node);
+                    });
+                } else {
+                    // 2-column layout: left = controls + results + input + chart, right = table
+                    [cardControls, results, inputGroup, chart].forEach(node => {
+                        if (node && node.parentElement !== colLeft) colLeft.appendChild(node);
+                    });
+                    [tableWrapper].forEach(node => {
+                        if (node && node.parentElement !== colRight) colRight.appendChild(node);
+                    });
+                }
             }
 
             // Remember original positions for accurate restoration
@@ -3399,15 +3456,15 @@
             }
 
             function rememberAll() {
-                const { cardControls, results, chart, inputGroup, table } = getElements();
-                [cardControls, results, chart, inputGroup, table].forEach(rememberOriginal);
+                const { cardControls, results, chart, inputGroup, tableWrapper } = getElements();
+                [cardControls, results, chart, inputGroup, tableWrapper].forEach(rememberOriginal);
             }
 
             function restoreFromGrid() {
-                const { colLeft, colRight, cardControls, results, chart, inputGroup, table } = getElements();
-                [cardControls, results, chart, inputGroup, table].forEach(node => {
+                const { colLeft, colRight, colMiddle, cardControls, results, chart, inputGroup, tableWrapper } = getElements();
+                [cardControls, results, chart, inputGroup, tableWrapper].forEach(node => {
                     const pos = originalPositions.get(node);
-                    if (node && pos && (node.parentElement === colLeft || node.parentElement === colRight)) {
+                    if (node && pos && (node.parentElement === colLeft || node.parentElement === colRight || node.parentElement === colMiddle)) {
                         pos.parent.insertBefore(node, pos.nextSibling);
                     }
                 });
@@ -4336,6 +4393,8 @@
                     // Default to aliasing the most recent available month as "current"
                     selector.value = 'current';
                 }
+                // Update nav buttons
+                updateMonthNavButtons();
             } catch (error) {
                 showNotification(`თვეების განახლება ვერ მოხერხდა: ${error.message}`, 'error');
                 // Reload page after 3 seconds if month selector update fails
@@ -4366,23 +4425,36 @@
                     return;
                 }
 
-                // Simple navigation logic
-                let newIndex = currentIndex + direction;
-
-                // Check boundaries
-                if (newIndex < 0) newIndex = options.length - 1;
-                if (newIndex >= options.length) newIndex = 0;
+                // Clamp within bounds (no wrap)
+                const newIndex = Math.max(0, Math.min(options.length - 1, currentIndex + direction));
+                if (newIndex === currentIndex) {
+                    updateMonthNavButtons();
+                    return;
+                }
 
                 // Set new value
                 selector.value = options[newIndex].value;
 
-                // Загружаем выбранный месяц
+                // Load selected and refresh buttons state
                 await loadSelectedMonth();
+                updateMonthNavButtons();
                 
             } catch (error) {
                 console.error('Error in navigateMonth:', error);
                 showNotification(`შეცდომა თვის ნავიგაციისას: ${error.message}`, 'error');
             }
+        }
+
+        function updateMonthNavButtons() {
+            try {
+                const selector = document.getElementById('monthSelect');
+                const options = selector ? Array.from(selector.options) : [];
+                const currentIndex = selector ? options.findIndex(o => o.value === selector.value) : -1;
+                const prevBtn = document.querySelector('.month-selector button[onclick="navigateMonth(-1)"]');
+                const nextBtn = document.querySelector('.month-selector button[onclick="navigateMonth(1)"]');
+                if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+                if (nextBtn) nextBtn.disabled = currentIndex >= options.length - 1;
+            } catch(_) {}
         }
 
         async function loadSelectedMonth() {
@@ -4440,6 +4512,7 @@
                 try {
                     await loadData();
                     showNotification(`შეიცვალა თვე: ${currentMonth}/${currentYear}`, 'success');
+                    updateMonthNavButtons();
                 } catch (loadError) {
                     console.error('Error loading data for month:', loadError);
                     showNotification(`შეცდომა მონაცემების ჩატვირთვაში: ${loadError.message}`, 'error');
