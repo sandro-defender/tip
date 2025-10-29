@@ -1,10 +1,10 @@
 <!--
 Project: Tip Tracker
 File: index.html
-Version: 1.8
+Version: 1.7
 Author: Cursor AI
-Model: Auto (claude-sonnet-4.5)
-Last Modified: 2025-01-15
+Model: GPT-5
+Last Modified: 2025-10-05
 Purpose: Main portal page with device theme detection and automatic theme switching
 -->
 <!DOCTYPE html>
@@ -959,25 +959,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             letter-spacing: 0.2px;
             white-space: nowrap;
         }
-        .mini-jar-top,
-        .mini-jar-bottom {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 800;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-            z-index: 4;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-        .mini-jar-top {
-            top: 6px;
-        }
-        .mini-jar-bottom {
-            bottom: 6px;
-        }
         /* Subtle shimmer to feel alive */
         .mini-jar-jar::after {
             content: '';
@@ -1386,10 +1367,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <div class="mini-jar" aria-hidden="true">
                         <div class="mini-jar-lid"></div>
                         <div class="mini-jar-jar">
-                            <div class="mini-jar-top" id="miniJarTop">0</div>
                             <div class="mini-jar-fill" id="miniJarFill"></div>
-                            <div class="mini-jar-percentage" id="miniJarPerPoint">0</div>
-                            <div class="mini-jar-bottom" id="miniJarBottom">0</div>
+                            <div class="mini-jar-percentage" id="miniJarValue">0</div>
                         </div>
                     </div>
                     <span class="tip-badge" id="tipBadge">
@@ -2006,7 +1985,10 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         document.addEventListener('DOMContentLoaded', initLogoSelection);
 
         // Tip Badge Functions
+        let currentDisplayIndex = 0;
         let tipData = { lastDayEntry: 0, currentMonthTotal: 0, lastEntryDate: null };
+        let previousValues = { lastDayEntry: null, currentMonthTotal: null };
+        let swapInterval;
 
         // Load tip data via fetch from /api/d1 with retries (migrated from iframe loader)
         function loadMonthData({ year, month, onSuccess, onError, retries = 3, retryDelayMs = 1500 }) {
@@ -2068,7 +2050,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         tipData.lastEntryDate = lastEntryDate;
 
                         tipBadge.classList.remove('loading');
-                        updateJarNumbers();
+                        startBadgeSwapping();
                     } catch (mapErr) {
                         console.error('Mapping error:', mapErr);
                         tipBadge.classList.remove('loading');
@@ -2087,45 +2069,111 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             });
         }
 
-        function updateJarNumbers() {
-            const topEl = document.getElementById('miniJarTop');
-            const bottomEl = document.getElementById('miniJarBottom');
-            const perPointEl = document.getElementById('miniJarPerPoint');
-            const tipBadge = document.getElementById('tipBadge');
-            if (!topEl || !bottomEl || !perPointEl || !tipBadge) return;
+        function startBadgeSwapping() {
+            const tipBadgeContent = document.getElementById('tipBadgeContent');
+            if (!tipBadgeContent) return;
+
+            // Clear any existing interval
+            if (swapInterval) {
+                clearInterval(swapInterval);
+            }
 
             // Function to format numbers with thousands separators
             function formatNumber(num) {
-                return Math.round(Number(num || 0))
+                return Math.round(num)
                     .toString()
                     .replace(/\B(?=(\d{3})+(?!\d))/g, '.');  // Add thousands separators (dots)
             }
 
-            // Update badge color based on data age
-            if (tipData.lastEntryDate) {
+            // Function to determine data age and set badge color
+            function updateBadgeColor() {
+                const tipBadge = document.getElementById('tipBadge');
+                if (!tipBadge || !tipData.lastEntryDate) return;
+
                 const lastEntryDate = new Date(tipData.lastEntryDate);
                 const today = new Date();
+                
+                // Reset time to start of day for accurate comparison
                 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 const lastEntryStart = new Date(lastEntryDate.getFullYear(), lastEntryDate.getMonth(), lastEntryDate.getDate());
-                const diffDays = Math.floor((todayStart - lastEntryStart) / (1000 * 60 * 60 * 24));
+                
+                const diffTime = todayStart - lastEntryStart;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
+                console.log('Date comparison:', {
+                    lastEntryDate: lastEntryDate.toISOString().split('T')[0],
+                    today: today.toISOString().split('T')[0],
+                    diffDays: diffDays
+                });
+
+                // Remove existing color classes
                 tipBadge.classList.remove('recent-data', 'old-data');
+
                 if (diffDays <= 1) {
+                    // Yesterday or today - Blue
                     tipBadge.classList.add('recent-data');
+                    console.log('Setting blue color - recent data');
                 } else if (diffDays >= 2) {
+                    // 2+ days ago - Red
                     tipBadge.classList.add('old-data');
+                    console.log('Setting red color - old data');
                 }
             }
 
-            // Get total points from localStorage, default to 1
-            const totalPoints = Number(localStorage.getItem('total_points') || 1);
-            const validPoints = isFinite(totalPoints) && totalPoints > 0 ? totalPoints : 1;
+            // Function to swap between values
+            function swapValues() {
+                const values = [
+                    { text: `${formatNumber(tipData.lastDayEntry)} `, label: 'ბოლო', key: 'lastDayEntry' },
+                    { text: `${formatNumber(tipData.currentMonthTotal)} `, label: 'თვე', key: 'currentMonthTotal' }
+                ];
 
-            // Update all three numbers: top = last day, center = per point, bottom = total
-            topEl.textContent = formatNumber(tipData.lastDayEntry || 0);
-            bottomEl.textContent = formatNumber(tipData.currentMonthTotal || 0);
-            const perPoint = ((tipData.currentMonthTotal || 0) / validPoints).toFixed(2);
-            perPointEl.textContent = perPoint;
+                const currentValue = values[currentDisplayIndex];
+                const nextValue = values[(currentDisplayIndex + 1) % values.length];
+                
+                // Check if the next value has actually changed
+                const nextValueKey = nextValue.key;
+                const hasValueChanged = previousValues[nextValueKey] !== tipData[nextValueKey];
+                
+                // Update previous values
+                previousValues[nextValueKey] = tipData[nextValueKey];
+
+                if (hasValueChanged) {
+                    // Only animate if the value has changed
+                    tipBadgeContent.classList.add('swapping');
+                    
+                    setTimeout(() => {
+                        // Update content with new value
+                        tipBadgeContent.textContent = nextValue.text;
+                        tipBadgeContent.title = nextValue.label;
+                        
+                        // Remove swapping class and add fade-in animation
+                        tipBadgeContent.classList.remove('swapping');
+                        tipBadgeContent.classList.add('fade-in');
+                        
+                        // Update badge color based on data age
+                        updateBadgeColor();
+                        
+                        // Remove fade-in class after animation completes
+                        setTimeout(() => {
+                            tipBadgeContent.classList.remove('fade-in');
+                        }, 400);
+                    }, 150);
+                } else {
+                    // No animation, just update the content
+                    tipBadgeContent.textContent = nextValue.text;
+                    tipBadgeContent.title = nextValue.label;
+                    updateBadgeColor();
+                }
+                
+                // Move to next value
+                currentDisplayIndex = (currentDisplayIndex + 1) % values.length;
+            }
+
+            // Initial display
+            swapValues();
+
+            // Set up interval to swap every 3 seconds
+            swapInterval = setInterval(swapValues, 3000);
         }
 
         // Load tip badge when page loads
@@ -2403,8 +2451,10 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
         });
 
-        // Mini jar fill animation and coin effects
+        // Mirror badge value into mini jar and animate fill
         document.addEventListener('DOMContentLoaded', () => {
+            const tipBadgeContent = document.getElementById('tipBadgeContent');
+            const miniJarValue = document.getElementById('miniJarValue');
             const miniJarFill = document.getElementById('miniJarFill');
             const miniJar = document.querySelector('.mini-jar-jar');
             const miniJarRoot = document.querySelector('.mini-jar');
@@ -2422,11 +2472,15 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 return Math.min(Math.max(Math.floor(percent), 0), 100);
             }
 
-            function updateJarFill() {
-                if (!miniJarFill) return;
+            function updateMiniJarFromBadge() {
+                if (!tipBadgeContent || !miniJarValue || !miniJarFill) return;
+                const raw = (tipBadgeContent.textContent || '').trim();
+                miniJarValue.textContent = raw || '0';
                 // Fill level based on month progress
                 const level = getMonthProgress();
                 miniJarFill.style.height = level + '%';
+                // Spawn a coin on value change
+                spawnMiniCoin();
             }
 
             function spawnMiniCoin() {
@@ -2446,11 +2500,17 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 setTimeout(() => coin.remove(), duration * 1000 + 200);
             }
 
-            // Initial fill update
-            updateJarFill();
+            // Initial sync
+            updateMiniJarFromBadge();
 
-            // Periodic fill updates
-            setInterval(updateJarFill, 1000);
+            // Observe changes to the badge content (existing logic updates it)
+            if (tipBadgeContent) {
+                const observer = new MutationObserver(updateMiniJarFromBadge);
+                observer.observe(tipBadgeContent, { childList: true, characterData: true, subtree: true });
+            }
+
+            // Also resync periodically as a fallback
+            setInterval(updateMiniJarFromBadge, 3000);
 
             // Periodic coin for liveliness
             setInterval(() => {
@@ -2459,6 +2519,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     spawnMiniCoin();
                 }
             }, 4000);
+
+            // Continuous date-based fill updates (once per second)
+            setInterval(() => {
+                if (!miniJarFill) return;
+                const level = getMonthProgress();
+                miniJarFill.style.height = level + '%';
+            }, 1000);
 
             // Hook into existing badge color logic by mirroring classes
             // Whenever the badge color classes change, apply the same to the mini jar
@@ -2795,11 +2862,4 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         });
     </script>
 </body>
-<!--
-CHANGELOG
-[2025-01-15] v1.8 – Modified mini jar to display three static numbers instead of swapping.
-Reason: User requested to show all numbers simultaneously - last day entry at top, per-point amount in center, monthly total at bottom.
-Thoughts: Removed swapping logic entirely; numbers now update directly from API data. Per-point calculated as (total / totalPoints) with 2 decimal precision. totalPoints read from localStorage key 'total_points' (defaults to 1).
-Model: Auto (claude-sonnet-4.5)
--->
 </html>
