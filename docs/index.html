@@ -1,10 +1,10 @@
 <!--
 Project: Tip Tracker
 File: index.html
-Version: 1.8
+Version: 1.7
 Author: Cursor AI
 Model: GPT-5
-Last Modified: 2025-10-29
+Last Modified: 2025-10-05
 Purpose: Main portal page with device theme detection and automatic theme switching
 -->
 <!DOCTYPE html>
@@ -1318,17 +1318,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             document.getElementById('sw-version').classList.remove('loading');
         }
     </script>
-
-    <!--
-    CHANGELOG
-    [2025-10-29] v1.8 – Show static jar numbers and per-point
-    Reason: Requested to display both numbers simultaneously and add per-point amount
-    Changes:
-    - Added .tip-number elements (top=last day, bottom=total) with no labels
-    - Computed per-point from /data/YYYY-MM.json totalPoints and shown in jar center
-    - Removed swapping animation; numbers now static and color-coded by data age
-    Model: GPT-5
-    -->
     <script>
         fetch("/includes/head.html")
             .then(response => response.text())
@@ -1997,7 +1986,9 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         // Tip Badge Functions
         let currentDisplayIndex = 0;
-        let tipData = { lastDayEntry: 0, currentMonthTotal: 0, lastEntryDate: null, totalPoints: 0, perPoint: 0 };
+        let tipData = { lastDayEntry: 0, currentMonthTotal: 0, lastEntryDate: null };
+        let previousValues = { lastDayEntry: null, currentMonthTotal: null };
+        let swapInterval;
 
         // Load tip data via fetch from /api/d1 with retries (migrated from iframe loader)
         function loadMonthData({ year, month, onSuccess, onError, retries = 3, retryDelayMs = 1500 }) {
@@ -2025,31 +2016,22 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         async function fetchTipData() {
             const tipBadge = document.getElementById('tipBadge');
             const tipBadgeContent = document.getElementById('tipBadgeContent');
-            if (tipBadge && tipBadgeContent) {
-                tipBadge.classList.add('loading');
-                tipBadgeContent.textContent = '...';
+            if (!tipBadge || !tipBadgeContent) {
+                console.error('Tip badge elements not found');
+                return;
             }
+
+            tipBadge.classList.add('loading');
+            tipBadgeContent.textContent = '...';
 
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
 
-            // helper to fetch totalPoints from static data
-            async function fetchTotalPoints(y, m) {
-                const mm = String(m).padStart(2, '0');
-                try {
-                    const res = await fetch(`/data/${y}-${mm}.json?_=${Date.now()}`);
-                    if (!res.ok) return 0;
-                    const json = await res.json();
-                    const tp = Number(json.totalPoints || 0);
-                    return isFinite(tp) ? tp : 0;
-                } catch { return 0; }
-            }
-
             loadMonthData({
                 year,
                 month,
-                onSuccess: async (data) => {
+                onSuccess: (data) => {
                     try {
                         // Map D1 month payload to dashboard-like structure (was db.php)
                         const daysObj = data.days || {};
@@ -2066,60 +2048,132 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         tipData.lastDayEntry = lastDayEntry || 0;
                         tipData.currentMonthTotal = currentMonthTotal || 0;
                         tipData.lastEntryDate = lastEntryDate;
-                        tipData.totalPoints = await fetchTotalPoints(year, month);
-                        tipData.perPoint = tipData.totalPoints > 0 ? (tipData.currentMonthTotal / tipData.totalPoints) : 0;
 
-                        if (tipBadge) tipBadge.classList.remove('loading');
-                        renderTipNumbers();
+                        tipBadge.classList.remove('loading');
+                        startBadgeSwapping();
                     } catch (mapErr) {
                         console.error('Mapping error:', mapErr);
-                        if (tipBadge) {
-                            tipBadge.classList.remove('loading');
-                            tipBadge.classList.add('error');
-                            if (tipBadgeContent) tipBadgeContent.textContent = 'Error';
-                        }
+                        tipBadge.classList.remove('loading');
+                        tipBadge.classList.add('error');
+                        tipBadgeContent.textContent = 'Error';
                     }
                 },
                 onError: (err) => {
                     console.error('Failed to load data via fetch:', err);
-                    if (tipBadge) {
-                        tipBadge.classList.remove('loading');
-                        tipBadge.classList.add('error');
-                        if (tipBadgeContent) tipBadgeContent.textContent = 'Error';
-                    }
+                    tipBadge.classList.remove('loading');
+                    tipBadge.classList.add('error');
+                    tipBadgeContent.textContent = 'Error';
                 },
                 retries: 3,
                 retryDelayMs: 1500
             });
         }
-        function renderTipNumbers() {
-            const topEl = document.getElementById('tipNumberTop');
-            const bottomEl = document.getElementById('tipNumberBottom');
-            const miniVal = document.getElementById('miniJarValue');
-            if (!topEl || !bottomEl || !miniVal) return;
 
-            const formatNumber = (num) => Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            topEl.textContent = formatNumber(tipData.lastDayEntry);
-            bottomEl.textContent = formatNumber(tipData.currentMonthTotal);
-            miniVal.textContent = (isFinite(tipData.perPoint) ? tipData.perPoint : 0).toFixed(2);
+        function startBadgeSwapping() {
+            const tipBadgeContent = document.getElementById('tipBadgeContent');
+            if (!tipBadgeContent) return;
 
-            const miniJarRoot = document.querySelector('.mini-jar');
-            [topEl, bottomEl].forEach(el => el.classList.remove('recent-data', 'old-data'));
-            if (miniJarRoot) miniJarRoot.classList.remove('recent-data', 'old-data');
-            if (tipData.lastEntryDate) {
+            // Clear any existing interval
+            if (swapInterval) {
+                clearInterval(swapInterval);
+            }
+
+            // Function to format numbers with thousands separators
+            function formatNumber(num) {
+                return Math.round(num)
+                    .toString()
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');  // Add thousands separators (dots)
+            }
+
+            // Function to determine data age and set badge color
+            function updateBadgeColor() {
+                const tipBadge = document.getElementById('tipBadge');
+                if (!tipBadge || !tipData.lastEntryDate) return;
+
                 const lastEntryDate = new Date(tipData.lastEntryDate);
                 const today = new Date();
+                
+                // Reset time to start of day for accurate comparison
                 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 const lastEntryStart = new Date(lastEntryDate.getFullYear(), lastEntryDate.getMonth(), lastEntryDate.getDate());
-                const diffDays = Math.floor((todayStart - lastEntryStart) / (1000 * 60 * 60 * 24));
+                
+                const diffTime = todayStart - lastEntryStart;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                console.log('Date comparison:', {
+                    lastEntryDate: lastEntryDate.toISOString().split('T')[0],
+                    today: today.toISOString().split('T')[0],
+                    diffDays: diffDays
+                });
+
+                // Remove existing color classes
+                tipBadge.classList.remove('recent-data', 'old-data');
+
                 if (diffDays <= 1) {
-                    [topEl, bottomEl].forEach(el => el.classList.add('recent-data'));
-                    if (miniJarRoot) miniJarRoot.classList.add('recent-data');
+                    // Yesterday or today - Blue
+                    tipBadge.classList.add('recent-data');
+                    console.log('Setting blue color - recent data');
                 } else if (diffDays >= 2) {
-                    [topEl, bottomEl].forEach(el => el.classList.add('old-data'));
-                    if (miniJarRoot) miniJarRoot.classList.add('old-data');
+                    // 2+ days ago - Red
+                    tipBadge.classList.add('old-data');
+                    console.log('Setting red color - old data');
                 }
             }
+
+            // Function to swap between values
+            function swapValues() {
+                const values = [
+                    { text: `${formatNumber(tipData.lastDayEntry)} `, label: 'ბოლო', key: 'lastDayEntry' },
+                    { text: `${formatNumber(tipData.currentMonthTotal)} `, label: 'თვე', key: 'currentMonthTotal' }
+                ];
+
+                const currentValue = values[currentDisplayIndex];
+                const nextValue = values[(currentDisplayIndex + 1) % values.length];
+                
+                // Check if the next value has actually changed
+                const nextValueKey = nextValue.key;
+                const hasValueChanged = previousValues[nextValueKey] !== tipData[nextValueKey];
+                
+                // Update previous values
+                previousValues[nextValueKey] = tipData[nextValueKey];
+
+                if (hasValueChanged) {
+                    // Only animate if the value has changed
+                    tipBadgeContent.classList.add('swapping');
+                    
+                    setTimeout(() => {
+                        // Update content with new value
+                        tipBadgeContent.textContent = nextValue.text;
+                        tipBadgeContent.title = nextValue.label;
+                        
+                        // Remove swapping class and add fade-in animation
+                        tipBadgeContent.classList.remove('swapping');
+                        tipBadgeContent.classList.add('fade-in');
+                        
+                        // Update badge color based on data age
+                        updateBadgeColor();
+                        
+                        // Remove fade-in class after animation completes
+                        setTimeout(() => {
+                            tipBadgeContent.classList.remove('fade-in');
+                        }, 400);
+                    }, 150);
+                } else {
+                    // No animation, just update the content
+                    tipBadgeContent.textContent = nextValue.text;
+                    tipBadgeContent.title = nextValue.label;
+                    updateBadgeColor();
+                }
+                
+                // Move to next value
+                currentDisplayIndex = (currentDisplayIndex + 1) % values.length;
+            }
+
+            // Initial display
+            swapValues();
+
+            // Set up interval to swap every 3 seconds
+            swapInterval = setInterval(swapValues, 3000);
         }
 
         // Load tip badge when page loads
@@ -2418,13 +2472,14 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 return Math.min(Math.max(Math.floor(percent), 0), 100);
             }
 
-            function updateMiniJarFromBadge() { /* deprecated: kept for safety */ }
-
-            function updateMiniJarFromData() {
-                if (!miniJarValue || !miniJarFill) return;
-                miniJarValue.textContent = (isFinite(tipData.perPoint) ? tipData.perPoint : 0).toFixed(2);
+            function updateMiniJarFromBadge() {
+                if (!tipBadgeContent || !miniJarValue || !miniJarFill) return;
+                const raw = (tipBadgeContent.textContent || '').trim();
+                miniJarValue.textContent = raw || '0';
+                // Fill level based on month progress
                 const level = getMonthProgress();
                 miniJarFill.style.height = level + '%';
+                // Spawn a coin on value change
                 spawnMiniCoin();
             }
 
@@ -2446,18 +2501,16 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
 
             // Initial sync
-            updateMiniJarFromData();
+            updateMiniJarFromBadge();
 
             // Observe changes to the badge content (existing logic updates it)
-            // Observe changes to numbers to refresh center per-point
-            const topEl = document.getElementById('tipNumberTop');
-            const bottomEl = document.getElementById('tipNumberBottom');
-            const observer = new MutationObserver(updateMiniJarFromData);
-            if (topEl) observer.observe(topEl, { childList: true });
-            if (bottomEl) observer.observe(bottomEl, { childList: true });
+            if (tipBadgeContent) {
+                const observer = new MutationObserver(updateMiniJarFromBadge);
+                observer.observe(tipBadgeContent, { childList: true, characterData: true, subtree: true });
+            }
 
             // Also resync periodically as a fallback
-            setInterval(updateMiniJarFromData, 3000);
+            setInterval(updateMiniJarFromBadge, 3000);
 
             // Periodic coin for liveliness
             setInterval(() => {
@@ -2474,7 +2527,22 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 miniJarFill.style.height = level + '%';
             }, 1000);
 
-            // Color classes are applied directly in renderTipNumbers
+            // Hook into existing badge color logic by mirroring classes
+            // Whenever the badge color classes change, apply the same to the mini jar
+            const tipBadge = document.getElementById('tipBadge');
+            if (tipBadge && miniJarRoot) {
+                const mirrorClasses = () => {
+                    miniJarRoot.classList.remove('recent-data', 'old-data');
+                    if (tipBadge.classList.contains('recent-data')) {
+                        miniJarRoot.classList.add('recent-data');
+                    } else if (tipBadge.classList.contains('old-data')) {
+                        miniJarRoot.classList.add('old-data');
+                    }
+                };
+                mirrorClasses();
+                const classObserver = new MutationObserver(mirrorClasses);
+                classObserver.observe(tipBadge, { attributes: true, attributeFilter: ['class'] });
+            }
         });
 
     </script>
