@@ -1,7 +1,7 @@
 <!--
 Project: Tip Tracker
 File: index.html
-Version: 1.9
+Version: 1.8
 Author: Cursor AI
 Model: GPT-5
 Last Modified: 2025-10-29
@@ -952,14 +952,12 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             left: 50%;
             transform: translate(-50%, -50%);
             color: #fff;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
             z-index: 3;
             letter-spacing: 0.2px;
-            white-space: pre-line; /* allow multiline values */
-            line-height: 1.1;
-            text-align: center;
+            white-space: nowrap;
         }
         /* Subtle shimmer to feel alive */
         .mini-jar-jar::after {
@@ -1320,6 +1318,17 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             document.getElementById('sw-version').classList.remove('loading');
         }
     </script>
+
+    <!--
+    CHANGELOG
+    [2025-10-29] v1.8 – Show static jar numbers and per-point
+    Reason: Requested to display both numbers simultaneously and add per-point amount
+    Changes:
+    - Added .tip-number elements (top=last day, bottom=total) with no labels
+    - Computed per-point from /data/YYYY-MM.json totalPoints and shown in jar center
+    - Removed swapping animation; numbers now static and color-coded by data age
+    Model: GPT-5
+    -->
     <script>
         fetch("/includes/head.html")
             .then(response => response.text())
@@ -1987,7 +1996,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         document.addEventListener('DOMContentLoaded', initLogoSelection);
 
         // Tip Badge Functions
-        let tipData = { lastDayEntry: 0, currentMonthTotal: 0, lastEntryDate: null, totalPoints: 0 };
+        let currentDisplayIndex = 0;
+        let tipData = { lastDayEntry: 0, currentMonthTotal: 0, lastEntryDate: null, totalPoints: 0, perPoint: 0 };
 
         // Load tip data via fetch from /api/d1 with retries (migrated from iframe loader)
         function loadMonthData({ year, month, onSuccess, onError, retries = 3, retryDelayMs = 1500 }) {
@@ -2015,22 +2025,31 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         async function fetchTipData() {
             const tipBadge = document.getElementById('tipBadge');
             const tipBadgeContent = document.getElementById('tipBadgeContent');
-            if (!tipBadge || !tipBadgeContent) {
-                console.error('Tip badge elements not found');
-                return;
+            if (tipBadge && tipBadgeContent) {
+                tipBadge.classList.add('loading');
+                tipBadgeContent.textContent = '...';
             }
-
-            tipBadge.classList.add('loading');
-            tipBadgeContent.textContent = '...';
 
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
 
+            // helper to fetch totalPoints from static data
+            async function fetchTotalPoints(y, m) {
+                const mm = String(m).padStart(2, '0');
+                try {
+                    const res = await fetch(`/data/${y}-${mm}.json?_=${Date.now()}`);
+                    if (!res.ok) return 0;
+                    const json = await res.json();
+                    const tp = Number(json.totalPoints || 0);
+                    return isFinite(tp) ? tp : 0;
+                } catch { return 0; }
+            }
+
             loadMonthData({
                 year,
                 month,
-                onSuccess: (data) => {
+                onSuccess: async (data) => {
                     try {
                         // Map D1 month payload to dashboard-like structure (was db.php)
                         const daysObj = data.days || {};
@@ -2044,76 +2063,62 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                         const lastEntryDate = lastNonZeroDay ? new Date(year, month - 1, lastNonZeroDay).toISOString() : new Date(year, month - 1, Math.max(1, dayKeys.length)).toISOString();
                         const currentMonthTotal = typeof data.total === 'number' ? data.total : Number(data.total || 0);
 
-                        // Derive totalPoints: prefer count of non-zero days; fallback to elapsed days in month
-                        const nonZeroDaysCount = Object.values(daysObj).filter(v => Number(v) > 0).length;
-                        const now = new Date();
-                        const elapsedDays = now.getDate();
-                        const totalPoints = nonZeroDaysCount || elapsedDays;
-
                         tipData.lastDayEntry = lastDayEntry || 0;
                         tipData.currentMonthTotal = currentMonthTotal || 0;
                         tipData.lastEntryDate = lastEntryDate;
-                        tipData.totalPoints = totalPoints;
+                        tipData.totalPoints = await fetchTotalPoints(year, month);
+                        tipData.perPoint = tipData.totalPoints > 0 ? (tipData.currentMonthTotal / tipData.totalPoints) : 0;
 
-                        tipBadge.classList.remove('loading');
+                        if (tipBadge) tipBadge.classList.remove('loading');
                         renderTipNumbers();
                     } catch (mapErr) {
                         console.error('Mapping error:', mapErr);
-                        tipBadge.classList.remove('loading');
-                        tipBadge.classList.add('error');
-                        tipBadgeContent.textContent = 'Error';
+                        if (tipBadge) {
+                            tipBadge.classList.remove('loading');
+                            tipBadge.classList.add('error');
+                            if (tipBadgeContent) tipBadgeContent.textContent = 'Error';
+                        }
                     }
                 },
                 onError: (err) => {
                     console.error('Failed to load data via fetch:', err);
-                    tipBadge.classList.remove('loading');
-                    tipBadge.classList.add('error');
-                    tipBadgeContent.textContent = 'Error';
+                    if (tipBadge) {
+                        tipBadge.classList.remove('loading');
+                        tipBadge.classList.add('error');
+                        if (tipBadgeContent) tipBadgeContent.textContent = 'Error';
+                    }
                 },
                 retries: 3,
                 retryDelayMs: 1500
             });
         }
-
         function renderTipNumbers() {
-            const tipBadge = document.getElementById('tipBadge');
-            const tipBadgeContent = document.getElementById('tipBadgeContent');
-            if (!tipBadge || !tipBadgeContent) return;
+            const topEl = document.getElementById('tipNumberTop');
+            const bottomEl = document.getElementById('tipNumberBottom');
+            const miniVal = document.getElementById('miniJarValue');
+            if (!topEl || !bottomEl || !miniVal) return;
 
-            // format helper
-            const formatNumber = (num) => {
-                return Math.round(Number(num) || 0)
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            };
+            const formatNumber = (num) => Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            topEl.textContent = formatNumber(tipData.lastDayEntry);
+            bottomEl.textContent = formatNumber(tipData.currentMonthTotal);
+            miniVal.textContent = (isFinite(tipData.perPoint) ? tipData.perPoint : 0).toFixed(2);
 
-            // Compute tipperpoint: total / totalPoints with 2 decimals
-            const total = Number(tipData.currentMonthTotal) || 0;
-            const totalPoints = Number(tipData.totalPoints) || 0;
-            const tipperpoint = totalPoints > 0 ? (total / totalPoints).toFixed(2) : '0.00';
-
-            // Update badge content to show all three values simultaneously
-            // Layout: last | tipperpoint | total
-            tipBadgeContent.textContent = `${formatNumber(tipData.lastDayEntry)} | ${tipperpoint} | ${formatNumber(total)}`;
-            tipBadgeContent.title = 'ბოლო | tipperpoint | თვე';
-
-            // Update color based on recency of last entry (reuse previous logic)
+            const miniJarRoot = document.querySelector('.mini-jar');
+            [topEl, bottomEl].forEach(el => el.classList.remove('recent-data', 'old-data'));
+            if (miniJarRoot) miniJarRoot.classList.remove('recent-data', 'old-data');
             if (tipData.lastEntryDate) {
                 const lastEntryDate = new Date(tipData.lastEntryDate);
                 const today = new Date();
                 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 const lastEntryStart = new Date(lastEntryDate.getFullYear(), lastEntryDate.getMonth(), lastEntryDate.getDate());
                 const diffDays = Math.floor((todayStart - lastEntryStart) / (1000 * 60 * 60 * 24));
-                tipBadge.classList.remove('recent-data', 'old-data');
-                if (diffDays <= 1) tipBadge.classList.add('recent-data');
-                else if (diffDays >= 2) tipBadge.classList.add('old-data');
-            }
-
-            // Also refresh the mini-jar text now that we show multiple values
-            const miniJarValue = document.getElementById('miniJarValue');
-            if (miniJarValue) {
-                // Use 3 lines (top: last, middle: tipperpoint, bottom: total)
-                miniJarValue.textContent = `ბოლო ${formatNumber(tipData.lastDayEntry)}\n ${tipperpoint}\nთვე ${formatNumber(total)}`;
+                if (diffDays <= 1) {
+                    [topEl, bottomEl].forEach(el => el.classList.add('recent-data'));
+                    if (miniJarRoot) miniJarRoot.classList.add('recent-data');
+                } else if (diffDays >= 2) {
+                    [topEl, bottomEl].forEach(el => el.classList.add('old-data'));
+                    if (miniJarRoot) miniJarRoot.classList.add('old-data');
+                }
             }
         }
 
@@ -2413,36 +2418,46 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 return Math.min(Math.max(Math.floor(percent), 0), 100);
             }
 
-            function updateMiniJarFromBadge() {
+            function updateMiniJarFromBadge() { /* deprecated: kept for safety */ }
+
+            function updateMiniJarFromData() {
                 if (!miniJarValue || !miniJarFill) return;
-                // Keep the same three-line content as renderTipNumbers if available
-                if (typeof tipData !== 'undefined') {
-                    const total = Number(tipData.currentMonthTotal) || 0;
-                    const totalPoints = Number(tipData.totalPoints) || 0;
-                    const tipperpoint = totalPoints > 0 ? (total / totalPoints).toFixed(2) : '0.00';
-                    const fmt = (n)=> Math.round(Number(n)||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    miniJarValue.textContent = ` ${fmt(tipData.lastDayEntry)}\n ${tipperpoint}\n ${fmt(total)}`;
-                } else if (tipBadgeContent) {
-                    // Fallback to badge text
-                    const raw = (tipBadgeContent.textContent || '').trim();
-                    miniJarValue.textContent = raw || '0';
-                }
+                miniJarValue.textContent = (isFinite(tipData.perPoint) ? tipData.perPoint : 0).toFixed(2);
                 const level = getMonthProgress();
                 miniJarFill.style.height = level + '%';
                 spawnMiniCoin();
             }
 
-            // Initial sync
-            updateMiniJarFromBadge();
-
-            // Observe changes to the badge content (kept as a fallback)
-            if (tipBadgeContent) {
-                const observer = new MutationObserver(updateMiniJarFromBadge);
-                observer.observe(tipBadgeContent, { childList: true, characterData: true, subtree: true });
+            function spawnMiniCoin() {
+                if (!miniJar) return;
+                const coin = document.createElement('div');
+                coin.className = 'mini-coin';
+                // slight horizontal jitter
+                const jitter = (Math.random() * 14) - 7; // -7px..7px
+                coin.style.left = `calc(50% + ${jitter}px)`;
+                // randomize duration slightly
+                const duration = 1.2 + Math.random() * 0.6;
+                coin.style.animationDuration = `${duration}s`;
+                // random small delay so multiple coins look natural
+                coin.style.animationDelay = `${Math.random() * 0.2}s`;
+                miniJar.appendChild(coin);
+                // cleanup after animation ends
+                setTimeout(() => coin.remove(), duration * 1000 + 200);
             }
 
+            // Initial sync
+            updateMiniJarFromData();
+
+            // Observe changes to the badge content (existing logic updates it)
+            // Observe changes to numbers to refresh center per-point
+            const topEl = document.getElementById('tipNumberTop');
+            const bottomEl = document.getElementById('tipNumberBottom');
+            const observer = new MutationObserver(updateMiniJarFromData);
+            if (topEl) observer.observe(topEl, { childList: true });
+            if (bottomEl) observer.observe(bottomEl, { childList: true });
+
             // Also resync periodically as a fallback
-            setInterval(updateMiniJarFromBadge, 3000);
+            setInterval(updateMiniJarFromData, 3000);
 
             // Periodic coin for liveliness
             setInterval(() => {
@@ -2459,22 +2474,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 miniJarFill.style.height = level + '%';
             }, 1000);
 
-            // Hook into existing badge color logic by mirroring classes
-            // Whenever the badge color classes change, apply the same to the mini jar
-            const tipBadge = document.getElementById('tipBadge');
-            if (tipBadge && miniJarRoot) {
-                const mirrorClasses = () => {
-                    miniJarRoot.classList.remove('recent-data', 'old-data');
-                    if (tipBadge.classList.contains('recent-data')) {
-                        miniJarRoot.classList.add('recent-data');
-                    } else if (tipBadge.classList.contains('old-data')) {
-                        miniJarRoot.classList.add('old-data');
-                    }
-                };
-                mirrorClasses();
-                const classObserver = new MutationObserver(mirrorClasses);
-                classObserver.observe(tipBadge, { attributes: true, attributeFilter: ['class'] });
-            }
+            // Color classes are applied directly in renderTipNumbers
         });
 
     </script>
@@ -2793,12 +2793,5 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             textColor: 'white'
         });
     </script>
-    <!--
-    CHANGELOG
-    [2025-10-29] v1.9 – Rename avg to tipperpoint and reorder values.
-    Reason: User requested naming change and to place total at bottom.
-    Thoughts: Badge now shows last | tipperpoint | total; mini-jar uses 3 lines.
-    Model: GPT-5
-    -->
 </body>
 </html>
