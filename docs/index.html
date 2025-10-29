@@ -675,42 +675,8 @@ Purpose: Main portal page with device theme detection and automatic theme switch
             }
         }
 
-        /* Animation for Header Text */
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.3) translateY(-100px);
-            }
-            50% {
-                opacity: 0.9;
-                transform: scale(1.1) translateY(20px);
-            }
-            70% {
-                transform: scale(0.9) translateY(-10px);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        @keyframes glow {
-            0% {
-                text-shadow: 0 0 5px var(--primary);
-            }
-            50% {
-                text-shadow: 0 0 20px var(--secondary);
-            }
-            100% {
-                text-shadow: 0 0 5px var(--primary);
-            }
-        }
-
-        header h1 {
-            animation: 
-                bounceIn 1.5s ease-out,
-                glow 2s ease-in-out infinite;
-            animation-fill-mode: both;
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
         }
 
         /* Modal Styles for QR Code */
@@ -1376,19 +1342,19 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     </span>
                 </a>
                 <a href="/statistics" class="link-item" title="View Statistics">
-                    <img src="/icon/link-img/stat.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/stat.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>სტატისტიკა</span>
                 </a>
                 <a href="/memo" class="link-item" title="View Gallery">
-                    <img src="/icon/link-img/note.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/note.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>მემო</span>
                 </a>
                 <a href="/shift" class="link-item" title="Manage Shifts">
-                    <img src="/icon/link-img/shift.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/shift.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>ცვლა</span>
                 </a>
                 <a href="/bar" class="link-item" title="Manage Inventory">
-                    <img src="/icon/link-img/inventory-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/inventory-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>ინვენტარი</span>
                 </a>
                 <a href="/instructions" class="link-item" title="instructions">
@@ -1396,21 +1362,21 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <span>ინსტრუქცია</span>
                 </a>
                 <a href="/salary" class="link-item" title="Salary">
-                    <img src="/icon/link-img/salary-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/salary-2.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>ხელფასი</span>
                 </a>
                 <a href="javascript:void(0)" id="qrLink" class="link-item" title="Share with QR code">
-                    <img src="/icon/link-img/share.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;">
+                    <img src="/icon/link-img/share.png" alt="Tip" class="link-icon" style="width: 46px; height: 46px;" width="46" height="46" loading="lazy" decoding="async">
                     <span>გაზიარება</span>
                 </a>
 
             </div>
             <div class="logo-container">
-                <img src="/img/staff-1.png" alt="img 1" role="presentation">
-                <img src="/img/staff-2.png" alt="img 2" role="presentation">
-                <img src="/img/staff-3.png" alt="img 3" role="presentation">
-                <img src="/img/staff-4.png" alt="img 4" role="presentation">
-                <img src="/img/staff-5.png" alt="img 5" role="presentation">
+                <img src="/img/staff-1.png" alt="img 1" role="presentation" loading="lazy" decoding="async" width="300">
+                <img src="/img/staff-2.png" alt="img 2" role="presentation" loading="lazy" decoding="async" width="300">
+                <img src="/img/staff-3.png" alt="img 3" role="presentation" loading="lazy" decoding="async" width="300">
+                <img src="/img/staff-4.png" alt="img 4" role="presentation" loading="lazy" decoding="async" width="300">
+                <img src="/img/staff-5.png" alt="img 5" role="presentation" loading="lazy" decoding="async" width="300">
             </div>
         </div>
 
@@ -1422,13 +1388,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 <p>პაროლის გაგება შეგიძლიათ "meta"-ს ჩატში;</p>
                 <p>გვერდის ტელეფონის ეკრანზე შესანახად დააჭირეთ მწვანე ღილაკს ქვედა კუთხეში, ან ნახეთ 
                     <a href="/instructions" title="instructions">📖 ინსტრუქცია</a> ;</p>
-                    <video src="/video/ios-install.mp4" controls height="480"></video>
+                    <video src="/video/ios-install.mp4" controls height="480" preload="metadata"></video>
                 <p>ბოლო განახლება: 12.04.2025</p>
             </div>
         </div>
 
         <!-- QR Code Modal -->
-        <div id="qrModal" class="modal">
+        <div id="qrModal" class="modal" role="dialog" aria-modal="true" tabindex="-1">
             <div class="modal-content">
                 <span class="modal-close">&times;</span>
                 <h3>გააზიარე QR კოდით</h3>
@@ -1442,7 +1408,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         </div>
 
         <!-- Update Check Modal -->
-        <div id="updateModal" class="modal">
+        <div id="updateModal" class="modal" role="dialog" aria-modal="true" tabindex="-1">
             <div class="modal-content">
                 <span class="modal-close" id="updateModalClose">&times;</span>
                 <h3>განახლების შემოწმება</h3>
@@ -1473,7 +1439,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                     <span>👋</span>
                     <span>Welcome!</span>
                 </div>
-                <button class="attention-box-close" onclick="closeAttentionBox()">✕</button>
+                <button class="attention-box-close" id="attentionClose">✕</button>
             </div>
             <div class="attention-box-content" data-message-id="message5">
                 <br>მოგესალმებით! პაროლის გაგება "მეტა"-ს ჩატში შეგიძლიათ. სხვა კითხვები თუ გექნებათ არ მოგერიდოთ ...
@@ -1484,21 +1450,21 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         <div class="status-bar" id="statusBar">
             <div class="status-item">
                 <span class="label">App Version:</span>
-                <span id="app-version" class="loading">Loading...</span>
+                <span id="app-version" class="loading" aria-live="polite">Loading...</span>
                 <button onclick="reloadpage()">Reload</button>
             </div>
             <div class="status-item">
                 <span class="label">SW Version:</span>
-                <span id="sw-version" class="loading">Loading...</span>
+                <span id="sw-version" class="loading" aria-live="polite">Loading...</span>
                 <button onclick="clearPWA()">Clear Cache</button>
             </div>
             <div class="status-item">
                 <span class="label">Status:</span>
-                <span id="online-status">Checking...</span>
+                <span id="online-status" aria-live="polite">Checking...</span>
             </div>
             <div class="status-item">
                 <span class="label">IP:</span>
-                <span id="ip-address" class="loading">Loading...</span>
+                <span id="ip-address" class="loading" aria-live="polite">Loading...</span>
             </div>
 
         </div>
@@ -1571,13 +1537,18 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 document.getElementById('menu-container').innerHTML = data;
                 console.log('Menu HTML inserted, executing scripts...');
                 
-                // Execute any script tags that were inserted
+                // Execute any script tags that were inserted without eval (CSP-friendly)
                 const scripts = document.getElementById('menu-container').querySelectorAll('script');
-                scripts.forEach(script => {
-                    if (script.textContent) {
-                        console.log('Executing script from menu...');
-                        eval(script.textContent);
+                scripts.forEach(srcScript => {
+                    const newScript = document.createElement('script');
+                    if (srcScript.src) {
+                        newScript.src = srcScript.src;
+                        newScript.defer = true;
+                    } else {
+                        newScript.textContent = srcScript.textContent;
                     }
+                    document.body.appendChild(newScript);
+                    srcScript.parentNode && srcScript.parentNode.removeChild(srcScript);
                 });
                 
                 // Wait for the script to execute and function to be available
@@ -1779,16 +1750,20 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         // IP Address Fetching
         const ipElement = document.getElementById('ip-address');
-        const fetchIPWithRetry = async (retries = 3) => {
+        const fetchIPWithRetry = async (retries = 3, timeoutMs = 1500) => {
             for (let i = 0; i < retries; i++) {
+                const controller = new AbortController();
+                const to = setTimeout(() => controller.abort(), timeoutMs);
                 try {
-                    const response = await fetch('https://api.ipify.org?format=json');
+                    const response = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+                    clearTimeout(to);
                     const data = await response.json();
                     ipElement.textContent = data.ip;
                     ipElement.style.color = 'var(--success)';
                     ipElement.classList.remove('loading');
                     return;
                 } catch {
+                    clearTimeout(to);
                     if (i === retries - 1) {
                         ipElement.textContent = 'Unavailable';
                         ipElement.style.color = 'var(--danger)';
@@ -1944,6 +1919,12 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 box.style.display = 'none';
             } else {
                 box.style.display = 'block';
+            }
+
+            // Bind close button without inline handler
+            const closeBtn = document.getElementById('attentionClose');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeAttentionBox);
             }
         });
 
@@ -2185,7 +2166,7 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         // Particles Toggle Functionality
         const particlesToggle = document.getElementById('particlesToggle');
         const particlesContainer = document.getElementById('particles-js');
-        const savedParticlesState = localStorage.getItem('particlesEnabled') !== 'false';
+        const savedParticlesState = localStorage.getItem('particlesEnabled') === 'true';
         
         // Set initial state
         particlesContainer.style.display = savedParticlesState ? 'block' : 'none';
@@ -2206,6 +2187,31 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         // QR Code Modal
         document.addEventListener('DOMContentLoaded', () => {
+            function getFocusableElements(container){
+                return Array.from(container.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el=>!el.hasAttribute('disabled'));
+            }
+            function openModal(modal){
+                modal.style.display = 'flex';
+                const focusables = getFocusableElements(modal);
+                if (focusables[0]) focusables[0].focus();
+                function handleKey(e){
+                    if (e.key === 'Escape') { e.preventDefault(); closeModal(modal); }
+                    if (e.key === 'Tab') {
+                        const items = getFocusableElements(modal);
+                        if (!items.length) return;
+                        const first = items[0];
+                        const last = items[items.length - 1];
+                        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                    }
+                }
+                modal._keyHandler = handleKey;
+                document.addEventListener('keydown', handleKey);
+            }
+            function closeModal(modal){
+                modal.style.display = 'none';
+                if (modal._keyHandler) { document.removeEventListener('keydown', modal._keyHandler); modal._keyHandler = null; }
+            }
             const qrLink = document.getElementById('qrLink');
             const qrModal = document.getElementById('qrModal');
             if (!qrLink || !qrModal) return;
@@ -2214,18 +2220,16 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
             qrLink.addEventListener('click', e => {
                 e.preventDefault();
-                qrModal.style.display = 'flex';
+                openModal(qrModal);
             });
 
             if (closeQrModal) {
-                closeQrModal.addEventListener('click', () => {
-                    qrModal.style.display = 'none';
-                });
+                closeQrModal.addEventListener('click', () => { closeModal(qrModal); });
             }
 
             window.addEventListener('click', e => {
                 if (e.target === qrModal) {
-                    qrModal.style.display = 'none';
+                    closeModal(qrModal);
                 }
             });
 
@@ -2314,19 +2318,28 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
             // Open update modal
             updateCheckButton.addEventListener('click', () => {
-                updateModal.style.display = 'flex';
+                // open with focus trap from QR utilities if available
+                if (typeof openModal === 'function') {
+                    openModal(updateModal);
+                } else {
+                    updateModal.style.display = 'flex';
+                }
                 checkForUpdates();
             });
 
             // Close update modal
             updateModalClose.addEventListener('click', () => {
-                updateModal.style.display = 'none';
+                if (typeof closeModal === 'function') {
+                    closeModal(updateModal);
+                } else {
+                    updateModal.style.display = 'none';
+                }
             });
 
             // Close modal when clicking outside
             window.addEventListener('click', (e) => {
                 if (e.target === updateModal) {
-                    updateModal.style.display = 'none';
+                    if (typeof closeModal === 'function') closeModal(updateModal); else updateModal.style.display = 'none';
                 }
             });
 
