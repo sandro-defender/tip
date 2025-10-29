@@ -1,0 +1,2039 @@
+<!--
+Project: Staff You - Salary & Tips Calculator
+File: html/salary.html
+Version: 1.1
+Author: Cursor AI
+Model: GPT-5
+Last Modified: 2025-10-03
+Purpose: Frontend page for salary and tips calculation with shifts and absences
+-->
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ხელფასის კალკულატორი</title>
+    <style>
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary, #2a6df5), var(--secondary, #1ac972));
+            animation: loading 1.5s infinite linear;
+            z-index: 9999;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .load-error {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 9999;
+            display: none;
+        }
+    </style>
+    <script>
+        // Add loading indicator
+        document.write('<div class="loading-indicator"></div><div class="load-error">Loading failed. Please refresh.</div>');
+        
+        // Improved head loading with retry
+        function loadHead(retries = 3) {
+            return fetch("/includes/head.html")
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load head content');
+                    return response.text();
+                })
+                .then(data => {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    Array.from(tempDiv.children).forEach(element => {
+                        if (!document.head.querySelector(`[src="${element.getAttribute('src')}"]`)) {
+                            document.head.appendChild(element.cloneNode(true));
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Head loading error:', error);
+                    if (retries > 0) {
+                        setTimeout(() => loadHead(retries - 1), 1000);
+                    } else {
+                        document.querySelector('.load-error').style.display = 'block';
+                    }
+                });
+        }
+
+        // Initialize loading
+        loadHead();
+    </script>
+    <style>
+        :root {
+            --primary: #2a6df5;
+            --secondary: #1ac972;
+            --background: #f8faff;
+            --text: #2d3748;
+            --card-bg: #ffffff;
+            --section-bg: #f8f9fe;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0,0,0,0.1);
+            --result-bg: linear-gradient(145deg, #2a6df5, #1e4eb2);
+            --input-bg: transparent;
+            --input-border: #e2e8f0;
+            --toggle-bg: white;
+            --toggle-shadow: rgba(0,0,0,0.05);
+            --toggle-selected-shadow: rgba(42,109,245,0.3);
+            --debug-bg: rgba(0, 0, 0, 0.8);
+            --debug-text: #00ff00;
+            --notice-banner-bg: #ff9800;
+            --table-border: rgba(255,255,255,0.2);
+            --table-hover: rgba(255,255,255,0.05);
+        }
+
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --secondary: #34d399;
+            --background: #111827;
+            --text: #f3f4f6;
+            --card-bg: #1f2937;
+            --section-bg: #374151;
+            --border-color: #4b5563;
+            --shadow-color: rgba(0,0,0,0.5);
+            --result-bg: linear-gradient(145deg, #324059, #3c4d74);
+            --input-bg: #374151;
+            --input-border: #4b5563;
+            --toggle-bg: #374151;
+            --toggle-shadow: rgba(0,0,0,0.3);
+            --toggle-selected-shadow: rgba(96,165,250,0.3);
+            --debug-bg: rgba(0, 0, 0, 0.9);
+            --debug-text: #00ff00;
+            --notice-banner-bg: #f59e0b;
+            --table-border: rgba(255,255,255,0.1);
+            --table-hover: rgba(255,255,255,0.1);
+            --rate-control-bg: #374151;
+            --rate-hint-color: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 1px;
+            padding-bottom: 120px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            animation: slideIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .calculator {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 5px;      /* Gup დაშორება გვერდებზე */
+            box-shadow: 0 8px 30px var(--shadow-color);
+            margin-bottom: 16px;
+        }
+
+        .section {
+            margin-bottom: 16px;
+            padding: 10px;
+            background: var(--section-bg);
+            border-radius: 15px;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 6px;
+        }
+
+        .toggle-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: var(--toggle-bg);
+            color: var(--text);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px var(--toggle-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--toggle-shadow);
+        }
+
+        .toggle-btn.selected {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px var(--toggle-selected-shadow);
+            border-color: var(--primary);
+        }
+
+        .currency-input {
+            position: relative;
+            z-index: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            background: var(--input-bg);
+            border: 2px solid var(--input-border);
+            border-radius: 12px;
+            padding: 12px;
+            height: 50px;
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .currency-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary), 0.2);
+        }
+
+        .results {
+            background: var(--result-bg);
+            color: white;
+            border-radius: 20px;
+            padding: 2px;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+        }
+
+        .results h3 {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.95);
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 6px 0;
+            padding: 6px;
+            border-bottom: 1px solid var(--table-border);
+            font-family: 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .result-item span:first-child {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            flex: 1;
+            text-align: left;
+        }
+
+        .result-item span:not(:first-child) {
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #5ee4ff;
+            text-shadow: 0 0 10px rgba(94,228,255,0.3);
+            flex: 1;
+            text-align: center;
+        }
+        .result-item.muted-row span:not(:first-child) {
+            color: rgba(255,255,255,0.65);
+            text-shadow: none;
+        }
+        .value-pos { color: #22c55e !important; text-shadow: 0 0 10px rgba(34,197,94,0.25) !important; }
+        .value-neg { color: #ef4444 !important; text-shadow: 0 0 10px rgba(239,68,68,0.25) !important; }
+
+        .result-item:hover {
+            background: var(--table-hover);
+            border-radius: 10px;
+            transform: translateX(5px);
+        }
+
+        .result-section {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            border: 1px solid var(--table-border);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .toggle-btn {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+
+        .notice-banner {
+            background: var(--notice-banner-bg);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        .notice-banner table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .notice-banner td, .notice-banner th {
+            padding: 6px;
+            border: 1px solid var(--table-border);
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        .notice-banner tr:hover {
+            background: var(--table-hover);
+        }
+
+        .rate-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            position: relative;
+            touch-action: auto; /* allow vertical page scroll */
+            user-select: auto;
+            background: var(--rate-control-bg, #f8f9fe);
+            border-radius: 12px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .rate-hint {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: var(--rate-hint-color, #666);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swipe-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .swipe-arrow {
+            font-size: 1.2rem;
+            animation: swipeHint 2s infinite;
+            opacity: 0.6;
+        }
+
+        .left-arrow { animation-delay: 0s; }
+        .right-arrow { animation-delay: 0.5s; }
+
+        @keyframes swipeHint {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        .rate-control:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                rgba(42,109,245,0.1) 0%, 
+                rgba(255,255,255,0) 20%, 
+                rgba(255,255,255,0) 80%, 
+                rgba(42,109,245,0.1) 100%);
+            pointer-events: none;
+            border-radius: 12px;
+        }
+
+        .rate-btn {
+            position: relative;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .rate-btn:hover {
+            background: #1d5bd9;
+            transform: scale(1.05);
+        }
+
+        .rate-btn:active {
+            transform: scale(0.95);
+        }
+
+        .debug-window {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--debug-bg);
+            color: var(--debug-text);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            max-height: 400px;
+            overflow: auto;
+            z-index: 1000;
+            white-space: pre;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 130px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        @media (max-width: 360px) {
+            .result-item {
+                font-size: 0.85rem;
+            }
+
+            .result-item span:first-child {
+                font-size: 0.8rem;
+            }
+
+            .result-item span:not(:first-child) {
+                font-size: 0.9rem;
+            }
+
+            .results h3 {
+                font-size: 1rem;
+            }
+
+            .result-section {
+                padding: 8px;
+                margin: 10px 0;
+            }
+
+            .container {
+                padding: 5px;
+            }
+
+            .calculator {
+                padding: 15px;
+            }
+        }
+
+        .collapsible-table {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-table.expanded {
+            max-height: 500px; /* Adjust this value based on your table height */
+        }
+
+        .table-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-toggle:after {
+            content: '▼';
+            font-size: 0.8em;
+            transform: rotate(-90deg);
+            transition: transform 0.3s ease;
+        }
+
+        .table-toggle.expanded:after {
+            transform: rotate(0);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 38px;
+            right: 80px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        [data-theme="dark"] .rate-control:after {
+            background: linear-gradient(90deg, 
+                rgba(96,165,250,0.1) 0%, 
+                rgba(0,0,0,0) 20%, 
+                rgba(0,0,0,0) 80%, 
+                rgba(96,165,250,0.1) 100%);
+        }
+
+        [data-theme="dark"] .rate-btn {
+            background: var(--primary);
+        }
+
+        [data-theme="dark"] .rate-btn:hover {
+            background: #3b82f6;
+        }
+
+        [data-theme="dark"] .notice-banner {
+            background: var(--notice-banner-bg);
+        }
+
+        [data-theme="dark"] .notice-banner table {
+            background: rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] .result-section {
+            background: rgba(0,0,0,0.3);
+        }
+
+        [data-theme="dark"] .result-item {
+            border-bottom-color: var(--table-border);
+        }
+
+        [data-theme="dark"] .result-item:hover {
+            background: var(--table-hover);
+        }
+
+        [data-theme="dark"] .currency-input {
+            background: var(--input-bg);
+            color: var(--text);
+            border-color: var(--input-border);
+        }
+
+        [data-theme="dark"] .currency-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+        }
+
+        [data-theme="dark"] .toggle-btn {
+            background: var(--toggle-bg);
+            color: var(--text);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .toggle-btn:hover {
+            background: var(--section-bg);
+        }
+
+        [data-theme="dark"] .toggle-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        #bottom-results-bar {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            z-index: 999;
+            transition: all 0.3s ease;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        [data-theme="dark"] #bottom-results-bar {
+            background: rgba(17, 24, 39, 0.75);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        }
+
+        .bottom-result-item {
+            text-align: center;
+            color: var(--text);
+        }
+
+        .bottom-result-item span {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bottom-result-item strong {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-container"></div>
+    <div class="container">
+        <!--<button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>-->
+
+    
+        <div class="calculator">
+            <!-- სამუშაო დღეები -->
+            <div class="section">
+                <h2>📅 სამუშაო დღეები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-days="13">13 დღე</button>
+                    <button class="toggle-btn" data-days="14">14 დღე</button>
+                    <button class="toggle-btn selected" data-days="15">15 დღე</button>
+                    <button class="toggle-btn" data-days="16">16 დღე</button>
+                    <button class="toggle-btn" data-days="17">17 დღე</button>
+                </div>
+            </div>
+
+            <!-- პოზიცია -->
+            <div class="section">
+                <h2>🧑‍🧑‍🧒‍🧒 პოზიცია</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-position="tr">TR</button>
+                    <button class="toggle-btn" data-position="d3">D3</button>
+                    <button class="toggle-btn" data-position="d2">D2</button>
+                    <button class="toggle-btn" data-position="d1">D1</button>
+                    <button class="toggle-btn selected" data-position="i2">I2</button>
+                    <button class="toggle-btn" data-position="i1">I1</button>
+                    <button class="toggle-btn" data-position="ti">IT</button>
+                </div>
+            </div>
+
+            <!-- დამატებითი სმენები და გაცდენები მოდალით -->
+            <div class="section">
+                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                   <button id="openShiftModal" class="toggle-btn" style="width:100%;font-size:1.1rem;">➕ დამატებითი სმენები</button>
+                   <button id="openMissedModal" class="toggle-btn" style="width:100%;font-size:1.1rem;">➖ გაცდენები</button>
+                 </div>
+                 <div style="margin-top:10px;text-align:center;">
+                   <span id="shiftSummary">დამატებითი სმენები: 0 | გაცდენები: 0</span>
+                </div>
+                <div style="margin-top:10px;text-align:center;">
+                   <button id="clearAllSelections" style="background:var(--primary);color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:none;">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <!-- დამატებითი პარამეტრები -->
+            <div class="section">
+                <h2>⚙️ პარამეტრები</h2>
+                <div class="button-grid">
+                    <button class="toggle-btn" data-option="vacation">🏖️ შვებულება</button>
+                    <button class="toggle-btn selected" data-option="pension">📈 პენსია (2%)</button>
+                </div>
+                <!-- Add insurance input after buttons -->
+                <div class="rate-control" style="margin-bottom: 15px; justify-content: space-between;">
+                    <span style="padding: 10px;">🏥 დაზღვევა (₾):</span>
+                    <input type="number" class="currency-input" id="insuranceAmount" value="0" step="1" min="0" style="text-align: center; width: 130px;" placeholder="დაზღვევის თანხა">
+                </div>
+                <!-- Add tip amount input -->
+                <div class="rate-control" style="margin-bottom: 15px; justify-content: space-between; align-items:center; gap:8px;">
+                    <span style="padding: 10px;">🎁 Tip ფოინტზე:</span>
+                    <button id="openTipImport" class="rate-btn" title="იმპორტი tip გვერდიდან" style="width:40px;min-width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">📥</button>
+                    <input type="number" class="currency-input" id="tipAmount" value="0" step="0.1" min="0" style="text-align: center; width: 130px;" placeholder="ჩაის რაოდენობა">
+                </div>
+                <div class="rate-control">
+                    <button class="rate-btn" onclick="calculator.adjustSalaryRate(-0.01)">-</button>
+                    <input type="number" class="currency-input" id="exchangeRate" value="2.800" step="0.01" min="0" placeholder="USD/GEL კურსი (ხელფასი)">
+                    <button class="rate-btn" onclick="calculator.adjustSalaryRate(0.01)">+</button>
+                </div>
+                <div style="margin-top:6px;text-align:center;font-size:0.85rem;opacity:0.8;">
+                    ხელფასის კურსი გამოიყენება მხოლოდ ხელფასის ₾-ში გადაყვანისთვის
+                </div>
+                <div class="rate-control" style="margin-top:8px;">
+                    <button class="rate-btn" onclick="calculator.adjustTipRate(-0.01)">-</button>
+                    <input type="number" class="currency-input" id="tipExchangeRate" value="2.800" step="0.01" min="0" placeholder="USD/GEL კურსი (ჩაი)">
+                    <button class="rate-btn" onclick="calculator.adjustTipRate(0.01)">+</button>
+                </div>
+                <div style="margin-top:6px;text-align:center;font-size:0.85rem;opacity:0.8;">
+                    ჩაის კურსი გამოიყენება მხოლოდ ჩაის ₾-ში გადაყვანისთვის
+                </div>
+                <div style="margin-top:10px;text-align:center;">
+                    <button id="resetLiveRates" class="toggle-btn" style="font-size:0.95rem;">🔄 Reset to live rate</button>
+                </div>
+            </div>
+
+            <!-- შედეგები -->
+            <div class="results">
+                <div class="result-section">
+                    <h3>💰 ხელფასი</h3>
+                    <div class="result-item">
+                        <span>დღე/სთ:</span>
+                        <span id="totalDays">0</span>
+                        <span id="totalHours">0 სთ</span>
+                    </div>
+                    <div class="result-item muted-row">
+                        <span>დღგ:</span>
+                        <span id="taxAmount">$0.00</span>
+                        <span id="taxAmountGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ხელფასი:</span>
+                        <span id="salaryOriginalUSD">$0.00</span>
+                        <span id="salaryOriginalGel">₾0.00</span>
+                    </div>
+                    <!--
+                    <div class="result-item">
+                        <span>ჯამი (Total):</span>
+                        <span id="totalSalary">$0.00</span>
+                        <span id="totalGelSalary">₾0.00</span>
+                    </div>
+                    -->
+                    <!-- ახალი გრაფა ცვლილებისთვის -->
+                    <div id="salaryDiffRow" style="display: none;" class="result-item">
+                        <span>ცვლილება:</span>
+                        <span id="salaryDiffUSD">$0.00</span>
+                        <span id="salaryDiffGEL">₾0.00</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>პენსია:</span>
+                        <span id="PensionAmount">$0.00</span>
+                        <span id="PensionAmountGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ასაღები:</span>
+                        <span id="netSalaryUSD">$0.00</span>
+                        <span id="netSalary">₾0.00</span>
+                    </div>
+                </div>
+                
+                <div class="result-section">
+                    <h3>🎁 ჩაი</h3>
+                    <!--
+                    <div class="result-item">
+                        <span>ჯამი:</span>
+                        <span id="tipAmountUSD">$0.00</span>
+                        <span id="tipAmountGel">₾0.00</span>
+                    </div>
+                    -->
+                    <div class="result-item muted-row">
+                        <span>დღგ:</span>
+                        <span id="tipTaxUSD">$0.00</span>
+                        <span id="tipTaxGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ჯამი (Total):</span>
+                        <span id="tipOriginalUSD">$0.00</span>
+                        <span id="tipOriginalGel">₾0.00</span>
+                    </div>
+                    <!-- ახალი გრაფა ცვლილებისთვის -->
+                    <div id="tipDiffRow" style="display: none;" class="result-item">
+                        <span>ცვლილება:</span>
+                        <span id="tipDiffUSD">$0.00</span>
+                        <span id="tipDiffGEL">₾0.00</span>
+                    </div>
+
+                    <div class="result-item">
+                        <span>პენსია:</span>
+                        <span id="tipPensionUSD">$0.00</span>
+                        <span id="tipPensionGel">₾0.00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>ასაღები:</span>
+                        <span id="grandTotalUSD">$0.00</span>
+                        <span id="grandTotalGel">₾0.00</span>
+                    </div>
+                </div>
+                <div class="result-section">
+                    <h3>ჯამი</h3>
+                    <div class="result-item">
+                        <span>ჯამი:</span>
+                        <span id="BothTotalUSD">$0.00</span>
+                        <span id="BothTotalGel">₾0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-results-bar">
+        <div class="bottom-result-item">
+            <span>ხელფასი (ხელზე)</span>
+            <strong id="bottom-salary-gel">₾0.00</strong>
+        </div>
+        <div class="bottom-result-item">
+            <span>ჩაი (ხელზე)</span>
+            <strong id="bottom-tip-gel">₾0.00</strong>
+        </div>
+        <div class="bottom-result-item">
+            <span>სულ ჯამი</span>
+            <strong id="bottom-total-gel">₾0.00</strong>
+        </div>
+    </div>
+
+    <button class="debug-toggle" onclick="toggleDebug()">🐞</button>
+    <div class="debug-window" id="debugWindow"></div>
+
+    <!-- Shift Modal (only shifts) -->
+    <div id="shiftModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
+      <div class="shift-modal-content">
+        <button id="closeShiftModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
+        <h2 style="margin-bottom:10px;font-size:1.2rem;color:var(--primary);">➕ დამატებითი სმენები</h2>
+        <span style="font-weight:600;">Overtime</span>
+        <small style="opacity:0.8;">(+0.5 points, +18h/day)</small>
+        <div class="button-grid" id="modalShiftsGrid" style="margin-bottom:6px;">
+          <button class="toggle-btn" data-shifts="0">0</button>
+          <button class="toggle-btn" data-shifts="1">1</button>
+          <button class="toggle-btn" data-shifts="2">2</button>
+          <button class="toggle-btn" data-shifts="3">3</button>
+          <button class="toggle-btn" data-shifts="4">4</button>
+          <button class="toggle-btn" data-shifts="5">5</button>
+          <button class="toggle-btn" data-shifts="6">6</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Missed Modal (reasons, each with day select) -->
+    <div id="missedModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
+      <div class="shift-modal-content">
+        <button id="closeMissedModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
+        <h2 style="margin-bottom:10px;font-size:1.2rem;color:var(--primary);">➖ გაცდენები</h2>
+        <div id="missedOptionsContainer" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="absence-row" data-type="buleteni">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">ბიულეტენი</span>
+              <small style="opacity:0.8;">(tip/30*2, -0h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="buleteni" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="buleteni" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="unpaid">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">Unpaid</span>
+              <small style="opacity:0.8;">(tip/30*2, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="unpaid" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="sikoli">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">სიქოლი</span>
+              <small style="opacity:0.8;">(tip/30*2.5, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="sikoli" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="sikoli" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="nocall">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">NoCall</span>
+              <small style="opacity:0.8;">(tip/30*3, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="nocall" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="nocall" data-missed="6">6</button>
+            </div>
+          </div>
+          <div class="absence-row" data-type="suspend">
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <span style="font-weight:600;">Suspend</span>
+              <small style="opacity:0.8;">(tip/30*4, -12h/day)</small>
+            </div>
+            <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
+              <button class="toggle-btn" data-absence="suspend" data-missed="0">0</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="1">1</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="2">2</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="3">3</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="4">4</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="5">5</button>
+              <button class="toggle-btn" data-absence="suspend" data-missed="6">6</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tip Import Modal -->
+    <div id="tipImportModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
+      <div class="shift-modal-content" style="max-width: 420px; width: 92vw; display:flex; flex-direction:column; gap:10px;">
+        <button id="closeTipImport" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text);">×</button>
+        <h2 style="margin-bottom:2px;font-size:1.1rem;color:var(--primary);">📥 ჩაის იმპორტი</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:600;">აირჩიეთ წყარო:</div>
+            <div style="display:flex;gap:8px;">
+              <button id="tipLoadCurrent" class="toggle-btn" style="flex:1;">
+                მიმდინარე: <span id="tipLoadCurrentVal">—</span>
+              </button>
+              <button id="tipLoadForecast" class="toggle-btn" style="flex:1;">
+                პროგნოზი: <span id="tipLoadForecastVal">—</span>
+              </button>
+            </div>
+            <small style="opacity:0.8;">მონაცემები იტვირთება localStorage-დან. აირჩიეთ რომელი მნიშვნელობა ჩატვირთოს.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      #shiftModal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.35);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+      #missedModal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.35);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+      .shift-modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--text);
+        max-width: 360px;
+        width: 92vw;
+        padding: 24px 18px 18px 18px;
+        border-radius: 16px;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+        position: relative;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      #shiftModal .toggle-btn.selected,
+      #missedModal .toggle-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+      #shiftModal .toggle-btn,
+      #missedModal .toggle-btn {
+        background: var(--toggle-bg);
+        color: var(--text);
+        border: 1px solid var(--border-color);
+      }
+      #shiftModal #closeShiftModal,
+      #missedModal #closeMissedModal {
+        color: var(--text);
+      }
+      [data-theme="dark"] #shiftModal,
+      [data-theme="dark"] #missedModal {
+        background: rgba(0,0,0,0.65);
+      }
+      [data-theme="dark"] .shift-modal-content {
+        background: rgba(20, 30, 45, 0.25);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      #tipImportModal .toggle-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+    </style>
+
+    <script>
+        //---> მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                console.log('Menu HTML loaded, inserting into DOM...');
+                document.getElementById('menu-container').innerHTML = data;
+                console.log('Menu HTML inserted, executing scripts...');
+                
+                // Execute any script tags that were inserted
+                const scripts = document.getElementById('menu-container').querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.textContent) {
+                        console.log('Executing script from menu...');
+                        eval(script.textContent);
+                    }
+                });
+                
+                // Wait for the script to execute and function to be available
+                let attempts = 0;
+                const maxAttempts = 20; // Reduced to 2 seconds since we're executing scripts immediately
+                
+                const waitForInit = () => {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    
+                    if (typeof window.initBottomNav === 'function') {
+                        console.log('initBottomNav function found! Calling it...');
+                        window.initBottomNav();
+                        console.log('Bottom navigation initialized successfully');
+                    } else if (attempts < maxAttempts) {
+                        console.log('Function not found yet, retrying...');
+                        setTimeout(waitForInit, 100);
+                    } else {
+                        console.error('initBottomNav function not found after 2 seconds. Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function'));
+                    }
+                };
+                
+                // Start waiting for the function to be available
+                setTimeout(waitForInit, 50); // Reduced delay since scripts are executed immediately
+            })
+            .catch(error => console.error('Error loading menu:', error));
+
+            // <--- მენიუს ჩატვირთვა
+
+
+
+        // Hide loading indicator when everything is loaded
+        window.addEventListener('load', () => {
+            document.querySelector('.loading-indicator').style.display = 'none';
+        });
+
+        // Show error if loading fails
+        window.addEventListener('error', () => {
+            document.querySelector('.loading-indicator').style.display = 'none';
+            document.querySelector('.load-error').style.display = 'block';
+        });
+
+        // Global configuration
+        const CONFIG = {
+            // Base rates for positions ($ per 174 hours)
+            RATES: {
+                'tr': 525,
+                'd3': 525,
+                'd2': 630,
+                'd1': 735,
+                'i2': 840,
+                'i1': 945,
+                'ti': 1050
+            },
+            
+            // Convert monthly rates to hourly rates
+            getRatePerHour: function(position) {
+                return this.RATES[position] / 174;
+            },
+            
+            // Tip multipliers per position
+            TIP_MULTIPLIERS: {
+                'point': 1,
+                'tr': 7,
+                'd3': 9,
+                'd2': 10,
+                'd1': 11,
+                'pb': 12,
+                'i2': 14.5,
+                'i1': 16,
+                'ti': 17.5
+            },
+
+            // Working hours
+            REGULAR_HOURS: 12,
+            EXTRA_SHIFT_HOURS: 18,
+            VACATION_BASE_DAYS: 14.5,
+            
+            // Deduction rates
+            PENSION_RATE: 0.02,
+            
+            // Exchange rate default
+            DEFAULT_EXCHANGE_RATE: 2.80,
+            
+            // Tax rate (e.g., 20%)
+            TAX_RATE: 0.20,
+
+            // Change EXTRA_SHIFT_TIP_BONUS to be calculated from tip amount
+            EXTRA_SHIFT_TIP_MULTIPLIER: 0.5,
+
+            // Tip adjustment formula constants
+            TIP_ADJUSTMENT_DIVISOR: 0.78,
+            
+            // Formula helper function
+            adjustTipAmount: function(x) {
+                return x / this.TIP_ADJUSTMENT_DIVISOR;
+            },
+
+            // Default insurance amount
+            INSURANCE_DEFAULT: 0,
+
+            // --- Dev/Admin Settings ---
+            // Set to true to show the debug button and window
+            DEBUG_MODE: false
+        };
+
+        // Absence types configuration
+        const ABSENCE_TYPES = [
+          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
+          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
+          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyMultiplier: 2.5, salaryHoursDeducted: 12, description: 'Sick (no-doc?)' },
+          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyMultiplier: 3,   salaryHoursDeducted: 12, description: 'No call / no show' },
+          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyMultiplier: 4,   salaryHoursDeducted: 12, description: 'Suspension' },
+        ];
+
+        function getAbsenceTypeById(id) {
+          return ABSENCE_TYPES.find(t => t.id === id) || ABSENCE_TYPES[0];
+        }
+
+        // Функция для получения курса USD/GEL из API
+        async function getRateFromNBG() {
+            try {
+                const response = await fetch("https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json");
+                const data = await response.json();
+                console.log('Получены данные от NBG:', data);
+                
+                // Проверяем различные возможные структуры данных
+                if (Array.isArray(data) && data.length > 0) {
+                    // Первый вариант: массив с элементами, содержащими code и currencies
+                    if (data[0] && typeof data[0] === 'object') {
+                        // Проверяем первую структуру формата
+                        const usd = data.find(item => item.code === "USD");
+                        if (usd && usd.currencies && Array.isArray(usd.currencies) && usd.currencies.length > 0) {
+                            const rate = usd.currencies[0].rate;
+                            console.log('Получен курс обмена USD/GEL из NBG (формат 1):', rate);
+                            return rate;
+                        }
+                        
+                        // Проверяем вторую структуру формата, где USD может быть в currencies
+                        for (const item of data) {
+                            if (item.currencies && Array.isArray(item.currencies)) {
+                                const usdCurrency = item.currencies.find(curr => curr.code === "USD");
+                                if (usdCurrency && usdCurrency.rate) {
+                                    console.log('Получен курс обмена USD/GEL из NBG (формат 2):', usdCurrency.rate);
+                                    return usdCurrency.rate;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                console.error('Не удалось найти курс USD в данных NBG:', data);
+                return null;
+            } catch (error) {
+                console.error('Ошибка при получении курса обмена из NBG:', error);
+                return null;
+            }
+        }
+
+        const calculator = {
+            days: 15,
+            rate: CONFIG.getRatePerHour('i2'), // Default to i2 position
+            shifts: 0,
+            missedDays: 0,
+            absenceTypeId: 'unpaid',
+            // New: support multiple absence types
+            selectedAbsences: new Map(), // Map of {typeId: days}
+            options: new Set(['pension']),
+            exchangeRate: parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE,
+            tipExchangeRate: parseFloat(localStorage.getItem('tipExchangeRate')) || (parseFloat(localStorage.getItem('exchangeRate')) || CONFIG.DEFAULT_EXCHANGE_RATE),
+            tipPoints: parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0,
+            position: 'i2', // Default position
+            insuranceAmount: parseFloat(localStorage.getItem('insuranceAmount')) || CONFIG.INSURANCE_DEFAULT,
+            
+            async init() {
+                console.log('Initializing calculator...');
+
+                // Hide debug button if debug mode is disabled
+                if (!CONFIG.DEBUG_MODE) {
+                    const debugToggle = document.querySelector('.debug-toggle');
+                    if (debugToggle) {
+                        debugToggle.style.display = 'none';
+                    }
+                }
+                
+                // Получаем актуальный курс валюты из API NBG
+                const liveRate = await getRateFromNBG();
+                const hasStoredSalary = localStorage.getItem('exchangeRate') !== null;
+                const hasStoredTip = localStorage.getItem('tipExchangeRate') !== null;
+
+                if (liveRate && !hasStoredSalary) {
+                    this.exchangeRate = liveRate;
+                    localStorage.setItem('exchangeRate', this.exchangeRate);
+                }
+                if (liveRate && !hasStoredTip) {
+                    this.tipExchangeRate = liveRate;
+                    localStorage.setItem('tipExchangeRate', this.tipExchangeRate);
+                }
+
+                // Reflect resolved values in inputs
+                document.getElementById('exchangeRate').value = this.exchangeRate.toFixed(liveRate && !hasStoredSalary ? 4 : 2);
+                document.getElementById('tipExchangeRate').value = this.tipExchangeRate.toFixed(liveRate && !hasStoredTip ? 4 : 2);
+                
+                // Set default values
+                document.getElementById('insuranceAmount').value = this.insuranceAmount;
+                document.getElementById('tipAmount').value = this.tipPoints;
+                // ensure inputs reflect persisted tip exchange
+                if (document.getElementById('tipExchangeRate').value === '') {
+                    document.getElementById('tipExchangeRate').value = this.tipExchangeRate.toFixed(2);
+                }
+                
+                // Process URL parameters
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('tipAmount') && params.has('position')) {
+                    const position = params.get('position').toLowerCase();
+                    if (CONFIG.RATES[position]) {
+                        this.position = position;
+                        this.rate = CONFIG.getRatePerHour(position);
+                        this.tipPoints = parseFloat(params.get('tipAmount')) || 0;
+                        document.getElementById('tipAmount').value = this.tipPoints;
+                        
+                        // Select position button
+                        this.selectPositionButton(position);
+                        console.log(`Set from URL: position=${position}, rate=${this.rate}, tips=${this.tipPoints}`);
+                    }
+                }
+
+                this.initEventListeners();
+                this.calculate();
+            },
+            async resetToLiveRates() {
+                const liveRate = await getRateFromNBG();
+                if (liveRate) {
+                    this.exchangeRate = liveRate;
+                    this.tipExchangeRate = liveRate;
+                    localStorage.setItem('exchangeRate', this.exchangeRate);
+                    localStorage.setItem('tipExchangeRate', this.tipExchangeRate);
+                    const salaryEl = document.getElementById('exchangeRate');
+                    const tipEl = document.getElementById('tipExchangeRate');
+                    if (salaryEl) salaryEl.value = this.exchangeRate.toFixed(4);
+                    if (tipEl) tipEl.value = this.tipExchangeRate.toFixed(4);
+                    this.calculate();
+                } else {
+                    this.showError('ვერ მივიღე ცოცხალი კურსი NBG-დან');
+                }
+            },
+
+            selectPositionButton(position) {
+                document.querySelectorAll('[data-position]').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.position.toLowerCase() === position);
+                });
+            },
+
+            initEventListeners() {
+                document.querySelectorAll('.toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.handleToggle(btn));
+                });
+
+                const exchangeRateInput = document.getElementById('exchangeRate');
+                exchangeRateInput.addEventListener('input', (e) => {
+                    this.exchangeRate = parseFloat(e.target.value) || CONFIG.DEFAULT_EXCHANGE_RATE;
+                    localStorage.setItem('exchangeRate', this.exchangeRate);
+                    this.calculate();
+                });
+
+                const tipExchangeRateInput = document.getElementById('tipExchangeRate');
+                tipExchangeRateInput.addEventListener('input', (e) => {
+                    this.tipExchangeRate = parseFloat(e.target.value) || this.exchangeRate || CONFIG.DEFAULT_EXCHANGE_RATE;
+                    localStorage.setItem('tipExchangeRate', this.tipExchangeRate);
+                    this.calculate();
+                });
+
+                const resetBtn = document.getElementById('resetLiveRates');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', () => this.resetToLiveRates());
+                }
+
+                const insuranceInput = document.getElementById('insuranceAmount');
+                insuranceInput.addEventListener('input', (e) => {
+                    this.insuranceAmount = parseFloat(e.target.value) || 0;
+                    localStorage.setItem('insuranceAmount', this.insuranceAmount);
+                    this.calculate();
+                });
+
+                // Add event listener for tip amount input
+                const tipAmountInput = document.getElementById('tipAmount');
+                tipAmountInput.addEventListener('input', (e) => {
+                    this.tipPoints = parseFloat(e.target.value) || 0;
+                    // Persist under new key; keep legacy for backward compat
+                    localStorage.setItem('TipsPerPoint', this.tipPoints);
+                    localStorage.setItem('tipPoints', this.tipPoints);
+                    this.calculate();
+                });
+            },
+
+            adjustSalaryRate(amount) {
+                const input = document.getElementById('exchangeRate');
+                const newValue = (parseFloat(input.value) + amount).toFixed(2);
+                input.value = newValue;
+                this.exchangeRate = parseFloat(newValue);
+                localStorage.setItem('exchangeRate', this.exchangeRate);
+                this.calculate();
+            },
+
+            adjustTipRate(amount) {
+                const input = document.getElementById('tipExchangeRate');
+                const newValue = (parseFloat(input.value) + amount).toFixed(2);
+                input.value = newValue;
+                this.tipExchangeRate = parseFloat(newValue);
+                localStorage.setItem('tipExchangeRate', this.tipExchangeRate);
+                this.calculate();
+            },
+
+            handleToggle(btn) {
+                const type = btn.dataset.days ? 'days' :
+                            btn.dataset.position ? 'rate' :
+                            btn.dataset.shifts ? 'shifts' :
+                            btn.dataset.missed ? 'missed' : 'option';
+
+                if (type === 'option') {
+                    btn.classList.toggle('selected');
+                    this.options[btn.classList.contains('selected') ? 'add' : 'delete'](btn.dataset.option);
+                } else {
+                    const selector = `[data-${type === 'rate' ? 'position' : type}]`;
+                    document.querySelectorAll(selector).forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    
+                    switch(type) {
+                        case 'rate':
+                            const pos = btn.dataset.position.toLowerCase();
+                            if (CONFIG.RATES[pos]) {
+                                this.position = pos;
+                                this.rate = CONFIG.getRatePerHour(pos);
+                                console.log(`Position changed: ${this.position}, rate: ${this.rate}`);
+                            }
+                            break;
+                        case 'days':
+                            this.days = parseFloat(btn.dataset.days);
+                            break;
+                        case 'shifts':
+                            this.shifts = parseFloat(btn.dataset.shifts);
+                            break;
+                        case 'missed':
+                            this.missedDays = parseFloat(btn.dataset.missed);
+                            break;
+                    }
+                }
+
+                this.calculate();
+            },
+
+            updateDebug(calculations) {
+                const debugWindow = document.getElementById('debugWindow');
+                const {
+                    hours = 0,
+                    baseHours = 0,
+                    extraHours = 0,
+                    missedHours = 0,
+                    baseSalary = 0,
+                    extraSalary = 0,
+                    missedSalary = 0,
+                    totalSalary = 0,
+                    grossTips = 0,
+                    tipDiff = 0,
+                    tipTax = 0,
+                    tipPension = 0,
+                    netTips = 0
+                } = calculations || {};
+
+                const formatMoney = (amount, symbol = '$') => 
+                    `${amount >= 0 ? '💵' : '💸'} ${symbol}${Math.abs(amount).toFixed(2)}`;
+                const formatPercent = (amount, total) => 
+                    total ? ` (${((amount/total)*100).toFixed(1)}%)` : '';
+
+                const insuranceUSD = this.insuranceAmount / this.exchangeRate;
+
+                // Build absence summary
+                let absenceSummary = '';
+                let totalAbsencePenalty = 0;
+                for (const [typeId, days] of this.selectedAbsences) {
+                    if (days > 0) {
+                        const absenceType = getAbsenceTypeById(typeId);
+                        const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
+                        const penaltyAmount = (grossTips / 30) * penaltyMultiplier * days;
+                        totalAbsencePenalty += penaltyAmount;
+                        absenceSummary += `\n  - ${absenceType.label_en}: ${days} days (tip/30*${penaltyMultiplier} × ${days})`;
+                    }
+                }
+
+                let debugText = `
+🔍 Debug Information
+═══════════════════
+ხელფასი 14.5 დღისთვის 174სთ
+პოზ.   ხელფასი.   -2%.  საათში
+D3	525	514.5	2.9586
+D2	630	617.4	3.5483
+D1	735	720.3	4.1414
+I2	840	823.2	4.7333
+I1	945	926.1	5.3236
+Ti	1050	1029	5.9138
+──────────────────
+👤 Position Settings
+──────────────────
+📋 Position: ${this.position.toUpperCase()}
+💰 Rate: ${formatMoney(this.rate)}/hr
+📅 Working Days: ${this.days}
+➕ Extra Shifts: ${this.shifts}
+➖ Selected Absences:${absenceSummary || ' None'}
+💱 Exchange Rate: ${this.exchangeRate} GEL
+🎯 Tip Points: ${this.tipPoints}
+⚙️ Options: ${Array.from(this.options).join(', ')}
+
+⏰ Hours Breakdown
+──────────────────
+📊 Base Hours: ${baseHours} (${this.days} days × ${CONFIG.REGULAR_HOURS}hrs)
+📈 Extra Hours: ${extraHours} (${this.shifts} shifts × ${CONFIG.EXTRA_SHIFT_HOURS}hrs)
+📉 Missed Hours: ${missedHours} (from all selected absences)
+📋 Total Hours: ${hours}
+
+💰 Salary Details
+──────────────────
+💵 Base Salary: ${formatMoney(baseSalary)}
+${extraSalary ? `📈 Extra Pay: ${formatMoney(extraSalary)}${formatPercent(extraSalary, totalSalary)}\n` : ''}
+${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(missedSalary, totalSalary)}\n` : ''}
+💰 Total Salary: ${formatMoney(totalSalary)} / ${formatMoney(totalSalary * this.exchangeRate, '₾')}
+
+🎁 Tips Calculation
+──────────────────
+ℹ️ Total absence penalty: ${totalAbsencePenalty.toFixed(2)} (calculated as tip/30*multiplier*days)
+💰 Base Tips (with position, after shift bonus, after absence penalty): ${formatMoney(grossTips)}
+${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
+${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
+${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
+💵 Net Tips: ${formatMoney(netTips)} / ${formatMoney(netTips * this.exchangeRate, '₾')}
+
+📚 Variables Used
+──────────────────
+- days, shifts, selectedAbsences (Map of typeId -> days)
+- position, rate
+- tipPoints, exchangeRate, options
+- baseHours, extraHours, missedHours, hours
+- baseSalary, extraSalary, missedSalary, totalSalary
+- grossTips, tipDiff, tipTax, tipPension, netTips
+`;
+
+                debugWindow.style.whiteSpace = 'pre-wrap';
+                debugWindow.style.fontFamily = 'monospace';
+                debugWindow.style.fontSize = '14px';
+                debugWindow.style.lineHeight = '1.5';
+                debugWindow.textContent = debugText;
+            },
+
+            calculate() {
+                try {
+                    if (!this.position || !CONFIG.RATES[this.position]) {
+                        throw new Error('Position or rate not set');
+                    }
+
+                    // Update hourly rate
+                    this.rate = CONFIG.getRatePerHour(this.position);
+
+                    // Base hours
+                    const baseHours = this.options.has('vacation') ? 
+                        CONFIG.VACATION_BASE_DAYS * CONFIG.REGULAR_HOURS :
+                        this.days * CONFIG.REGULAR_HOURS;
+
+                    // Extra shifts add hours directly (no offset with missed)
+                    const extraHours = this.shifts * CONFIG.EXTRA_SHIFT_HOURS;
+
+                    // Calculate total missed hours and salary deductions from all selected absences
+                    let totalMissedHours = 0;
+                    let totalMissedSalary = 0;
+                    
+                    for (const [typeId, days] of this.selectedAbsences) {
+                        if (days > 0) {
+                            const absenceType = getAbsenceTypeById(typeId);
+                            const missedHours = days * absenceType.salaryHoursDeducted;
+                            totalMissedHours += missedHours;
+                            totalMissedSalary += missedHours * this.rate;
+                        }
+                    }
+
+                    const totalHours = baseHours + extraHours - totalMissedHours;
+
+                    // Salary calculations
+                    const baseSalary = baseHours * this.rate;
+                    const extraSalary = extraHours * this.rate;
+                    const totalSalary = baseSalary + extraSalary - totalMissedSalary;
+
+                    // Tips calculation
+                    const baseTipAmount = this.tipPoints;
+                    const positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
+                    let grossTips = baseTipAmount * positionMultiplier;
+
+                    // Shift bonus (positive)
+                    const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * (this.shifts || 0);
+                    grossTips += shiftBonus;
+
+                    // Calculate total absence penalty from all selected absences
+                    let totalAbsencePenalty = 0;
+                    for (const [typeId, days] of this.selectedAbsences) {
+                        if (days > 0) {
+                            const absenceType = getAbsenceTypeById(typeId);
+                            const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
+                            const penaltyForThisType = (grossTips / 30) * penaltyMultiplier * days;
+                            totalAbsencePenalty += penaltyForThisType;
+                        }
+                    }
+                    grossTips -= totalAbsencePenalty;
+
+                    // tipDiff shows net change vs base position-only tips
+                    const positionOnlyTips = baseTipAmount * positionMultiplier;
+                    const tipDiff = (grossTips - positionOnlyTips);
+
+                    // Original tax amount on tips (info only)
+                    const originalTaxAmount = grossTips * CONFIG.TAX_RATE;
+                    const pensionAmount = grossTips * CONFIG.PENSION_RATE;
+
+                    // Final tips (only pension affects take-home here)
+                    let finalTips = grossTips;
+                    if (this.options.has('pension')) {
+                        finalTips -= pensionAmount;
+                    }
+
+                    this.updateUI({
+                        hours: totalHours,
+                        baseHours,
+                        extraHours,
+                        missedHours: totalMissedHours,
+                        baseSalary,
+                        extraSalary,
+                        missedSalary: totalMissedSalary,
+                        totalSalary,
+                        grossTips: finalTips,
+                        tipDiff,
+                        tipTax: originalTaxAmount,
+                        tipPension: this.options.has('pension') ? pensionAmount : 0,
+                        netTips: finalTips,
+                        positionOnlyTips
+                    });
+
+                } catch (error) {
+                    console.error('Calculation error:', error);
+                    this.showError('Calculation failed: ' + error.message);
+                }
+            },
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:red;color:white;padding:10px;border-radius:5px;z-index:1000;';
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 3000);
+            },
+
+            updateUI(calculations) {
+                // Safe helpers
+                const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+                const setClass = (id, add, remove) => { const el = document.getElementById(id); if (!el) return; if (remove && remove.length) el.classList.remove(...remove); if (add && add.length) el.classList.add(...add); };
+                // Destructure all needed values
+                const { 
+                    hours, baseHours, extraHours, missedHours,
+                    baseSalary, extraSalary, missedSalary, totalSalary,
+                    grossTips, tipDiff, tipTax, tipPension, netTips,
+                    positionOnlyTips 
+                } = calculations;
+
+                // Update debug info first to ensure all values are passed correctly
+                this.updateDebug(calculations);
+
+                // Update hours display
+                setText('totalHours', hours);
+                setText('totalDays', (hours / CONFIG.REGULAR_HOURS).toFixed(1));
+
+                // Update base amounts
+                setText('totalSalary', `$${totalSalary.toFixed(1)}`);
+                setText('totalGelSalary', `₾${(totalSalary * this.exchangeRate).toFixed(1)}`);
+                // Original salary before extra shifts and missed deductions
+                const salaryOriginalUSD = baseHours * this.rate;
+                setText('salaryOriginalUSD', `$${salaryOriginalUSD.toFixed(1)}`);
+                setText('salaryOriginalGel', `₾${(salaryOriginalUSD * this.exchangeRate).toFixed(1)}`);
+
+                // Update salary section with 20% already deducted tax
+                const baseTax = totalSalary * 0.2; // Changed from CONFIG.TAX_RATE to direct 0.2 for 20%
+                const salaryPension = totalSalary * CONFIG.PENSION_RATE;
+                const insuranceUSD = this.insuranceAmount / this.exchangeRate;
+                const deductions = (this.options.has('pension') ? salaryPension : 0);
+                const netSalaryUSD = totalSalary - deductions - insuranceUSD;
+                const netSalaryGEL = netSalaryUSD * this.exchangeRate;
+
+                setText('netSalaryUSD', `$${netSalaryUSD.toFixed(1)}`);
+                setText('netSalary', `₾${netSalaryGEL.toFixed(1)}`);
+                setText('taxAmount', `-$${(totalSalary * CONFIG.TAX_RATE).toFixed(1)}`);
+                setText('taxAmountGel', `-₾${(totalSalary * CONFIG.TAX_RATE * this.exchangeRate).toFixed(1)}`);
+                setText('PensionAmount', `-$${this.options.has('pension') ? salaryPension.toFixed(1) : '0.0'}`);
+                setText('PensionAmountGel', `-₾${this.options.has('pension') ? (salaryPension * this.exchangeRate).toFixed(1) : '0.0'}`);
+
+                // Update tips section - show original 20% tax that was deducted
+                const originalTipTax = (grossTips + tipPension) * CONFIG.TAX_RATE; // 20% of gross tip amount
+                setText('tipAmountUSD', `$${(grossTips + tipPension).toFixed(1)}`);
+                setText('tipAmountGel', `₾${((grossTips + tipPension) * this.tipExchangeRate).toFixed(1)}`);
+
+                // Base tips before shifts and missed: position-only tips
+                const originalBaseUSD = positionOnlyTips;
+                setText('tipOriginalUSD', `$${originalBaseUSD.toFixed(1)}`);
+                setText('tipOriginalGel', `₾${(originalBaseUSD * this.tipExchangeRate).toFixed(1)}`);
+                
+                setText('tipTaxUSD', `-$${originalTipTax.toFixed(1)}`);
+                setText('tipTaxGel', `-₾${(originalTipTax * this.tipExchangeRate).toFixed(1)}`);
+                
+                setText('tipPensionUSD', `-$${tipPension.toFixed(1)}`);
+                setText('tipPensionGel', `-₾${(tipPension * this.tipExchangeRate).toFixed(1)}`);
+                
+                // Show net tips (after pension deduction) in the grand total
+                setText('grandTotalUSD', `$${grossTips.toFixed(1)}`);
+                setText('grandTotalGel', `₾${(grossTips * this.tipExchangeRate).toFixed(1)}`);
+
+                // Calculate final total with gross tips but net salary
+                setText('BothTotalUSD', `$${(grossTips + netSalaryUSD).toFixed(1)}`);
+                setText('BothTotalGel', `₾${((grossTips * this.tipExchangeRate) + netSalaryGEL).toFixed(1)}`);
+
+                // Update bottom results bar (split exchange rates)
+                setText('bottom-salary-gel', `₾${netSalaryGEL.toFixed(1)}`);
+                const tipTotalGEL = (grossTips * this.tipExchangeRate);
+                setText('bottom-tip-gel', `₾${tipTotalGEL.toFixed(1)}`);
+                setText('bottom-total-gel', `₾${(tipTotalGEL + netSalaryGEL).toFixed(1)}`);
+
+                // Update differences display
+                const salaryDiffRow = document.getElementById('salaryDiffRow');
+                const tipDiffRow = document.getElementById('tipDiffRow');
+
+                if (this.shifts > 0 || this.missedDays > 0) {
+                    // Salary difference vs base salary
+                    const salaryDiff = totalSalary - baseSalary;
+                    if (salaryDiff !== 0 && salaryDiffRow) {
+                        salaryDiffRow.style.display = 'flex';
+                        const signS = salaryDiff > 0 ? '+' : '-';
+                        const usdS = document.getElementById('salaryDiffUSD');
+                        const gelS = document.getElementById('salaryDiffGEL');
+                        if (usdS) usdS.textContent = `${signS}$${Math.abs(salaryDiff).toFixed(1)}`;
+                        if (gelS) gelS.textContent = `${signS}₾${Math.abs(salaryDiff * this.exchangeRate).toFixed(1)}`;
+                        if (usdS) { usdS.classList.remove('value-pos','value-neg'); usdS.classList.add(salaryDiff > 0 ? 'value-pos' : 'value-neg'); }
+                        if (gelS) { gelS.classList.remove('value-pos','value-neg'); gelS.classList.add(salaryDiff > 0 ? 'value-pos' : 'value-neg'); }
+                    } else if (salaryDiffRow) {
+                        salaryDiffRow.style.display = 'none';
+                    }
+
+                    // Tip difference vs position-only tips
+                    if (tipDiff !== 0 && tipDiffRow) {
+                        tipDiffRow.style.display = 'flex';
+                        const sign = tipDiff > 0 ? '+' : '-';
+                        const usdEl = document.getElementById('tipDiffUSD');
+                        const gelEl = document.getElementById('tipDiffGEL');
+                        if (usdEl) usdEl.textContent = `${sign}$${Math.abs(tipDiff).toFixed(1)}`;
+                        if (gelEl) gelEl.textContent = `${sign}₾${Math.abs(tipDiff * this.tipExchangeRate).toFixed(1)}`;
+                        if (usdEl) { usdEl.classList.remove('value-pos','value-neg'); usdEl.classList.add(tipDiff > 0 ? 'value-pos' : 'value-neg'); }
+                        if (gelEl) { gelEl.classList.remove('value-pos','value-neg'); gelEl.classList.add(tipDiff > 0 ? 'value-pos' : 'value-neg'); }
+                    } else if (tipDiffRow) {
+                        tipDiffRow.style.display = 'none';
+                    }
+                } else {
+                    if (salaryDiffRow) salaryDiffRow.style.display = 'none';
+                    if (tipDiffRow) tipDiffRow.style.display = 'none';
+                }
+            }
+        };
+
+        // Add debug toggle function
+        function toggleDebug() {
+            const debugWindow = document.getElementById('debugWindow');
+            debugWindow.style.display = debugWindow.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Initialize calculator
+        (async function() {
+            await calculator.init();
+        })();
+        
+        function toggleTable(button) {
+            const table = button.nextElementSibling;
+            button.classList.toggle('expanded');
+            table.classList.toggle('expanded');
+        }
+
+        // Theme management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-toggle');
+            if (icon) {
+                icon.textContent = theme === 'light' ? '🌙' : '☀️';
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
+        // Add modal logic for shifts
+        document.getElementById('openShiftModal').onclick = function() {
+          document.getElementById('shiftModal').style.display = 'flex';
+          Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.dataset.shifts) === calculator.shifts);
+          });
+        };
+        document.getElementById('closeShiftModal').onclick = function() {
+          document.getElementById('shiftModal').style.display = 'none';
+        };
+        document.getElementById('shiftModal').addEventListener('mousedown', function(e) {
+          if (e.target === this) this.style.display = 'none';
+        });
+        Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
+          btn.onclick = function() {
+            calculator.shifts = parseInt(btn.dataset.shifts);
+            calculator.calculate();
+            updateShiftSummary();
+            updateClearButtonVisibility();
+            updatePopupButtonStates();
+          };
+        });
+
+        // Tip import modal logic (simplified)
+        const openTipImport = document.getElementById('openTipImport');
+        const tipImportModal = document.getElementById('tipImportModal');
+        const closeTipImport = document.getElementById('closeTipImport');
+        const tipLoadCurrent = document.getElementById('tipLoadCurrent');
+        const tipLoadForecast = document.getElementById('tipLoadForecast');
+        const tipLoadCurrentVal = document.getElementById('tipLoadCurrentVal');
+        const tipLoadForecastVal = document.getElementById('tipLoadForecastVal');
+        
+        if (openTipImport && tipImportModal && closeTipImport && tipLoadCurrent && tipLoadForecast) {
+          openTipImport.onclick = function() {
+            // Load current values from localStorage
+            const current = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            const forecast = parseFloat(localStorage.getItem('TipsPerPoint-FORECAST')) || 0;
+            
+            tipLoadCurrentVal.textContent = current ? current.toFixed(1) : '—';
+            tipLoadForecastVal.textContent = forecast ? forecast.toFixed(1) : '—';
+            
+            // Clear previous selection
+            tipLoadCurrent.classList.remove('selected');
+            tipLoadForecast.classList.remove('selected');
+            
+            tipImportModal.style.display = 'flex';
+          };
+          
+          closeTipImport.onclick = function() {
+            tipImportModal.style.display = 'none';
+          };
+          
+          tipImportModal.addEventListener('mousedown', function(e) {
+            if (e.target === this) this.style.display = 'none';
+          });
+
+          tipLoadCurrent.onclick = function() {
+            tipLoadCurrent.classList.add('selected');
+            tipLoadForecast.classList.remove('selected');
+            
+            // Auto-import current value
+            const value = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
+            if (value > 0) {
+              calculator.tipPoints = value;
+              document.getElementById('tipAmount').value = value;
+              calculator.calculate();
+              tipImportModal.style.display = 'none';
+            } else {
+              calculator.showError('მიმდინარე მნიშვნელობა არ არის ხელმისაწვდომი');
+            }
+          };
+
+          tipLoadForecast.onclick = function() {
+            tipLoadForecast.classList.add('selected');
+            tipLoadCurrent.classList.remove('selected');
+            
+            // Auto-import forecast value
+            const value = parseFloat(localStorage.getItem('TipsPerPoint-FORECAST')) || 0;
+            if (value > 0) {
+              calculator.tipPoints = value;
+              document.getElementById('tipAmount').value = value;
+              calculator.calculate();
+              tipImportModal.style.display = 'none';
+            } else {
+              calculator.showError('პროგნოზირებული მნიშვნელობა არ არის ხელმისაწვდომი');
+            }
+          };
+        }
+
+        // Missed modal logic - updated for multiple selection
+        document.getElementById('openMissedModal').onclick = function() {
+          document.getElementById('missedModal').style.display = 'flex';
+          
+          // Use setTimeout to ensure the modal is fully rendered before updating selections
+          setTimeout(() => {
+            // Clear all selections first
+            Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+            
+            // Then highlight currently selected absences
+            for (const [typeId, days] of calculator.selectedAbsences) {
+              console.log(`Restoring ${typeId}: ${days} days`);
+              Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
+                if (parseInt(btn.dataset.missed) === days) {
+                  btn.classList.add('selected');
+                }
+              });
+            }
+          }, 10);
+        };
+        document.getElementById('closeMissedModal').onclick = function() {
+          document.getElementById('missedModal').style.display = 'none';
+        };
+        
+        // Clear All button functionality
+        document.getElementById('clearAllSelections').onclick = function() {
+          // Clear all absence data
+          calculator.selectedAbsences.clear();
+          
+          // Clear all shift data
+          calculator.shifts = 0;
+          
+          // Clear all visual selections in missed modal
+          Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          
+          // Clear all visual selections in shift modal
+          Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(b => b.classList.remove('selected'));
+          
+          
+          
+          calculator.calculate();
+          updateShiftSummary();
+          updateClearButtonVisibility();
+          updatePopupButtonStates();
+        };
+        document.getElementById('missedModal').addEventListener('mousedown', function(e) {
+          if (e.target === this) this.style.display = 'none';
+        });
+        Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(btn => {
+          btn.onclick = function() {
+            const type = String(btn.dataset.absence);
+            const days = parseInt(btn.dataset.missed);
+            
+            
+            
+            // Update the data first
+            if (days === 0) {
+              calculator.selectedAbsences.delete(type);
+            } else {
+              calculator.selectedAbsences.set(type, days);
+            }
+            
+            // Now update ALL visual states based on current data
+            // Use setTimeout to ensure DOM updates are processed
+            setTimeout(() => {
+              // Clear all selections first
+              Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
+              
+              
+              
+              // Then restore all selections from the data
+              for (const [typeId, selectedDays] of calculator.selectedAbsences) {
+                if (selectedDays > 0) {
+                  const buttons = document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`);
+                  
+                  Array.from(buttons).forEach(b => {
+                    if (parseInt(b.dataset.missed) === selectedDays) {
+                      b.classList.add('selected');
+                    }
+                  });
+                }
+              }
+              
+              // ensure UI reflects selections immediately
+              updatePopupButtonStates();
+            }, 10);
+            
+            
+            
+            calculator.calculate();
+            updateShiftSummary();
+            updatePopupButtonStates();
+          };
+        });
+
+        function updateShiftSummary() {
+          let summary = `დამატებითი სმენები: ${calculator.shifts}`;
+          if (calculator.selectedAbsences.size > 0) {
+            const absenceParts = [];
+            for (const [typeId, days] of calculator.selectedAbsences) {
+              const type = getAbsenceTypeById(typeId);
+              absenceParts.push(`${type.label_en}: ${days}`);
+            }
+            summary += ` | გაცდენები: ${absenceParts.join(', ')}`;
+          } else {
+            summary += ` | გაცდენები: 0`;
+          }
+          document.getElementById('shiftSummary').textContent = summary;
+          updateClearButtonVisibility();
+        }
+
+        function updateClearButtonVisibility() {
+          const clearButton = document.getElementById('clearAllSelections');
+          const hasShifts = calculator.shifts > 0;
+          const hasAbsences = calculator.selectedAbsences.size > 0;
+          
+          if (hasShifts || hasAbsences) {
+            clearButton.style.display = 'inline-block';
+          } else {
+            clearButton.style.display = 'none';
+          }
+        }
+
+        function updatePopupButtonStates() {
+          // Update shift modal button state
+          const shiftButton = document.getElementById('openShiftModal');
+          if (calculator.shifts > 0) {
+            shiftButton.classList.add('selected');
+          } else {
+            shiftButton.classList.remove('selected');
+          }
+
+          // Update missed modal button state
+          const missedButton = document.getElementById('openMissedModal');
+          if (calculator.selectedAbsences.size > 0) {
+            missedButton.classList.add('selected');
+          } else {
+            missedButton.classList.remove('selected');
+          }
+        }
+        updateShiftSummary();
+        updatePopupButtonStates();
+    </script>
+    <!-- 
+     changelog:
+    // v0.4 -> 0.5: 
+    სიქოლის დათვლა: 12სთ და 1.5 ჩაიდან  (line:1192 - Changed from EXTRA_SHIFT_HOURS to REGULAR_HOURS ) (line: 1219 - added 1.5x)
+    note: სიქოლს + დოპი = +0.5 დღის ხელფასი ?
+    // v0.5 -> 0.6:
+    დოპის და სიქოლის გაბათილება
+    // v0.6 -> 0.7:
+    removed notice baner
+    // [2025-10-03] v0.7 -> v0.8 – Added Absence Types and Missed Reason popup; separated shifts vs absences in calculations; added variables summary; expanded missed days to 0–6.
+    Reason: To support granular absence penalties and clearer calculations.
+    Thoughts: Future improvement: persist chosen absence type in localStorage.
+    Model: GPT-5
+    // [2025-10-03] v0.8 -> v0.9 – Split combined modal into two popups (Shifts and Missed). In Missed, each option now has its own 0–6 day selector. Updated wiring and UI; kept calculations.
+    Reason: Improve UX and make missed selection per-option clear.
+    Thoughts: Could persist per-option last chosen day; currently single active option.
+    Model: GPT-5
+    // [2025-10-03] v0.9 -> v1.0 – Fixed tip penalty calculation (30/3 = 10%, not 3.33%); enabled multiple absence type selection; updated UI to show combined absences; improved debug output.
+    Reason: Correct calculation errors and support complex absence scenarios like "nocall+sikoli".
+    Thoughts: Multiple absence types now properly accumulate penalties and salary deductions.
+    Model: GPT-5
+    // [2025-10-03] v1.0 -> v1.1 – Fixed multiple absence selection UI bug where clicking different rows would clear previous selections.
+    Reason: UI was clearing all selections when switching between absence types instead of preserving multiple selections.
+    Thoughts: Now properly supports "unpaid+nocall" type combinations as intended.
+    Model: GPT-5
+    -->
+</body>
+</html>
