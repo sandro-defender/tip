@@ -5,7 +5,7 @@
         fetch("/includes/head.html")
             .then(response => response.text())
             .then(data => document.head.innerHTML += data)
-            .catch(error => console.error("ოшибка загрузки head:", error));
+            .catch(error => console.error("შეცდომა head-ის ჩატვირთვისას:", error));
     </script>
     
     <!-- Changelog -->
@@ -15,7 +15,9 @@
     <style>
         @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
 
-        /* ძირითადი ცვლადები */
+        /* ============================================
+           CSS VARIABLES
+           ============================================ */
         :root {
             --primary: #2c3e50;
             --secondary: #3498db;
@@ -56,6 +58,9 @@
             --border: var(--border-dark);
         }
 
+        /* ============================================
+           BASE STYLES
+           ============================================ */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -206,6 +211,9 @@
             transform: translateY(1px);
         }
 
+        /* ============================================
+           BUTTON STYLES
+           ============================================ */
         /* Glass button styles for edit and delete buttons */
         .glass-button {
             background: rgba(255, 255, 255, 0.1);
@@ -2143,47 +2151,6 @@
             }
         }
 
-        /* UNUSED: @keyframes shine {
-            0% { background-position: -100% 50%; }
-            100% { background-position: 200% 50%; }
-        } */
-
-        /* UNUSED: .shine-effect {
-            background: linear-gradient(90deg, #006AFF 0%, #00A3FF 25%, #ffffff 50%, #00A3FF 75%, #006AFF 100%);
-            background-size: 200% 100%;
-            color: white;
-            animation: shine 2s infinite;
-            background-clip: text;
-            -webkit-background-clip: text;
-        } */
-
-        /* UNUSED: @keyframes buttonShine {
-            0% {
-                background-position: -100% 50%;
-                box-shadow: 0 0 5px #006AFF;
-            }
-            50% {
-                box-shadow: 0 0 20px #006AFF;
-            }
-            100% {
-                background-position: 200% 50%;
-                box-shadow: 0 0 5px #006AFF;
-            }
-        } */
-
-        /* UNUSED: .button-shine {
-            background: linear-gradient(90deg, 
-                #006AFF 0%, 
-                #00A3FF 25%, 
-                #0088FF 50%, 
-                #00A3FF 75%, 
-                #006AFF 100%) !important;
-            background-size: 200% 100% !important;
-            animation: buttonShine 2s infinite !important;
-            color: white !important;
-            border: none !important;
-            transition: all 0.3s ease !important;
-        } */
 
         /* Hide share button on desktop */
         button[onclick="shareLastEntry()"] {
@@ -2968,17 +2935,6 @@
             white-space: nowrap;
         }
 
-        /* UNUSED: .result-card-total-details {
-            opacity: 0.9;
-            margin-top: 4px;
-            font-size: 16px;
-        }
-        .result-card-total-details2 {
-            opacity: 0.9;
-            margin-top: 2px;
-            font-size: 12px;
-            color: #ff1900;
-        } */
         .result-card-forecast {
             flex: 1;
             min-width: 220px;
@@ -3052,10 +3008,66 @@
         .points-input-group-hidden {
             display: none;
         }
+
+        /* Animation container styles (extracted from inline JavaScript) */
+        .amount-animation-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 20px;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .amount-animation-total-label {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .amount-animation-display {
+            margin-bottom: 15px;
+        }
+
+        .amount-animation-points-label {
+            font-size: 20px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .amount-animation-points-display {
+            font-size: 32px;
+            opacity: 0.9;
+        }
+
+        /* Countdown styles (extracted from inline JavaScript) */
+        .countdown-critical {
+            color: #e74c3c;
+            font-size: 2em;
+            font-weight: bold;
+            animation: pulse 0.5s infinite;
+        }
+
+        .countdown-warning {
+            color: #f39c12;
+            font-size: 1.7em;
+            font-weight: bold;
+        }
+
+        .countdown-normal {
+            color: #2ecc71;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
     </style>
-    <!-- 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-     -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -3166,19 +3178,25 @@
     <script>
 
 
-        //---> მენიუს ჩატვირთვა
+        //---> Menu loading
         fetch('/includes/menu.html')
             .then(response => response.text())
             .then(data => {
-                console.log('Menu HTML loaded, inserting into DOM...');
+                if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                    console.log('Menu HTML loaded, inserting into DOM...');
+                }
                 document.getElementById('menu-container').innerHTML = data;
-                console.log('Menu HTML inserted, executing scripts...');
+                if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                    console.log('Menu HTML inserted, executing scripts...');
+                }
                 
                 // Execute any script tags that were inserted
                 const scripts = document.getElementById('menu-container').querySelectorAll('script');
                 scripts.forEach(script => {
                     if (script.textContent) {
-                        console.log('Executing script from menu...');
+                        if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                            console.log('Executing script from menu...');
+                        }
                         eval(script.textContent);
                     }
                 });
@@ -3189,14 +3207,22 @@
                 
                 const waitForInit = () => {
                     attempts++;
-                    console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                        console.log(`Attempt ${attempts}: Checking for initBottomNav function...`);
+                    }
                     
                     if (typeof window.initBottomNav === 'function') {
-                        console.log('initBottomNav function found! Calling it...');
+                        if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                            console.log('initBottomNav function found! Calling it...');
+                        }
                         window.initBottomNav();
-                        console.log('Bottom navigation initialized successfully');
+                        if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                            console.log('Bottom navigation initialized successfully');
+                        }
                     } else if (attempts < maxAttempts) {
-                        console.log('Function not found yet, retrying...');
+                        if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                            console.log('Function not found yet, retrying...');
+                        }
                         setTimeout(waitForInit, 100);
                     } else {
                         console.error('initBottomNav function not found after 2 seconds. Available functions:', Object.keys(window).filter(key => typeof window[key] === 'function'));
@@ -3208,11 +3234,11 @@
             })
             .catch(error => console.error('Error loading menu:', error));
 
-            // <--- მენიუს ჩატვირთვა
+            // <--- Menu loading
 
-
-
-        // ⚙️ კონფიგურაცია
+        /* ============================================
+           CONFIGURATION & CONSTANTS
+           ============================================ */
         const CONFIG = {
             API_URL: 'https://tips-api.you.ge/api/d1', // 🔗 D1 Worker endpoint — API მისამართი (migrated from /api/db.php)
             API_PASSWORD: '4545', // 🔑 API password for POST requests — API პაროლი POST მოთხოვნებისთვის
@@ -3444,15 +3470,17 @@
             }
         }
         function showMainContent() {
-            document.getElementById('authOverlay').style.display = 'none';
-            document.getElementById('mainContent').classList.remove('main-content-hidden');
+            const authOverlay = DOMCache.get('authOverlay');
+            const mainContent = DOMCache.get('mainContent');
+            if (authOverlay) authOverlay.style.display = 'none';
+            if (mainContent) mainContent.classList.remove('main-content-hidden');
 
-            // Устанавливаем дату по умолчанию
+            // Set default date
             setDefaultDate();
 
-            // Загружаем список месяцев и обновляем селектор
+            // Load month list and update selector
             updateMonthSelector().then(() => {
-                // После обновления селектора загружаем данные текущего месяца
+                // After updating selector, load current month data
                 loadData();
             });
         }
@@ -3680,13 +3708,68 @@
             }
         };
 
+        /* ============================================
+           APPLICATION STATE
+           ============================================ */
         let appData = { currentMonth: [], totalPoints: 5767.6 };
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth() + 1;
         let tipChart = null; // გრაფიკის ობიექტი
         let totalPoints = 5767.6; // ფოინტების საწყისი რაოდენობა
 
-        // თემის მენეჯმენტი
+        /* ============================================
+           DOM ELEMENT CACHE
+           ============================================ */
+        const DOMCache = {
+            _cache: {},
+            get(id) {
+                if (!this._cache[id]) {
+                    this._cache[id] = document.getElementById(id);
+                }
+                return this._cache[id];
+            },
+            clear() {
+                this._cache = {};
+            },
+            refresh() {
+                for (const id in this._cache) {
+                    this._cache[id] = document.getElementById(id);
+                }
+            }
+        };
+
+        /* ============================================
+           PERFORMANCE UTILITIES
+           ============================================ */
+        // Debounce function - delays execution until after wait time has passed
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Throttle function - limits execution to once per wait period
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        /* ============================================
+           UTILITY FUNCTIONS
+           ============================================ */
+        // Theme management
         function toggleTheme() {
             document.body.classList.toggle('dark-theme');
             localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
@@ -3695,29 +3778,29 @@
             }
         }
 
-        // პაროლის ეკრანის ტაიმერი
+        // Password screen timer
         let passwordTimer = null;
         let countdownInterval = null;
-        let timeLeft = 10; // 10 წამი
+        let timeLeft = 10; // 10 seconds
 
-        // დავიწყოთ ტაიმერი გვერდის ჩატვირთვისთანავე
+        // Start timer on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // თუ მომხმარებელი არ არის ავტორიზებული, დავიწყოთ ტაიმერი
+            // If user is not authorized, start timer
             if (!localStorage.getItem('tipAuth')) {
-                // Очищаем существующие таймеры
+                // Clear existing timers
                 if (passwordTimer) clearTimeout(passwordTimer);
                 if (countdownInterval) clearInterval(countdownInterval);
                 
-                // Сбрасываем время
+                // Reset time
                 timeLeft = 10;
                 
-                // Запускаем новый таймер
+                // Start new timer
                 startPasswordTimer();
             }
         });
 
         function startPasswordTimer() {
-            // თუ ტაიმერი უკვე გაშვებულია, გავასუფთავოთ
+            // Clear existing timers if running
             if (passwordTimer) {
                 clearTimeout(passwordTimer);
             }
@@ -3726,11 +3809,11 @@
                 clearInterval(countdownInterval);
             }
 
-            // დავაყენოთ ახალი ტაიმერი 10 წამზე
+            // Set new timer for 10 seconds
             timeLeft = 10;
             updateCountdown();
 
-            // დავიწყოთ კაუნდაუნის ინტერვალი
+            // Start countdown interval
             countdownInterval = setInterval(() => {
                 timeLeft--;
                 updateCountdown();
@@ -3740,53 +3823,51 @@
                 }
             }, 1000);
 
-            // დავაყენოთ გადამისამართების ტაიმერი
+            // Set redirect timer
             passwordTimer = setTimeout(() => {
-                // თუ მომხმარებელი არ არის ავტორიზებული, გადავამისამართოთ მთავარ გვერდზე
+                // If user is not authorized, redirect to main page
                 if (!localStorage.getItem('tipAuth')) {
                     window.location.href = '/';
                 }
-            }, 10000); // 10 წამი
+            }, 10000); // 10 seconds
 
-            console.log('ტაიმერი დაიწყო');
+            if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                console.log('Timer started');
+            }
         }
 
         function updateCountdown() {
-            const countdownElement = document.getElementById('countdown');
+            const countdownElement = DOMCache.get('countdown');
             if (countdownElement) {
                 countdownElement.textContent = timeLeft;
 
-                // შევცვალოთ ფერი დროის მიხედვით
+                // Update styling based on time left using CSS classes
+                countdownElement.className = 'countdown-text';
                 if (timeLeft <= 3) {
-                    countdownElement.style.color = '#e74c3c'; // წითელი
-                    countdownElement.style.fontSize = '2em';
-                    countdownElement.style.fontWeight = 'bold';
-                    // დავამატოთ პულსაცია
-                    countdownElement.style.animation = 'pulse 0.5s infinite';
+                    countdownElement.classList.add('countdown-critical');
                 } else if (timeLeft <= 5) {
-                    countdownElement.style.color = '#f39c12'; // ყვითელი
-                    countdownElement.style.fontSize = '1.7em';
-                    countdownElement.style.fontWeight = 'bold';
-                    countdownElement.style.animation = 'none';
+                    countdownElement.classList.add('countdown-warning');
                 } else {
-                    countdownElement.style.color = '#2ecc71'; // მწვანე
-                    countdownElement.style.fontSize = '1.5em';
-                    countdownElement.style.fontWeight = 'bold';
-                    countdownElement.style.animation = 'none';
+                    countdownElement.classList.add('countdown-normal');
                 }
 
-                // გავხადოთ კაუნდაუნის კონტეინერი
-                const countdownContainer = document.getElementById('countdown-container');
+                // Show countdown container
+                const countdownContainer = DOMCache.get('countdown-container');
                 if (countdownContainer) {
                     countdownContainer.style.display = 'block';
                     countdownContainer.style.visibility = 'visible';
                 }
             } else {
-                console.error('ვერ მოიძებნა countdown ელემენტი');
+                if (CONFIG.FEATURES.VERBOSE_LOGGING) {
+                    console.error('ვერ მოიძებნა countdown ელემენტი');
+                }
             }
         }
 
-        // თემის ავტომატური ჩატვირთვა
+        /* ============================================
+           INITIALIZATION
+           ============================================ */
+        // Auto-load theme preference
         window.onload = function() {
             // Apply theme preference
             const savedTheme = localStorage.getItem('theme');
@@ -3803,7 +3884,8 @@
             currentYear = new Date().getFullYear();
 
             // Focus password input initially (unconditional from first onload)
-            document.getElementById('passwordInput').focus(); 
+            const passwordInput = DOMCache.get('passwordInput');
+            if (passwordInput) passwordInput.focus(); 
 
             if(localStorage.getItem('tipAuth') === 'true') {
                 showMainContent();
@@ -3828,9 +3910,11 @@
         // 📅 დროის ფუნქციები (GMT+4)
         // getCurrentMonthFile and getMonthFileFromDate functions removed - no longer needed with PHP API
         
-        // Debug function to test date parsing
+        // Debug function to test date parsing (only logs if VERBOSE_LOGGING is enabled)
         function testDateParsing() {
-            const testDate = document.getElementById('dateInput').value;
+            if (!CONFIG.FEATURES.VERBOSE_LOGGING) return;
+            
+            const testDate = DOMCache.get('dateInput')?.value;
             console.log('Testing date parsing for:', testDate);
             
             // Use centralized date parsing utility
@@ -4116,7 +4200,7 @@
         }
 
         function setDefaultDate() {
-            const dateInput = document.getElementById('dateInput');
+            const dateInput = DOMCache.get('dateInput');
             const now = new Date();
             now.setUTCHours(now.getUTCHours() + CONFIG.TIMEZONE_OFFSET);
 
@@ -4507,41 +4591,21 @@
 
         function animateAmount(start, end) {
             const animContainer = document.createElement('div');
-            animContainer.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                background-color: rgba(0, 0, 0, 0.7);
-                padding: 40px;
-                border-radius: 20px;
-                color: white;
-                font-size: 48px;
-                font-weight: bold;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            `;
+            animContainer.className = 'amount-animation-container';
 
             const totalLabel = document.createElement('div');
+            totalLabel.className = 'amount-animation-total-label';
             totalLabel.innerText = 'საერთო თანხა';
-            totalLabel.style.fontSize = '24px';
-            totalLabel.style.marginBottom = '20px';
 
             const amountDisplay = document.createElement('div');
-            amountDisplay.style.marginBottom = '15px';
+            amountDisplay.className = 'amount-animation-display';
             
             const pointsLabel = document.createElement('div');
+            pointsLabel.className = 'amount-animation-points-label';
             pointsLabel.innerText = '1 ფოინტი';
-            pointsLabel.style.fontSize = '20px';
-            pointsLabel.style.marginBottom = '10px';
-            pointsLabel.style.opacity = '0.9';
             
             const pointsDisplay = document.createElement('div');
-            pointsDisplay.style.fontSize = '32px';
-            pointsDisplay.style.opacity = '0.9';
+            pointsDisplay.className = 'amount-animation-points-display';
             
             animContainer.appendChild(totalLabel);
             animContainer.appendChild(amountDisplay);
@@ -5998,22 +6062,6 @@
                             });
                         }
                         
-                        // Temporarily disable stale cache detection to debug the issue
-                        // const isStaleResponse = detectStaleResponse(responseText, response);
-                        // if (isStaleResponse.isStale) {
-                        //     if (CONFIG.FEATURES.VERBOSE_LOGGING) {
-                        //         console.warn(`🔄 Stale response detected for request ${requestId}:`, isStaleResponse.reason);
-                        //     }
-                        //     
-                        //     // Force cache invalidation and retry
-                        //     if (retryCount < maxRetries) {
-                        //         await invalidatePWACache();
-                        //         await new Promise(r => setTimeout(r, 1000)); // Wait for cache invalidation
-                        //         return loadData(retryCount + 1);
-                        //     } else {
-                        //         throw new Error(`Stale cache detected: ${isStaleResponse.reason}`);
-                        //     }
-                        // }
 
                         // Detect anti-bot challenges
                         const antiBotResult = detectAntiBotChallenge(responseText);
