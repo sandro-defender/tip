@@ -1259,6 +1259,29 @@
       padding: 50px;
     }
 
+    /* Skeletons */
+    .post-skeleton {
+      background: var(--filter-bg);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      min-height: 200px;
+      position: relative;
+    }
+    .skeleton-line {
+      height: 14px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 8px;
+      margin: 12px 16px;
+    }
+    .skeleton-image { height: 160px; margin: 0; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
     .no-posts {
       text-align: center;
       color: var(--text-white);
@@ -1365,10 +1388,10 @@
 </head>
 <body>
   <!-- Password Protection Modal -->
-  <div id="passwordProtectionModal" class="password-modal">
-    <div class="password-modal-content">
+  <div id="passwordProtectionModal" class="password-modal" role="dialog" aria-modal="true" aria-labelledby="passwordProtectionTitle">
+    <div class="password-modal-content" tabindex="-1">
       <div class="password-header">
-        <h2>🔒 Access Required</h2>
+        <h2 id="passwordProtectionTitle">🔒 Access Required</h2>
         <p>Please enter the password to access this page</p>
       </div>
       <form id="passwordProtectionForm" class="password-form">
@@ -1417,8 +1440,8 @@
   </div>
 
   <!-- Add/Edit Post Modal -->
-  <div id="postModal" class="modal">
-    <div class="modal-content">
+  <div id="postModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content" tabindex="-1">
       <h2 id="modalTitle">Add New Post</h2>
       <form id="postForm">
         <input type="hidden" id="postId">
@@ -1458,8 +1481,8 @@
   </div>
 
   <!-- Image Gallery Modal -->
-  <div id="imageGalleryModal" class="view-modal">
-    <div class="view-modal-content">
+  <div id="imageGalleryModal" class="view-modal" role="dialog" aria-modal="true" aria-label="Image gallery">
+    <div class="view-modal-content" tabindex="-1">
       <button class="view-modal-close" onclick="closeImageGallery()">×</button>
       
       <div class="view-modal-images" id="galleryModalImages">
@@ -1478,9 +1501,9 @@
   </div>
 
   <!-- Password Popup Modal -->
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <h2>Admin Authentication</h2>
+  <div id="passwordModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="adminAuthTitle">
+    <div class="modal-content" tabindex="-1">
+      <h2 id="adminAuthTitle">Admin Authentication</h2>
       <form id="passwordForm">
         <div class="form-group">
           <label for="popupUsername">Username</label>
@@ -1515,6 +1538,7 @@
       <button class="confirmation-btn primary" id="confirmationOkBtn" onclick="closeConfirmation()">OK</button>
     </div>
   </div>
+  <div id="offlineBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10001;background:#b91c1c;color:#fff;text-align:center;padding:10px;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.2)">You're offline. Some actions are unavailable.</div>
   <div id="menu-container"></div>
   <script>
     // ⚠️ IMPORTANT: Replace with your Google Apps Script URL
@@ -1523,6 +1547,54 @@
     // Configuration
     const PAGE_PASSWORD = '4545'; // Page access password
     const ADMIN_PASSWORD = 'Sandro4545'; // Admin password for CRUD operations
+
+    // Network helpers
+    const DEFAULT_TIMEOUT_MS = 15000;
+    const RETRY_DELAYS_MS = [400, 1200];
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function fetchWithTimeout(resource, options = {}, timeout = DEFAULT_TIMEOUT_MS) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetch(resource, { ...options, signal: controller.signal });
+        return response;
+      } finally {
+        clearTimeout(id);
+      }
+    }
+
+    async function withRetries(fn) {
+      let attempt = 0;
+      while (true) {
+        try {
+          return await fn();
+        } catch (err) {
+          if (attempt >= RETRY_DELAYS_MS.length) throw err;
+          const delay = RETRY_DELAYS_MS[attempt++];
+          await sleep(delay);
+        }
+      }
+    }
+
+    async function apiGet(action) {
+      const url = `${API_URL}?action=${encodeURIComponent(action)}`;
+      return withRetries(async () => {
+        const res = await fetchWithTimeout(url, { method: 'GET' });
+        return res.json();
+      });
+    }
+
+    async function apiPost(payload) {
+      return withRetries(async () => {
+        const res = await fetchWithTimeout(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        return res.json();
+      });
+    }
 
     // State management
     let allPosts = [];
@@ -1552,12 +1624,31 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', checkAuthentication);
 
-    // Handle window resize to update image display
-    window.addEventListener('resize', () => {
-      if (allPosts.length > 0) {
-        applyCurrentFilter();
+    // Handle window resize to update image display (debounced)
+    function debounce(fn, wait) {
+      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(null, args), wait); };
+    }
+    const debouncedApplyFilter = debounce(() => { if (allPosts.length > 0) applyCurrentFilter(); }, 150);
+    window.addEventListener('resize', debouncedApplyFilter);
+
+    // Offline/Online handling
+    const offlineBannerEl = document.getElementById('offlineBanner');
+    function updateOfflineBanner() {
+      if (navigator.onLine) {
+        offlineBannerEl.style.display = 'none';
+      } else {
+        offlineBannerEl.style.display = 'block';
+      }
+    }
+    window.addEventListener('online', () => {
+      updateOfflineBanner();
+      // Auto-retry fetching posts when back online
+      if (!document.body.classList.contains('password-protected')) {
+        loadPosts();
       }
     });
+    window.addEventListener('offline', updateOfflineBanner);
+    updateOfflineBanner();
 
     // ==================== Authentication ====================
     function checkAuthentication() {
@@ -1573,6 +1664,7 @@
     function showPagePasswordModal() {
       document.body.classList.add('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'flex';
+      trapFocus(document.getElementById('passwordProtectionModal'));
       document.getElementById('pagePassword').focus();
     }
 
@@ -1646,13 +1738,19 @@
                 document.getElementById('menu-container').innerHTML = data;
                 console.log('Menu HTML inserted, executing scripts...');
                 
-                // Execute any script tags that were inserted
+                // Execute any script tags safely (no eval)
                 const scripts = document.getElementById('menu-container').querySelectorAll('script');
                 scripts.forEach(script => {
-                    if (script.textContent) {
-                        console.log('Executing script from menu...');
-                        eval(script.textContent);
+                    const newScript = document.createElement('script');
+                    // Copy attributes
+                    Array.from(script.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    if (script.src) {
+                        newScript.src = script.src;
+                        newScript.async = false;
+                    } else if (script.textContent) {
+                        newScript.textContent = script.textContent;
                     }
+                    document.body.appendChild(newScript);
                 });
                 
                 // Wait for the script to execute and function to be available
@@ -1682,12 +1780,23 @@
 
             // <--- მენიუს ჩატვირთვა
     // ==================== API Functions ====================
+    function showPostSkeletons(count = 6) {
+      const skeletons = Array.from({ length: count }).map(() => `
+        <div class="post-skeleton">
+          <div class="skeleton-line skeleton-image"></div>
+          <div class="skeleton-line" style="width:60%"></div>
+          <div class="skeleton-line" style="width:40%"></div>
+          <div class="skeleton-line" style="width:80%"></div>
+        </div>
+      `).join('');
+      document.getElementById('postsContainer').innerHTML = skeletons;
+    }
+
     async function loadPosts() {
       showLoading('Loading posts...');
-      
+      showPostSkeletons();
       try {
-        const response = await fetch(`${API_URL}?action=getPosts`);
-        const result = await response.json();
+        const result = await apiGet('getPosts');
         
         hideLoading();
         
@@ -1699,7 +1808,13 @@
         }
       } catch (error) {
         hideLoading();
-        showError('Error connecting to server: ' + error.message);
+        if (!navigator.onLine) {
+          showError('You are offline. Please check your connection.');
+        } else if (error && error.name === 'AbortError') {
+          showError('Request timed out. Please try again.');
+        } else {
+          showError('Error connecting to server: ' + (error && error.message ? error.message : 'Unknown error'));
+        }
       }
     }
 
@@ -1727,12 +1842,7 @@
           data.id = pendingFormData.id;
         }
         
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
+        const result = await apiPost(data);
         
         hideLoading();
         
@@ -1745,7 +1855,10 @@
         }
       } catch (error) {
         hideLoading();
-        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+        const msg = !navigator.onLine
+          ? 'You are offline. Please reconnect and try again.'
+          : (error && error.name === 'AbortError' ? 'Request timed out. Please try again.' : 'Network error. Please try again.');
+        showConfirmation('❌', 'Error', msg, 'OK', 'danger');
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save Post';
@@ -1764,12 +1877,7 @@
           id: pendingAction.id
         };
         
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
+        const result = await apiPost(data);
         
         hideLoading();
         
@@ -1784,7 +1892,10 @@
         }
       } catch (error) {
         hideLoading();
-        showConfirmation('❌', 'Error', 'Network error. Please try again.', 'OK', 'danger');
+        const msg = !navigator.onLine
+          ? 'You are offline. Please reconnect and try again.'
+          : (error && error.name === 'AbortError' ? 'Request timed out. Please try again.' : 'Network error. Please try again.');
+        showConfirmation('❌', 'Error', msg, 'OK', 'danger');
       } finally {
         pendingAction = null;
       }
@@ -1850,7 +1961,7 @@
           ${imageCount > 0 ? `
             <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGallery(${index})">
               ${displayImages.map(url => `
-                <div><img src="${url}" alt="${escapeHtml(displayTitle)}" 
+                <div><img src="${url}" alt="${escapeHtml(displayTitle)}" loading="lazy" decoding="async"
                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22150%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22200%22 height=%22150%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
                 </div>
               `).join('')}
@@ -1903,6 +2014,8 @@
       uploadedImages = [];
       currentEditingPost = null;
       document.getElementById('postModal').classList.add('active');
+      trapFocus(document.getElementById('postModal'));
+      document.querySelector('#postModal .modal-content').focus();
     }
 
     function editPost(index) {
@@ -1922,6 +2035,7 @@
 
     function closeModal() {
       document.getElementById('postModal').classList.remove('active');
+      releaseFocusTrap();
       
       // Reset form button state
       const saveBtn = document.getElementById('saveBtn');
@@ -1932,15 +2046,18 @@
     function showPostPasswordModal() {
       document.getElementById('passwordModal').classList.add('active');
       document.getElementById('popupPassword').value = '';
+      trapFocus(document.getElementById('passwordModal'));
       document.getElementById('popupPassword').focus();
     }
 
     function hidePasswordModalUI() {
       document.getElementById('passwordModal').classList.remove('active');
+      releaseFocusTrap();
     }
 
     function closePostPasswordModal() {
       document.getElementById('passwordModal').classList.remove('active');
+      releaseFocusTrap();
       pendingFormData = null;
       
       // Reset form button state when password modal is cancelled
@@ -1966,17 +2083,58 @@
     });
     fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-    function handleFiles(files) {
-      Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            uploadedImages.push(e.target.result);
-            displayPreviews();
-          };
-          reader.readAsDataURL(file);
+    // Image compression constraints
+    const MAX_IMAGES_PER_POST = 12;
+    const MAX_DIMENSION = 1600; // px
+    const JPEG_QUALITY = 0.8; // 0..1
+    const MAX_TOTAL_PAYLOAD_BYTES = 8 * 1024 * 1024; // ~8MB
+
+    async function compressImageToDataUrl(file) {
+      const bitmap = await createImageBitmap(file);
+      const { width, height } = bitmap;
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+      const targetW = Math.round(width * scale);
+      const targetH = Math.round(height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+      const mime = file.type === 'image/png' ? 'image/jpeg' : 'image/jpeg';
+      return await new Promise(resolve => canvas.toBlob(b => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(b);
+      }, mime, JPEG_QUALITY));
+    }
+
+    function estimateTotalBytes(base64Array) {
+      // Rough estimate: base64 string length * 3/4
+      let total = 0;
+      base64Array.forEach(s => { if (typeof s === 'string') total += Math.floor(s.length * 0.75); });
+      return total;
+    }
+
+    async function handleFiles(files) {
+      const images = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if (uploadedImages.length + images.length > MAX_IMAGES_PER_POST) {
+        showConfirmation('⚠️', 'Too many images', `Limit is ${MAX_IMAGES_PER_POST} images per post.`, 'OK', 'secondary');
+        return;
+      }
+      for (const file of images) {
+        try {
+          const dataUrl = await compressImageToDataUrl(file);
+          const nextTotal = estimateTotalBytes([...uploadedImages, dataUrl]);
+          if (nextTotal > MAX_TOTAL_PAYLOAD_BYTES) {
+            showConfirmation('⚠️', 'Payload too large', 'Total images exceed ~8MB after compression.', 'OK', 'secondary');
+            break;
+          }
+          uploadedImages.push(dataUrl);
+          displayPreviews();
+        } catch (e) {
+          // skip problematic image
         }
-      });
+      }
     }
 
     function displayPreviews() {
@@ -2004,6 +2162,8 @@
       
       document.getElementById('imageGalleryModal').classList.add('active');
       document.body.classList.add('modal-open');
+      trapFocus(document.getElementById('imageGalleryModal'));
+      document.querySelector('#imageGalleryModal .view-modal-content').focus();
       
       setupGalleryThumbnails();
       showGalleryImage(0);
@@ -2054,6 +2214,7 @@
     function closeImageGallery() {
       document.getElementById('imageGalleryModal').classList.remove('active');
       document.body.classList.remove('modal-open');
+      releaseFocusTrap();
       removeImageZoomListeners();
     }
 
@@ -2274,9 +2435,56 @@
       document.getElementById('confirmationMessage').classList.remove('active');
     }
 
+    // Focus trap for modals
+    let activeTrap = null;
+    let lastFocusedBeforeTrap = null;
+    const focusableSelector = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex]:not([tabindex="-1"])';
+    function trapFocus(container) {
+      releaseFocusTrap();
+      lastFocusedBeforeTrap = document.activeElement;
+      activeTrap = container;
+      function handleKey(e) {
+        if (e.key !== 'Tab') return;
+        const focusables = Array.from(container.querySelectorAll(focusableSelector)).filter(el => el.offsetParent !== null);
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            last.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === last) {
+            first.focus();
+            e.preventDefault();
+          }
+        }
+      }
+      container.__trapHandler = handleKey;
+      container.addEventListener('keydown', handleKey);
+    }
+    function releaseFocusTrap() {
+      if (activeTrap && activeTrap.__trapHandler) {
+        activeTrap.removeEventListener('keydown', activeTrap.__trapHandler);
+        delete activeTrap.__trapHandler;
+      }
+      if (lastFocusedBeforeTrap && typeof lastFocusedBeforeTrap.focus === 'function') {
+        try { lastFocusedBeforeTrap.focus(); } catch (_) {}
+      }
+      activeTrap = null;
+      lastFocusedBeforeTrap = null;
+    }
+
     function showError(message) {
       const container = document.getElementById('postsContainer');
       container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    }
+
+    function friendlyNetworkError(error) {
+      if (!navigator.onLine) return 'You are offline. Please check your connection.';
+      if (error && error.name === 'AbortError') return 'Request timed out. Please try again.';
+      return 'Network error. Please try again.';
     }
 
     function escapeHtml(text) {
@@ -2316,11 +2524,22 @@
     // ==================== Keyboard Navigation ====================
     document.addEventListener('keydown', (e) => {
       const galleryModal = document.getElementById('imageGalleryModal');
+      const postModalEl = document.getElementById('postModal');
+      const passModalEl = document.getElementById('passwordModal');
       
       if (galleryModal.classList.contains('active')) {
         if (e.key === 'ArrowLeft') prevGalleryImage();
         else if (e.key === 'ArrowRight') nextGalleryImage();
         else if (e.key === 'Escape') closeImageGallery();
+        return;
+      }
+      if (postModalEl.classList.contains('active') && e.key === 'Escape') {
+        closeModal();
+        return;
+      }
+      if (passModalEl.classList.contains('active') && e.key === 'Escape') {
+        closePostPasswordModal();
+        return;
       }
     });
 
