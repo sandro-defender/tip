@@ -326,6 +326,20 @@
       min-height: 200px;
       backdrop-filter: var(--blur-sm);
       border: 1px solid var(--border-color);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .post-card::before {
@@ -1793,12 +1807,9 @@
     }
 
     async function loadPosts() {
-      showLoading('Loading posts...');
       showPostSkeletons();
       try {
         const result = await apiGet('getPosts');
-        
-        hideLoading();
         
         if (result.success) {
           allPosts = result.data;
@@ -1807,7 +1818,6 @@
           showError('Failed to load posts: ' + result.message);
         }
       } catch (error) {
-        hideLoading();
         if (!navigator.onLine) {
           showError('You are offline. Please check your connection.');
         } else if (error && error.name === 'AbortError') {
@@ -1914,7 +1924,7 @@
       }
     }
 
-    function displayPosts(posts) {
+    async function displayPosts(posts) {
       const container = document.getElementById('postsContainer');
       
       if (posts.length === 0) {
@@ -1926,7 +1936,23 @@
         return;
       }
 
-      container.innerHTML = posts.map((post, index) => createPostCard(post, index)).join('');
+      // Clear container first
+      container.innerHTML = '';
+      
+      // Render posts progressively with delay
+      const DELAY_BETWEEN_POSTS = 120; // milliseconds
+      
+      for (let index = 0; index < posts.length; index++) {
+        if (index > 0) {
+          await sleep(DELAY_BETWEEN_POSTS);
+        }
+        // Find the actual index in allPosts array
+        const actualIndex = allPosts.findIndex(p => p.id === posts[index].id);
+        const postCardHtml = createPostCard(posts[index], actualIndex);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = postCardHtml;
+        container.appendChild(tempDiv.firstElementChild);
+      }
     }
 
     function createPostCard(post, index) {
