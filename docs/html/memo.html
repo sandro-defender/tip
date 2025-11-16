@@ -1820,13 +1820,22 @@
     }
 
     async function loadPosts() {
-      // Check for gallery hash before loading
+      // Check for post hash before loading (gallery or regular post)
       const hash = window.location.hash;
-      const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
-      if (galleryMatch) {
-        shouldOpenGallery = true;
-        pendingGalleryPostId = galleryMatch[1];
-        pendingGalleryImageIndex = parseInt(galleryMatch[2], 10) - 1;
+      if (hash && hash.startsWith('#post-')) {
+        const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
+        if (galleryMatch) {
+          // Gallery hash with specific image
+          shouldOpenGallery = true;
+          pendingGalleryPostId = galleryMatch[1];
+          pendingGalleryImageIndex = parseInt(galleryMatch[2], 10) - 1;
+        } else {
+          // Regular post hash - open gallery with first image
+          const postId = hash.substring(6); // Remove '#post-' prefix
+          shouldOpenGallery = true;
+          pendingGalleryPostId = postId;
+          pendingGalleryImageIndex = 0; // First image
+        }
       }
       
       showPostSkeletons();
@@ -2682,7 +2691,7 @@
     function handleHashNavigation() {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#post-')) {
-        // Check if it's a gallery hash (format: #post-123-image-2)
+        // Check if it's a gallery hash with specific image (format: #post-123-image-2)
         const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
         if (galleryMatch) {
           const postId = galleryMatch[1];
@@ -2706,17 +2715,21 @@
             setTimeout(() => clearInterval(checkPosts), 5000);
           }
         } else {
-          // Regular post hash (format: #post-123)
+          // Regular post hash (format: #post-123) - open gallery with first image
           const postId = hash.substring(6); // Remove '#post-' prefix
-          // Wait for posts to load before scrolling
+          
           if (allPosts.length > 0) {
-            scrollToPost(postId);
+            openGalleryFromHash(postId, 0); // Open with first image (index 0)
           } else {
             // If posts aren't loaded yet, wait for them
+            shouldOpenGallery = true;
+            pendingGalleryPostId = postId;
+            pendingGalleryImageIndex = 0; // First image
+            
             const checkPosts = setInterval(() => {
               if (allPosts.length > 0) {
                 clearInterval(checkPosts);
-                scrollToPost(postId);
+                openGalleryFromHash(pendingGalleryPostId, pendingGalleryImageIndex);
               }
             }, 100);
             // Stop checking after 5 seconds
@@ -2732,6 +2745,29 @@
         const post = allPosts[postIndex];
         if (post.imageUrls && post.imageUrls.length > 0) {
           openImageGallery(postIndex, imageIndex);
+        } else {
+          // Post has no images, just scroll to it instead
+          // Clear gallery flags since we're not opening gallery
+          shouldOpenGallery = false;
+          pendingGalleryPostId = null;
+          pendingGalleryImageIndex = 0;
+          
+          // Show posts since we're not opening gallery
+          document.getElementById('postsContainer').style.display = '';
+          const header = document.querySelector('.container header');
+          if (header) {
+            header.style.display = '';
+          }
+          
+          // Display posts if they weren't displayed yet
+          const container = document.getElementById('postsContainer');
+          if (container.innerHTML.trim() === '' || container.querySelector('.post-skeleton')) {
+            applyCurrentFilter().then(() => {
+              scrollToPost(postId);
+            });
+          } else {
+            scrollToPost(postId);
+          }
         }
       }
     }
@@ -2740,7 +2776,7 @@
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#post-')) {
-        // Check if it's a gallery hash (format: #post-123-image-2)
+        // Check if it's a gallery hash with specific image (format: #post-123-image-2)
         const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
         if (galleryMatch) {
           const postId = galleryMatch[1];
@@ -2749,9 +2785,11 @@
             openGalleryFromHash(postId, imageIndex);
           }
         } else {
-          // Regular post hash (format: #post-123)
+          // Regular post hash (format: #post-123) - open gallery with first image
           const postId = hash.substring(6);
-          scrollToPost(postId);
+          if (allPosts.length > 0) {
+            openGalleryFromHash(postId, 0); // Open with first image (index 0)
+          }
         }
       }
     });
@@ -2825,4 +2863,5 @@
 <!-- --- Changelog ---
 [2025-01-27]: Added unique HTML addresses for each post (hash-based URLs) and share button functionality to copy post links to clipboard. (auto)
 [2025-01-27]: Added automatic gallery opening from hash links (format: #post-123-image-2) and prevent loading other posts until gallery is closed. (auto)
+[2025-01-27]: Updated post links to automatically open gallery with first image instead of just scrolling to post. (auto)
 -->
