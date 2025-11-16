@@ -3865,11 +3865,24 @@
         // Initialize device theme listener
         setupDeviceThemeListener();
 
-        // თემის ავტომატური ჩატვირთვა
-        window.onload = function() {
+        // თემის ავტომატური ჩატვირთვა - Apply theme as soon as DOM is ready
+        function initializeTheme() {
             // Apply theme preference (defaults to 'auto' if not set)
             const savedTheme = localStorage.getItem('theme') || 'auto';
             applyTheme(savedTheme, false); // Don't save again, just apply
+        }
+
+        // Apply theme immediately if DOM is already ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeTheme);
+        } else {
+            // DOM is already ready, apply immediately
+            initializeTheme();
+        }
+
+        window.onload = function() {
+            // Re-apply theme on window load to ensure it's set correctly
+            initializeTheme();
 
             // Initialize current month and year (critical from first onload)
             currentMonth = new Date().getMonth() + 1;
