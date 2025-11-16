@@ -1625,6 +1625,9 @@
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
     let authTimeout = null;
+    let shouldOpenGallery = false;
+    let pendingGalleryPostId = null;
+    let pendingGalleryImageIndex = 0;
 
     // Zoom and pan state
     let currentX = 0;
@@ -1817,13 +1820,28 @@
     }
 
     async function loadPosts() {
+      // Check for gallery hash before loading
+      const hash = window.location.hash;
+      const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
+      if (galleryMatch) {
+        shouldOpenGallery = true;
+        pendingGalleryPostId = galleryMatch[1];
+        pendingGalleryImageIndex = parseInt(galleryMatch[2], 10) - 1;
+      }
+      
       showPostSkeletons();
       try {
         const result = await apiGet('getPosts');
         
         if (result.success) {
           allPosts = result.data;
-          await applyCurrentFilter();
+          
+          // If gallery should open, open it immediately without displaying posts
+          if (shouldOpenGallery && pendingGalleryPostId) {
+            openGalleryFromHash(pendingGalleryPostId, pendingGalleryImageIndex);
+          } else {
+            await applyCurrentFilter();
+          }
         } else {
           showError('Failed to load posts: ' + result.message);
         }
@@ -1937,6 +1955,12 @@
     async function displayPosts(posts) {
       const container = document.getElementById('postsContainer');
       
+      // If gallery should open, don't display posts yet
+      if (shouldOpenGallery && pendingGalleryPostId) {
+        container.innerHTML = '';
+        return Promise.resolve();
+      }
+      
       if (posts.length === 0) {
         const typeNames = {
           'memo': 'memos', 'shift': 'shifts', 'tip': 'tips', 'other': 'other posts'
@@ -2042,8 +2066,10 @@
         ? allPosts 
         : allPosts.filter(post => post.type === currentFilter);
       await displayPosts(filteredPosts);
-      // Check for hash navigation after posts are displayed
-      handleHashNavigation();
+      // Check for hash navigation after posts are displayed (only if gallery shouldn't open)
+      if (!shouldOpenGallery) {
+        handleHashNavigation();
+      }
     }
 
     // ==================== Modal Functions ====================
@@ -2194,12 +2220,19 @@
     }
 
     // ==================== Gallery Functions ====================
-    function openImageGallery(index) {
+    function openImageGallery(index, imageIndex = 0) {
       const post = allPosts[index];
       if (!post.imageUrls || post.imageUrls.length === 0) return;
       
       currentGalleryImages = post.imageUrls;
-      currentGalleryIndex = 0;
+      currentGalleryIndex = Math.min(imageIndex, post.imageUrls.length - 1);
+      
+      // Hide posts container and header when gallery opens
+      document.getElementById('postsContainer').style.display = 'none';
+      const header = document.querySelector('.container header');
+      if (header) {
+        header.style.display = 'none';
+      }
       
       document.getElementById('imageGalleryModal').classList.add('active');
       document.body.classList.add('modal-open');
@@ -2207,7 +2240,7 @@
       document.querySelector('#imageGalleryModal .view-modal-content').focus();
       
       setupGalleryThumbnails();
-      showGalleryImage(0);
+      showGalleryImage(currentGalleryIndex);
       addImageZoomListeners();
     }
 
@@ -2257,6 +2290,26 @@
       document.body.classList.remove('modal-open');
       releaseFocusTrap();
       removeImageZoomListeners();
+      
+      // Show posts container and header when gallery closes
+      document.getElementById('postsContainer').style.display = '';
+      const header = document.querySelector('.container header');
+      if (header) {
+        header.style.display = '';
+      }
+      
+      // Clear gallery flags
+      shouldOpenGallery = false;
+      pendingGalleryPostId = null;
+      pendingGalleryImageIndex = 0;
+      
+      // If posts weren't displayed yet, display them now
+      if (allPosts.length > 0) {
+        const container = document.getElementById('postsContainer');
+        if (container.innerHTML.trim() === '' || container.querySelector('.post-skeleton')) {
+          applyCurrentFilter();
+        }
+      }
     }
 
     // ==================== Zoom Functions ====================
@@ -2629,20 +2682,56 @@
     function handleHashNavigation() {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#post-')) {
-        const postId = hash.substring(6); // Remove '#post-' prefix
-        // Wait for posts to load before scrolling
-        if (allPosts.length > 0) {
-          scrollToPost(postId);
+        // Check if it's a gallery hash (format: #post-123-image-2)
+        const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
+        if (galleryMatch) {
+          const postId = galleryMatch[1];
+          const imageIndex = parseInt(galleryMatch[2], 10) - 1; // Convert to 0-based index
+          
+          if (allPosts.length > 0) {
+            openGalleryFromHash(postId, imageIndex);
+          } else {
+            // If posts aren't loaded yet, wait for them
+            shouldOpenGallery = true;
+            pendingGalleryPostId = postId;
+            pendingGalleryImageIndex = imageIndex;
+            
+            const checkPosts = setInterval(() => {
+              if (allPosts.length > 0) {
+                clearInterval(checkPosts);
+                openGalleryFromHash(pendingGalleryPostId, pendingGalleryImageIndex);
+              }
+            }, 100);
+            // Stop checking after 5 seconds
+            setTimeout(() => clearInterval(checkPosts), 5000);
+          }
         } else {
-          // If posts aren't loaded yet, wait for them
-          const checkPosts = setInterval(() => {
-            if (allPosts.length > 0) {
-              clearInterval(checkPosts);
-              scrollToPost(postId);
-            }
-          }, 100);
-          // Stop checking after 5 seconds
-          setTimeout(() => clearInterval(checkPosts), 5000);
+          // Regular post hash (format: #post-123)
+          const postId = hash.substring(6); // Remove '#post-' prefix
+          // Wait for posts to load before scrolling
+          if (allPosts.length > 0) {
+            scrollToPost(postId);
+          } else {
+            // If posts aren't loaded yet, wait for them
+            const checkPosts = setInterval(() => {
+              if (allPosts.length > 0) {
+                clearInterval(checkPosts);
+                scrollToPost(postId);
+              }
+            }, 100);
+            // Stop checking after 5 seconds
+            setTimeout(() => clearInterval(checkPosts), 5000);
+          }
+        }
+      }
+    }
+    
+    function openGalleryFromHash(postId, imageIndex) {
+      const postIndex = allPosts.findIndex(p => p.id === postId);
+      if (postIndex !== -1) {
+        const post = allPosts[postIndex];
+        if (post.imageUrls && post.imageUrls.length > 0) {
+          openImageGallery(postIndex, imageIndex);
         }
       }
     }
@@ -2651,8 +2740,19 @@
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#post-')) {
-        const postId = hash.substring(6);
-        scrollToPost(postId);
+        // Check if it's a gallery hash (format: #post-123-image-2)
+        const galleryMatch = hash.match(/^#post-(\d+)-image-(\d+)$/);
+        if (galleryMatch) {
+          const postId = galleryMatch[1];
+          const imageIndex = parseInt(galleryMatch[2], 10) - 1; // Convert to 0-based index
+          if (allPosts.length > 0) {
+            openGalleryFromHash(postId, imageIndex);
+          }
+        } else {
+          // Regular post hash (format: #post-123)
+          const postId = hash.substring(6);
+          scrollToPost(postId);
+        }
       }
     });
 
@@ -2724,4 +2824,5 @@
 </html>
 <!-- --- Changelog ---
 [2025-01-27]: Added unique HTML addresses for each post (hash-based URLs) and share button functionality to copy post links to clipboard. (auto)
+[2025-01-27]: Added automatic gallery opening from hash links (format: #post-123-image-2) and prevent loading other posts until gallery is closed. (auto)
 -->
