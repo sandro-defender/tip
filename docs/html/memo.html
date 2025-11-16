@@ -2300,6 +2300,11 @@
       releaseFocusTrap();
       removeImageZoomListeners();
       
+      // Remove hash from URL to prevent gallery from reopening automatically
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      
       // Show posts container and header when gallery closes
       document.getElementById('postsContainer').style.display = '';
       const header = document.querySelector('.container header');
@@ -2864,4 +2869,5 @@
 [2025-01-27]: Added unique HTML addresses for each post (hash-based URLs) and share button functionality to copy post links to clipboard. (auto)
 [2025-01-27]: Added automatic gallery opening from hash links (format: #post-123-image-2) and prevent loading other posts until gallery is closed. (auto)
 [2025-01-27]: Updated post links to automatically open gallery with first image instead of just scrolling to post. (auto)
+[2025-01-27]: Gallery close button now removes hash from URL to prevent automatic reopening. (auto)
 -->
