@@ -596,6 +596,11 @@
       border-color: rgba(239, 68, 68, 0.3) !important;
     }
 
+    .share-btn {
+      background: rgba(59, 130, 246, 0.2) !important;
+      border-color: rgba(59, 130, 246, 0.3) !important;
+    }
+
     /* Modals */
     .modal, .view-modal {
       display: none;
@@ -1686,7 +1691,12 @@
       clearAuthTimeout();
       document.body.classList.remove('password-protected');
       document.getElementById('passwordProtectionModal').style.display = 'none';
-      setTimeout(loadPosts, 100);
+      setTimeout(() => {
+        loadPosts().then(() => {
+          // Check for hash navigation after posts are loaded
+          handleHashNavigation();
+        });
+      }, 100);
     }
 
     function startAuthTimeout() {
@@ -1813,7 +1823,7 @@
         
         if (result.success) {
           allPosts = result.data;
-          applyCurrentFilter();
+          await applyCurrentFilter();
         } else {
           showError('Failed to load posts: ' + result.message);
         }
@@ -1933,7 +1943,7 @@
         };
         const filterText = currentFilter === 'all' ? 'posts' : typeNames[currentFilter];
         container.innerHTML = `<div class="no-posts">No ${filterText} yet. Click "Add New Post" to create your first post!</div>`;
-        return;
+        return Promise.resolve();
       }
 
       // Clear container first
@@ -1953,6 +1963,8 @@
         tempDiv.innerHTML = postCardHtml;
         container.appendChild(tempDiv.firstElementChild);
       }
+      
+      return Promise.resolve();
     }
 
     function createPostCard(post, index) {
@@ -1982,7 +1994,7 @@
       const displayContent = post.content || '';
       
       return `
-        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}">
+        <div class="post-card ${post.pinned ? 'pinned' : ''}" data-type="${post.type || 'other'}" id="post-${post.id}">
           ${post.pinned ? '<div class="pin-badge">📌 Pinned</div>' : ''}
           ${imageCount > 0 ? `
             <div class="post-images-grid ${gridClass}" onclick="event.stopPropagation(); openImageGallery(${index})">
@@ -2006,6 +2018,7 @@
             </div>
           </div>
           <div class="post-actions" onclick="event.stopPropagation()">
+            <button class="share-btn" onclick="sharePost('${post.id}')" title="Share">🔗</button>
             <button class="pin-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin('${post.id}', ${post.pinned})" title="${post.pinned ? 'Unpin' : 'Pin'}">📌</button>
             <button class="edit-btn" onclick="editPost(${index})" title="Edit">✏️</button>
             <button class="delete-btn" onclick="confirmDelete('${post.id}')" title="Delete">🗑️</button>
@@ -2024,11 +2037,13 @@
       applyCurrentFilter();
     }
 
-    function applyCurrentFilter() {
+    async function applyCurrentFilter() {
       const filteredPosts = currentFilter === 'all' 
         ? allPosts 
         : allPosts.filter(post => post.type === currentFilter);
-      displayPosts(filteredPosts);
+      await displayPosts(filteredPosts);
+      // Check for hash navigation after posts are displayed
+      handleHashNavigation();
     }
 
     // ==================== Modal Functions ====================
@@ -2547,6 +2562,100 @@
       }
     }
 
+    // ==================== Share Functions ====================
+    function getPostUrl(postId) {
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}#post-${postId}`;
+    }
+
+    async function sharePost(postId) {
+      const postUrl = getPostUrl(postId);
+      
+      try {
+        // Try using the modern Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(postUrl);
+          showConfirmation('✅', 'Link Copied!', 'Post link has been copied to clipboard.', 'OK', 'success');
+        } else {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = postUrl;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+              showConfirmation('✅', 'Link Copied!', 'Post link has been copied to clipboard.', 'OK', 'success');
+            } else {
+              throw new Error('Copy command failed');
+            }
+          } catch (err) {
+            // If copy fails, show the URL in a prompt
+            prompt('Copy this link:', postUrl);
+            showConfirmation('ℹ️', 'Link Ready', 'Please copy the link from the prompt.', 'OK', 'secondary');
+          } finally {
+            document.body.removeChild(textArea);
+          }
+        }
+      } catch (error) {
+        // If all else fails, show the URL in a prompt
+        prompt('Copy this link:', postUrl);
+        showConfirmation('ℹ️', 'Link Ready', 'Please copy the link from the prompt.', 'OK', 'secondary');
+      }
+    }
+
+    function scrollToPost(postId) {
+      const postElement = document.getElementById(`post-${postId}`);
+      if (postElement) {
+        // Wait a bit for posts to render if they're still loading
+        setTimeout(() => {
+          postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a highlight effect
+          postElement.style.transition = 'box-shadow 0.3s ease';
+          postElement.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.5), ' + postElement.style.boxShadow;
+          setTimeout(() => {
+            postElement.style.boxShadow = '';
+          }, 2000);
+        }, 300);
+      }
+    }
+
+    // Handle hash navigation on page load
+    function handleHashNavigation() {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#post-')) {
+        const postId = hash.substring(6); // Remove '#post-' prefix
+        // Wait for posts to load before scrolling
+        if (allPosts.length > 0) {
+          scrollToPost(postId);
+        } else {
+          // If posts aren't loaded yet, wait for them
+          const checkPosts = setInterval(() => {
+            if (allPosts.length > 0) {
+              clearInterval(checkPosts);
+              scrollToPost(postId);
+            }
+          }, 100);
+          // Stop checking after 5 seconds
+          setTimeout(() => clearInterval(checkPosts), 5000);
+        }
+      }
+    }
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#post-')) {
+        const postId = hash.substring(6);
+        scrollToPost(postId);
+      }
+    });
+
     // ==================== Keyboard Navigation ====================
     document.addEventListener('keydown', (e) => {
       const galleryModal = document.getElementById('imageGalleryModal');
@@ -2613,3 +2722,6 @@
   </script>
 </body>
 </html>
+<!-- --- Changelog ---
+[2025-01-27]: Added unique HTML addresses for each post (hash-based URLs) and share button functionality to copy post links to clipboard. (auto)
+-->
