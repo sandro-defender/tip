@@ -1604,24 +1604,51 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         function getInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
-            const hasUserPreference = localStorage.getItem('user-theme-set') === 'true';
             
-            // If user has manually set a theme, use that
-            if (hasUserPreference && savedTheme) {
+            // If theme is set to 'auto', use device theme
+            if (savedTheme === 'auto') {
+                return detectDeviceTheme();
+            }
+            
+            // If user has set a specific theme, use that
+            if (savedTheme === 'light' || savedTheme === 'dark') {
                 return savedTheme;
             }
             
-            // Otherwise, use device theme
+            // Default to auto mode (device theme)
             return detectDeviceTheme();
+        }
+
+        function getEffectiveTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'auto') {
+                return detectDeviceTheme();
+            }
+            return savedTheme || detectDeviceTheme();
         }
 
         function applyTheme(theme, saveToStorage = true) {
             const body = document.body;
             const themeToggle = document.getElementById('themeToggle');
             
-            body.setAttribute('data-theme', theme);
-            themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
-            applyParticlesConfig(theme);
+            // Get effective theme (resolve 'auto' to actual theme)
+            const effectiveTheme = theme === 'auto' ? detectDeviceTheme() : theme;
+            
+            body.setAttribute('data-theme', effectiveTheme);
+            
+            // Update toggle icon based on mode
+            if (theme === 'auto') {
+                themeToggle.textContent = '📲';
+                themeToggle.title = 'Auto (follows device theme)';
+            } else if (theme === 'light') {
+                themeToggle.textContent = '🌞';
+                themeToggle.title = 'Light theme';
+            } else {
+                themeToggle.textContent = '🌙';
+                themeToggle.title = 'Dark theme';
+            }
+            
+            applyParticlesConfig(effectiveTheme);
             
             // Always save theme to localStorage for other pages to use
             if (saveToStorage) {
@@ -1631,28 +1658,35 @@ Purpose: Main portal page with device theme detection and automatic theme switch
 
         // Theme Toggle with Persistence and Particles Integration
         document.addEventListener('DOMContentLoaded', function() {
-            const initialTheme = getInitialTheme();
-            applyTheme(initialTheme, true); // Save initial theme to localStorage
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            applyTheme(savedTheme, false); // Don't save again, just apply
         });
 
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
-        const initialTheme = getInitialTheme();
-        applyTheme(initialTheme, true); // Save initial theme to localStorage
+        const savedTheme = localStorage.getItem('theme') || 'auto';
+        applyTheme(savedTheme, false); // Don't save again, just apply
 
         themeToggle.addEventListener('click', () => {
-            const isDark = body.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
+            const currentTheme = localStorage.getItem('theme') || 'auto';
             
-            // Mark that user has manually set theme preference
-            localStorage.setItem('user-theme-set', 'true');
+            // Cycle through: auto -> light -> dark -> auto
+            let newTheme;
+            if (currentTheme === 'auto') {
+                newTheme = 'light';
+            } else if (currentTheme === 'light') {
+                newTheme = 'dark';
+            } else {
+                newTheme = 'auto';
+            }
             
-            applyTheme(newTheme, true); // Save manual theme change to localStorage
+            applyTheme(newTheme, true); // Save theme change to localStorage
             
             // Проверяем, включены ли частицы
             const particlesEnabled = localStorage.getItem('particlesEnabled') !== 'false';
             if (particlesEnabled) {
-                applyParticlesConfig(newTheme);
+                const effectiveTheme = newTheme === 'auto' ? detectDeviceTheme() : newTheme;
+                applyParticlesConfig(effectiveTheme);
             }
         });
 
@@ -1674,12 +1708,13 @@ Purpose: Main portal page with device theme detection and automatic theme switch
                 const lightModeQuery = window.matchMedia('(prefers-color-scheme: light)');
                 
                 function handleThemeChange() {
-                    const hasUserPreference = localStorage.getItem('user-theme-set') === 'true';
+                    const currentTheme = localStorage.getItem('theme') || 'auto';
                     
-                    // Only auto-update if user hasn't manually set a theme
-                    if (!hasUserPreference) {
+                    // Only auto-update if theme is set to 'auto'
+                    if (currentTheme === 'auto') {
                         const deviceTheme = detectDeviceTheme();
-                        applyTheme(deviceTheme, true); // Save device theme change to localStorage
+                        // Apply the device theme but keep 'auto' in storage
+                        applyTheme('auto', false); // Don't save, keep 'auto' mode
                     }
                 }
                 
@@ -2875,4 +2910,6 @@ Purpose: Main portal page with device theme detection and automatic theme switch
         });
     </script>
 </body>
+<!-- --- Changelog ---
+2025-01-27: Added auto theme mode to theme toggle button. Theme now cycles through auto -> light -> dark -> auto. Auto mode automatically follows device theme preference. (auto) -->
 </html>
