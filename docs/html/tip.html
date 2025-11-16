@@ -9,6 +9,7 @@
     </script>
     
     <!-- Changelog -->
+    <!-- 2025-01-27: Added auto theme mode support. Theme now cycles through auto -> light -> dark -> auto. Auto mode automatically follows device theme preference. (auto) -->
 
  
     <title>თიფ მენეჯერი</title>
@@ -3686,13 +3687,63 @@
         let tipChart = null; // გრაფიკის ობიექტი
         let totalPoints = 5767.6; // ფოინტების საწყისი რაოდენობა
 
-        // თემის მენეჯმენტი
-        function toggleTheme() {
-            document.body.classList.toggle('dark-theme');
-            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        // Device theme detection
+        function detectDeviceTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                return 'light';
+            }
+            return 'dark'; // Default fallback
+        }
+
+        // Get effective theme (resolve 'auto' to actual theme)
+        function getEffectiveTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            if (savedTheme === 'auto') {
+                return detectDeviceTheme();
+            }
+            return savedTheme;
+        }
+
+        // Apply theme
+        function applyTheme(theme, saveToStorage = true) {
+            const effectiveTheme = theme === 'auto' ? detectDeviceTheme() : theme;
+            
+            // Remove existing theme classes
+            document.body.classList.remove('dark-theme');
+            
+            // Apply effective theme
+            if (effectiveTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+            
+            // Save to localStorage if requested
+            if (saveToStorage) {
+                localStorage.setItem('theme', theme);
+            }
+            
+            // Update chart if it exists
             if (tipChart) {
                 updateChart();
             }
+        }
+
+        // თემის მენეჯმენტი
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'auto';
+            
+            // Cycle through: auto -> light -> dark -> auto
+            let newTheme;
+            if (currentTheme === 'auto') {
+                newTheme = 'light';
+            } else if (currentTheme === 'light') {
+                newTheme = 'dark';
+            } else {
+                newTheme = 'auto';
+            }
+            
+            applyTheme(newTheme, true);
         }
 
         // პაროლის ეკრანის ტაიმერი
@@ -3786,17 +3837,39 @@
             }
         }
 
+        // Listen for device theme changes
+        function setupDeviceThemeListener() {
+            if (window.matchMedia) {
+                const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                const lightModeQuery = window.matchMedia('(prefers-color-scheme: light)');
+                
+                function handleThemeChange() {
+                    const currentTheme = localStorage.getItem('theme') || 'auto';
+                    
+                    // Only auto-update if theme is set to 'auto'
+                    if (currentTheme === 'auto') {
+                        // Apply the device theme but keep 'auto' in storage
+                        applyTheme('auto', false); // Don't save, keep 'auto' mode
+                    }
+                }
+                
+                // Add listeners for both dark and light mode changes
+                darkModeQuery.addEventListener('change', handleThemeChange);
+                lightModeQuery.addEventListener('change', handleThemeChange);
+                
+                // Also listen for the general change event
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleThemeChange);
+            }
+        }
+        
+        // Initialize device theme listener
+        setupDeviceThemeListener();
+
         // თემის ავტომატური ჩატვირთვა
         window.onload = function() {
-            // Apply theme preference
-            const savedTheme = localStorage.getItem('theme');
-            if (!savedTheme) {
-                // If no theme is saved, default to dark theme and save preference
-                localStorage.setItem('theme', 'dark');
-                document.body.classList.add('dark-theme');
-            } else if (savedTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-            }
+            // Apply theme preference (defaults to 'auto' if not set)
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            applyTheme(savedTheme, false); // Don't save again, just apply
 
             // Initialize current month and year (critical from first onload)
             currentMonth = new Date().getMonth() + 1;
