@@ -104,7 +104,7 @@ class InstallHelper {
             .pwa-install-helper {
                 position: fixed;
                 z-index: 2147483643;
-                bottom: 90px;
+                bottom: 95px;
                 right: 20px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             }
@@ -124,14 +124,14 @@ class InstallHelper {
             }
 
             .pwa-install-helper.bottom-left {
-                bottom: 90px;
+                bottom: 95px;
                 left: 20px;
                 top: auto;
                 right: auto;
             }
 
             .pwa-install-helper.bottom-center {
-                bottom: 90px;
+                bottom: 95px;
                 left: 50%;
                 transform: translateX(-50%);
                 top: auto;
