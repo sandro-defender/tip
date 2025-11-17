@@ -2,6 +2,7 @@ export default {
 	async fetch(request, env) {
 	  const url = new URL(request.url);
 	  const method = request.method;
+	  const db = env.DB ?? env["DB"] ?? env["bar-DB"];
 	  const cors = {
 		"Access-Control-Allow-Origin": "https://tips.you.ge",
 		"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -20,11 +21,11 @@ export default {
   
 	  // --- CREATE TABLE IF NOT EXISTS ---
 	  async function ensureTable() {
-		if (!env.bar-DB) {
-		  throw new Error("D1 database binding 'bar-DB' is not configured");
+		if (!db) {
+		  throw new Error("D1 database binding 'DB' is not configured");
 		}
   
-		await env.bar-DB.prepare(`
+		await db.prepare(`
 		  CREATE TABLE IF NOT EXISTS stock_data (
 			Timestamp TEXT PRIMARY KEY,
 			Date TEXT,
@@ -52,7 +53,7 @@ export default {
 		try {
 		  await ensureTable();
 		} catch (err) {
-		  return json({ result: "error", error: `bar-DB init failed: ${err.message}` }, 500);
+		  return json({ result: "error", error: `DB init failed: ${err.message}` }, 500);
 		}
 
 		let body = {};
@@ -63,7 +64,7 @@ export default {
 		}
 
 		try {
-		  await env.bar-DB.prepare(
+		  await db.prepare(
 			`INSERT OR REPLACE INTO stock_data 
 			(Timestamp, Date, Time, InitialStock, Received, Sold, FinalStock, ExpectedStock, Difference, Status)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -84,7 +85,7 @@ export default {
 
 		  return json({ result: "success" });
 		} catch (err) {
-		  return json({ result: "error", error: `bar-DB insert failed: ${err.message}` }, 500);
+		  return json({ result: "error", error: `DB insert failed: ${err.message}` }, 500);
 		}
 	  }
   
@@ -96,7 +97,7 @@ export default {
 		  try {
 			await ensureTable();
 
-			const { results } = await env.bar-DB
+			const { results } = await db
 			  .prepare(`SELECT * FROM stock_data ORDER BY Timestamp ASC`)
 			  .all();
 
@@ -116,7 +117,7 @@ export default {
 			  }))
 			});
 		  } catch (err) {
-			return json({ result: "error", error: `bar-DB query failed: ${err.message}` }, 500);
+			return json({ result: "error", error: `DB query failed: ${err.message}` }, 500);
 		  }
 		}
   
@@ -129,3 +130,4 @@ export default {
 
 // --- Changelog ---
 // 2025-11-17: Hardened D1 worker error handling and binding checks. (auto)
+// 2025-11-17: Added fallback to bar-DB binding name for D1 access. (auto)
