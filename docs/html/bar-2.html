@@ -1326,6 +1326,9 @@
                 return;
             }
 
+            // Ensure we request the history action
+            const historyUrl = sheetsUrl.includes('?') ? `${sheetsUrl}&action=getHistory` : `${sheetsUrl}?action=getHistory`;
+
             // Show modal
             DOM.historyModal.classList.add('visible');
             DOM.historyContent.innerHTML = `
@@ -1336,8 +1339,7 @@
             `;
 
             try {
-                // doGet handles history retrieval
-                const response = await fetch(sheetsUrl, {
+                const response = await fetch(historyUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1462,4 +1464,5 @@
 </html>
 <!-- --- Changelog ---
 2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
-2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto) -->
+2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
+2025-11-17: Added getHistory query parameter when requesting history. (auto) -->
