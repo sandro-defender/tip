@@ -552,26 +552,7 @@
         }
 
         .theme-toggle {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 1000;
-            background: var(--surface);
-            border: none;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1) rotate(10deg);
+            display: none;
         }
 
         /* Loading indicator */
@@ -609,19 +590,6 @@
             color: white;
         }
 
-        .version-badge {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 8px 18px;
-            font-weight: 600;
-            box-shadow: var(--shadow-sm);
-            z-index: 1500;
-        }
 
         /* Responsive adjustments */
         @media (max-width: 500px) {
@@ -734,7 +702,6 @@
         </div>
     </div>
 
-    <div class="version-badge">v2</div>
 
     <script>
         // Constants and State
@@ -1424,7 +1391,6 @@
         }
 
         function displayHistory(history) {
-            // Sort by timestamp descending (newest first)
             history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             const uniqueHistory = [];
@@ -1438,64 +1404,98 @@
                 }
             });
 
-            let historyHTML = '<div class="history-list">';
+            const PAGE_SIZE = 10;
+            let currentCount = 0;
 
-            uniqueHistory.forEach(item => {
-                const statusClass = item.difference === 0 ? 'success' : (item.difference > 0 ? 'positive' : 'negative');
-                const statusText = item.status || (item.difference === 0 ? 'იდეალური' : (item.difference > 0 ? 'მეტობა' : 'დანაკლისი'));
-                
-                const date = new Date(item.timestamp);
-                const formattedDate = date.toLocaleDateString('ka-GE', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+            const renderItems = () => {
+                const list = document.createElement('div');
+                list.className = 'history-list';
+
+                const itemsToRender = uniqueHistory.slice(0, currentCount);
+                if (itemsToRender.length === 0) {
+                    DOM.historyContent.innerHTML = `
+                        <div class="no-history">
+                            <i class="fas fa-inbox"></i>
+                            <p>ისტორია ჯერ ცარიელია</p>
+                            <p style="font-size: 0.875rem; margin-top: 8px;">დაიწყეთ გამოთვლები და ისინი აქ გამოჩნდება</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                itemsToRender.forEach(item => {
+                    const statusClass = item.difference === 0 ? 'success' : (item.difference > 0 ? 'positive' : 'negative');
+                    const statusText = item.status || (item.difference === 0 ? 'იდეალური' : (item.difference > 0 ? 'მეტობა' : 'დანაკლისი'));
+                    
+                    const date = new Date(item.timestamp);
+                    const formattedDate = date.toLocaleDateString('ka-GE', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    const formattedTime = date.toLocaleTimeString('ka-GE', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    list.innerHTML += `
+                        <div class="history-item ${statusClass}">
+                            <div class="history-date">
+                                <i class="far fa-calendar"></i> ${formattedDate} • 
+                                <i class="far fa-clock"></i> ${formattedTime}
+                            </div>
+                            <div class="history-details">
+                                <div class="history-detail">
+                                    <span class="history-detail-label">საწყისი:</span>
+                                    <span class="history-detail-value">${item.initialStock}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="history-detail-label">მიღებული:</span>
+                                    <span class="history-detail-value">+${item.received}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="history-detail-label">გაყიდული:</span>
+                                    <span class="history-detail-value">-${item.sold}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="history-detail-label">საბოლოო:</span>
+                                    <span class="history-detail-value">${item.finalStock}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="history-detail-label">მოსალოდნელი:</span>
+                                    <span class="history-detail-value">${item.expectedStock}</span>
+                                </div>
+                                <div class="history-detail">
+                                    <span class="history-detail-label">სხვაობა:</span>
+                                    <span class="history-detail-value">${item.difference > 0 ? '+' : ''}${item.difference}</span>
+                                </div>
+                            </div>
+                            <div class="history-status ${statusClass}">
+                                ${statusText === 'იდეალური' ? '🎯' : (statusText === 'მეტობა' ? '📈' : '📉')} ${statusText}
+                            </div>
+                        </div>
+                    `;
                 });
-                const formattedTime = date.toLocaleTimeString('ka-GE', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
 
-                historyHTML += `
-                    <div class="history-item ${statusClass}">
-                        <div class="history-date">
-                            <i class="far fa-calendar"></i> ${formattedDate} • 
-                            <i class="far fa-clock"></i> ${formattedTime}
-                        </div>
-                        <div class="history-details">
-                            <div class="history-detail">
-                                <span class="history-detail-label">საწყისი:</span>
-                                <span class="history-detail-value">${item.initialStock}</span>
-                            </div>
-                            <div class="history-detail">
-                                <span class="history-detail-label">მიღებული:</span>
-                                <span class="history-detail-value">+${item.received}</span>
-                            </div>
-                            <div class="history-detail">
-                                <span class="history-detail-label">გაყიდული:</span>
-                                <span class="history-detail-value">-${item.sold}</span>
-                            </div>
-                            <div class="history-detail">
-                                <span class="history-detail-label">საბოლოო:</span>
-                                <span class="history-detail-value">${item.finalStock}</span>
-                            </div>
-                            <div class="history-detail">
-                                <span class="history-detail-label">მოსალოდნელი:</span>
-                                <span class="history-detail-value">${item.expectedStock}</span>
-                            </div>
-                            <div class="history-detail">
-                                <span class="history-detail-label">სხვაობა:</span>
-                                <span class="history-detail-value">${item.difference > 0 ? '+' : ''}${item.difference}</span>
-                            </div>
-                        </div>
-                        <div class="history-status ${statusClass}">
-                            ${statusText === 'იდეალური' ? '🎯' : (statusText === 'მეტობა' ? '📈' : '📉')} ${statusText}
-                        </div>
-                    </div>
-                `;
-            });
+                DOM.historyContent.innerHTML = '';
+                DOM.historyContent.appendChild(list);
 
-            historyHTML += '</div>';
-            DOM.historyContent.innerHTML = historyHTML;
+                if (currentCount < uniqueHistory.length) {
+                    const loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.textContent = 'მეტის ნახვა';
+                    loadMoreBtn.style.marginTop = '20px';
+                    loadMoreBtn.style.width = '100%';
+                    loadMoreBtn.className = 'btn-history';
+                    loadMoreBtn.onclick = () => {
+                        currentCount = Math.min(currentCount + PAGE_SIZE, uniqueHistory.length);
+                        renderItems();
+                    };
+                    DOM.historyContent.appendChild(loadMoreBtn);
+                }
+            };
+
+            currentCount = Math.min(PAGE_SIZE, uniqueHistory.length);
+            renderItems();
         }
 
         function closeHistoryModal() {
@@ -1521,10 +1521,3 @@
 
 </body>
 </html>
-<!-- --- Changelog ---
-2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
-2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
-2025-11-17: Added getHistory query parameter when requesting history. (auto)
-2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto)
-2025-11-17: Deferred Sheets save until share/copy actions and added v2 badge. (auto)
-2025-11-17: History view now shows only the latest entry per date. (auto) -->
