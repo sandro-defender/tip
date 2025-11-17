@@ -715,8 +715,23 @@
             historyModal: document.getElementById('historyModal'),
             historyContent: document.getElementById('historyContent')
         };
-        //const GOOGLE_SHEETS_URL = 'https://bar-api.sandro-1990.workers.dev/';
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzLBXpFUBGwZHqUKhuUlFe7LJwddXe3zT6k4eoG5BjAd5DbXNMOpbHblk2gtM4Qnerh/exec';
+
+        const WORKER_API_URL = (function resolveWorkerUrl() {
+            if (window.BAR_WORKER_URL) {
+                return window.BAR_WORKER_URL.replace(/\/+$/, '');
+            }
+
+            const host = window.location.hostname;
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return 'http://127.0.0.1:8787';
+            }
+
+            return 'https://bar-api.sandro-1990.workers.dev';
+        })();
+
+        const getHistoryEndpoint = () => WORKER_API_URL.includes('?')
+            ? `${WORKER_API_URL}&action=getHistory`
+            : `${WORKER_API_URL}?action=getHistory`;
         const STATE = {
             lastCalculationData: null,
             historySaved: false,
@@ -862,26 +877,26 @@
             }
 
             STATE.savingPromise = (async () => {
-                const result = await saveToGoogleSheets(STATE.lastCalculationData);
+                const result = await saveCalculationToWorker(STATE.lastCalculationData);
 
                 if (result.success) {
                     STATE.historySaved = true;
                     if (!result.skipped) {
-                        showStatus('✅ ისტორია წარმატებით შეინახა Google Sheets-ში', 'success');
+                        showStatus('✅ ისტორია Cloudflare D1-ში შენახულია', 'success');
                     }
                 } else {
-                    showStatus('⚠️ შენახვა ვერ მოხერხდა, სცადეთ ხელახლა', 'error');
+                    showStatus(`⚠️ ${result.error || 'შენახვა ვერ მოხერხდა, სცადეთ ხელახლა'}`, 'error');
                 }
 
                 STATE.savingPromise = null;
             })();
         }
 
-        async function saveToGoogleSheets(data) {
-            const sheetsUrl = GOOGLE_SHEETS_URL.trim();
-            
-            if (!sheetsUrl) {
-                console.log('No Google Sheets URL provided - skipping save');
+        async function saveCalculationToWorker(data) {
+            const workerUrl = WORKER_API_URL?.trim();
+
+            if (!workerUrl) {
+                console.warn('Cloudflare Worker URL not configured - skipping save');
                 return { success: true, skipped: true };
             }
 
@@ -889,20 +904,27 @@
                 DOM.calculateBtn.disabled = true;
                 DOM.calculateBtn.innerHTML = '<div class="loading"></div><span>შენახვა...</span>';
 
-                const response = await fetch(sheetsUrl, {
+                const response = await fetch(workerUrl, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(data)
                 });
 
-                // Note: with no-cors, we can't read the response
-                // We assume success if no error was thrown
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(errorBody || `Request failed with status ${response.status}`);
+                }
+
+                const payload = await response.json().catch(() => ({ result: 'success' }));
+                if (payload.result !== 'success') {
+                    throw new Error(payload.error || 'უცნობი შეცდომა Cloudflare Worker-დან');
+                }
+
                 return { success: true };
             } catch (error) {
-                console.error('Error saving to Google Sheets:', error);
+                console.error('Error saving to Cloudflare Worker:', error);
                 return { success: false, error: error.message };
             } finally {
                 DOM.calculateBtn.disabled = false;
@@ -1337,15 +1359,15 @@
         }
 
         async function loadHistory() {
-            const sheetsUrl = GOOGLE_SHEETS_URL.trim();
+            const workerUrl = WORKER_API_URL?.trim();
             
-            if (!sheetsUrl) {
-                alert('Google Sheets URL არ არის კონფიგურირებული.');
+            if (!workerUrl) {
+                alert('Cloudflare Worker URL არ არის კონფიგურირებული.');
                 return;
             }
 
             // Ensure we request the history action
-            const historyUrl = sheetsUrl.includes('?') ? `${sheetsUrl}&action=getHistory` : `${sheetsUrl}?action=getHistory`;
+            const historyUrl = getHistoryEndpoint();
 
             // Show modal
             DOM.historyModal.classList.add('visible');
@@ -1384,7 +1406,7 @@
                     <div class="no-history">
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>ისტორიის ჩატვირთვა ვერ მოხერხდა</p>
-                        <p style="font-size: 0.875rem; margin-top: 8px;">დარწმუნდით, რომ Google Apps Script სწორად არის კონფიგურირებული</p>
+                        <p style="font-size: 0.875rem; margin-top: 8px;">დარწმუნდით, რომ Cloudflare Worker და D1 მონაცემთა ბაზა სწორად არის კონფიგურირებული</p>
                     </div>
                 `;
             }
@@ -1521,3 +1543,6 @@
 
 </body>
 </html>
+
+<!-- --- Changelog ---
+2025-11-17: Switched storage to Cloudflare D1 worker endpoint. (auto) -->
