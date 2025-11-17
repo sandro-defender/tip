@@ -1,0 +1,25 @@
+name = "bar-api"
+main = "worker/index.js"
+
+compatibility_date = "2025-09-30"
+
+preview_urls = true   # or false, depending on your preference
+
+[vars]
+# API_PASSWORD is set via Wrangler secrets in production:
+# wrangler secret put API_PASSWORD
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bar-data"
+database_id = "83c0015f-9160-4ec7-aa88-e9131f939ad3"
+
+[observability]
+enabled = true
+
+
+
+# Optional route (customize for your zone)
+# [[routes]]
+# pattern = "tips-api.you.ge/api/d1*"
+# zone_id = "<your-zone-id>"
