@@ -124,12 +124,6 @@
             outline: none;
         }
 
-        .input-group input[readonly] {
-            cursor: not-allowed;
-            color: var(--text-secondary);
-            background-color: var(--surface-secondary);
-        }
-
         .input-group input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
@@ -634,19 +628,9 @@
     <div class="calculator">
         <h2>ინვენტარის კალკულატორი</h2>
         
-        <!-- Google Sheets Configuration -->
-        <div class="input-group">
-            <label for="sheetsUrl">
-                <i class="fas fa-link"></i> Google Sheets Web App URL:
-            </label>
-            <input type="text" id="sheetsUrl" 
-                   placeholder="ჩასვით Google Apps Script URL"
-                   value="https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec"
-                   readonly aria-readonly="true">
-            <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 4px; display: block;">
-                URL წინასწარ არის კონფიგურირებული და შეცვლას არ საჭიროებს.
-            </small>
-        </div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">
+            შედეგები ავტომატურად ინახება Google Sheets-ში; დამატებითი კონფიგურაცია საჭირო არ არის.
+        </p>
 
         <div class="shop">
             <h3>ბარის ინვენტარი</h3>
@@ -746,13 +730,12 @@
             timestamp: document.getElementById('timestamp'),
             actionButtons: document.getElementById('action-buttons'),
             statusMessage: document.getElementById('statusMessage'),
-            sheetsUrl: document.getElementById('sheetsUrl'),
             calculateBtn: document.getElementById('calculateBtn'),
             historyModal: document.getElementById('historyModal'),
             historyContent: document.getElementById('historyContent')
         };
 
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyo50C3S6KRbOxKKM_UK_wjRp3SM8YcUCh5z7EYKr8tWhWergH--Z6QB50dlJ5g5mU_/exec';
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzLBXpFUBGwZHqUKhuUlFe7LJwddXe3zT6k4eoG5BjAd5DbXNMOpbHblk2gtM4Qnerh/exec';
 
         const ThemeManager = (() => {
             const STORAGE_KEY = 'theme';
@@ -833,17 +816,6 @@
 
             return { init, applyTheme };
         })();
-
-        function initializeSheetsConfig() {
-            if (!DOM.sheetsUrl) return;
-            DOM.sheetsUrl.value = GOOGLE_SHEETS_URL;
-            DOM.sheetsUrl.setAttribute('readonly', 'readonly');
-            DOM.sheetsUrl.setAttribute('aria-readonly', 'true');
-            DOM.sheetsUrl.title = 'URL წინასწარ არის კონფიგურირებული';
-        }
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSheetsConfig();
-        });
 
         // მენიუს ჩატვირთვა
         fetch('/includes/menu.html')
@@ -1350,7 +1322,7 @@
             const sheetsUrl = GOOGLE_SHEETS_URL.trim();
             
             if (!sheetsUrl) {
-                alert('გთხოვთ ჯერ შეიყვანოთ Google Sheets Web App URL');
+                alert('Google Sheets URL არ არის კონფიგურირებული.');
                 return;
             }
 
@@ -1364,9 +1336,8 @@
             `;
 
             try {
-                // Add ?action=getHistory to the URL
-                const getUrl = sheetsUrl + '?action=getHistory';
-                const response = await fetch(getUrl, {
+                // doGet handles history retrieval
+                const response = await fetch(sheetsUrl, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1490,4 +1461,5 @@
 </body>
 </html>
 <!-- --- Changelog ---
-2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto) -->
+2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
+2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto) -->
