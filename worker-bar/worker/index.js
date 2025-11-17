@@ -3,7 +3,7 @@ export default {
 	  const url = new URL(request.url);
 	  const method = request.method;
 	  const cors = {
-		"Access-Control-Allow-Origin": "*",
+		"Access-Control-Allow-Origin": "https://tips.you.ge",
 		"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 		"Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match, If-Modified-Since, X-Request-ID, Cache-Control, Pragma, Expires, X-Requested-With, Accept, Accept-Language, Origin",
 		"Access-Control-Allow-Credentials": "true",
@@ -20,6 +20,10 @@ export default {
   
 	  // --- CREATE TABLE IF NOT EXISTS ---
 	  async function ensureTable() {
+		if (!env.DB) {
+		  throw new Error("D1 database binding 'DB' is not configured");
+		}
+  
 		await env.DB.prepare(`
 		  CREATE TABLE IF NOT EXISTS stock_data (
 			Timestamp TEXT PRIMARY KEY,
@@ -45,15 +49,19 @@ export default {
   
 	  // --- POST: Insert row ---
 	  if (method === "POST") {
-		await ensureTable();
-  
+		try {
+		  await ensureTable();
+		} catch (err) {
+		  return json({ result: "error", error: `DB init failed: ${err.message}` }, 500);
+		}
+
 		let body = {};
 		try {
 		  body = await request.json();
 		} catch (e) {
 		  return json({ result: "error", error: "Invalid JSON" }, 400);
 		}
-  
+
 		try {
 		  await env.DB.prepare(
 			`INSERT OR REPLACE INTO stock_data 
@@ -73,10 +81,10 @@ export default {
 			  body.status
 			)
 			.run();
-  
+
 		  return json({ result: "success" });
 		} catch (err) {
-		  return json({ result: "error", error: err.toString() }, 500);
+		  return json({ result: "error", error: `DB insert failed: ${err.message}` }, 500);
 		}
 	  }
   
@@ -85,27 +93,31 @@ export default {
 		const action = url.searchParams.get("action");
   
 		if (action === "getHistory") {
-		  await ensureTable();
-  
-		  const { results } = await env.DB
-			.prepare(`SELECT * FROM stock_data ORDER BY Timestamp ASC`)
-			.all();
-  
-		  return json({
-			result: "success",
-			history: results.map(row => ({
-			  timestamp: row.Timestamp,
-			  date: row.Date,
-			  time: row.Time,
-			  initialStock: row.InitialStock,
-			  received: row.Received,
-			  sold: row.Sold,
-			  finalStock: row.FinalStock,
-			  expectedStock: row.ExpectedStock,
-			  difference: row.Difference,
-			  status: row.Status
-			}))
-		  });
+		  try {
+			await ensureTable();
+
+			const { results } = await env.DB
+			  .prepare(`SELECT * FROM stock_data ORDER BY Timestamp ASC`)
+			  .all();
+
+			return json({
+			  result: "success",
+			  history: results.map(row => ({
+				timestamp: row.Timestamp,
+				date: row.Date,
+				time: row.Time,
+				initialStock: row.InitialStock,
+				received: row.Received,
+				sold: row.Sold,
+				finalStock: row.FinalStock,
+				expectedStock: row.ExpectedStock,
+				difference: row.Difference,
+				status: row.Status
+			  }))
+			});
+		  } catch (err) {
+			return json({ result: "error", error: `DB query failed: ${err.message}` }, 500);
+		  }
 		}
   
 		return json({ result: "error", error: "Invalid action" }, 400);
@@ -114,3 +126,6 @@ export default {
 	  return json({ result: "error", error: "Method not allowed" }, 405);
 	}
   }
+
+// --- Changelog ---
+// 2025-11-17: Hardened D1 worker error handling and binding checks. (auto)
