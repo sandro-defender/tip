@@ -734,6 +734,8 @@
         };
 
         const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzLBXpFUBGwZHqUKhuUlFe7LJwddXe3zT6k4eoG5BjAd5DbXNMOpbHblk2gtM4Qnerh/exec';
+        let lastCalculationPayload = null;
+        let historySavePromise = null;
 
         const ThemeManager = (() => {
             const STORAGE_KEY = 'theme';
@@ -873,9 +875,6 @@
             }
 
             try {
-                DOM.calculateBtn.disabled = true;
-                DOM.calculateBtn.innerHTML = '<div class="loading"></div><span>შენახვა...</span>';
-
                 const response = await fetch(sheetsUrl, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -891,9 +890,6 @@
             } catch (error) {
                 console.error('Error saving to Google Sheets:', error);
                 return { success: false, error: error.message };
-            } finally {
-                DOM.calculateBtn.disabled = false;
-                DOM.calculateBtn.innerHTML = '<span>გამოთვლა</span>';
             }
         }
 
@@ -937,14 +933,9 @@
                 status: difference1 === 0 ? 'იდეალური' : (difference1 > 0 ? 'მეტობა' : 'დანაკლისი')
             };
 
-            // Save to Google Sheets
-            const saveResult = await saveToGoogleSheets(sheetData);
-            
-            if (saveResult.success && !saveResult.skipped) {
-                showStatus('✅ ისტორია წარმატებით შეინახა Google Sheets-ში', 'success');
-            } else if (!saveResult.success) {
-                showStatus('⚠️ შენახვა ვერ მოხერხდა, მაგრამ გამოთვლა შესრულდა', 'error');
-            }
+            lastCalculationPayload = { data: sheetData, saved: false };
+            historySavePromise = null;
+            showStatus('ℹ️ შედეგები მზადაა. გაზიარებისას ისტორია ავტომატურად შეინახება.', 'success');
 
             // Display results
             DOM.result.innerHTML = `
@@ -996,11 +987,46 @@
             DOM.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function printResults() {
+        async function ensureHistorySaved(triggerSource = '') {
+            if (!lastCalculationPayload || lastCalculationPayload.saved) {
+                return true;
+            }
+
+            if (historySavePromise) {
+                return historySavePromise;
+            }
+
+            showStatus('📥 ისტორია ინახება...', 'success');
+            historySavePromise = saveToGoogleSheets(lastCalculationPayload.data)
+                .then(result => {
+                    const success = result.success && !result.skipped;
+                    lastCalculationPayload.saved = success;
+                    if (success) {
+                        showStatus('✅ ისტორია შენახულია', 'success');
+                    } else {
+                        showStatus('⚠️ ისტორიის შენახვა ვერ მოხერხდა', 'error');
+                    }
+                    historySavePromise = null;
+                    return success;
+                })
+                .catch(error => {
+                    console.error('History save failed:', error);
+                    showStatus('⚠️ ისტორიის შენახვა ვერ მოხერხდა', 'error');
+                    lastCalculationPayload.saved = false;
+                    historySavePromise = null;
+                    return false;
+                });
+
+            return historySavePromise;
+        }
+
+        async function printResults() {
             if (!DOM.result.classList.contains('visible')) {
                 alert('გთხოვთ ჯერ გამოთვალოთ შედეგები დაბეჭდვამდე.');
                 return;
             }
+
+            await ensureHistorySaved('print');
 
             var resultElement = DOM.result;
             var differenceElement = DOM.difference;
@@ -1190,12 +1216,14 @@
             return /FBAN|FBAV|FB_IAB|FBAN\/Messenger/i.test(ua);
         }
 
-        function shareToMessenger() {
+        async function shareToMessenger() {
             const formattedData = formatResultsForSharing();
             if (!formattedData) {
                 alert('გთხოვთ ჯერ გამოთვალოთ შედეგები გაზიარებამდე.');
                 return;
             }
+
+            await ensureHistorySaved('messenger');
 
             const message = formattedData.getFullMessage();
             
@@ -1243,6 +1271,8 @@
                 return;
             }
 
+            await ensureHistorySaved('share');
+
             if (isMessengerWebView()) {
                 copyToClipboard();
                 alert('Messenger-ში ჩაშენებული ბრაუზერი ბლოკავს გაზიარებას. გახსენით გვერდი გარე ბრაუზერში და ცადეთ ხელახლა, ან ჩასვით დაკოპირებული ტექსტი ჩატში.');
@@ -1267,12 +1297,14 @@
             copyToClipboard();
         }
 
-        function copyToClipboard() {
+        async function copyToClipboard() {
             const formattedData = formatResultsForSharing();
             if (!formattedData) {
                 alert('გთხოვთ ჯერ გამოთვალოთ შედეგები კოპირებამდე.');
                 return;
             }
+
+            await ensureHistorySaved('copy');
 
             const tempTextarea = document.createElement('textarea');
             tempTextarea.value = formattedData.getFullMessage();
@@ -1310,6 +1342,8 @@
             DOM.difference.innerHTML = '';
             DOM.timestamp.innerText = '';
             DOM.statusMessage.innerHTML = '';
+            lastCalculationPayload = null;
+            historySavePromise = null;
 
             DOM.actionButtons.style.display = 'none';
 
@@ -1461,4 +1495,5 @@
 2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
 2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
 2025-11-17: Added getHistory query parameter when requesting history. (auto)
-2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto) -->
+2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto)
+2025-11-17: Delayed Google Sheets save until print/share/copy actions. (auto) -->
