@@ -611,8 +611,8 @@
 
         .version-badge {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 20px;
+            left: 20px;
             background: var(--surface);
             color: var(--text);
             border: 1px solid var(--border);
@@ -1427,9 +1427,20 @@
             // Sort by timestamp descending (newest first)
             history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            let historyHTML = '<div class="history-list">';
+            const uniqueHistory = [];
+            const seenDates = new Set();
 
             history.forEach(item => {
+                const dateKey = new Date(item.timestamp).toISOString().split('T')[0];
+                if (!seenDates.has(dateKey)) {
+                    uniqueHistory.push(item);
+                    seenDates.add(dateKey);
+                }
+            });
+
+            let historyHTML = '<div class="history-list">';
+
+            uniqueHistory.forEach(item => {
                 const statusClass = item.difference === 0 ? 'success' : (item.difference > 0 ? 'positive' : 'negative');
                 const statusText = item.status || (item.difference === 0 ? 'იდეალური' : (item.difference > 0 ? 'მეტობა' : 'დანაკლისი'));
                 
@@ -1515,4 +1526,5 @@
 2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
 2025-11-17: Added getHistory query parameter when requesting history. (auto)
 2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto)
-2025-11-17: Deferred Sheets save until share/copy actions and added v2 badge. (auto) -->
+2025-11-17: Deferred Sheets save until share/copy actions and added v2 badge. (auto)
+2025-11-17: History view now shows only the latest entry per date. (auto) -->
