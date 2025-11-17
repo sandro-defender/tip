@@ -628,9 +628,7 @@
     <div class="calculator">
         <h2>ინვენტარის კალკულატორი</h2>
         
-        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px;">
-            შედეგები ავტომატურად ინახება Google Sheets-ში; დამატებითი კონფიგურაცია საჭირო არ არის.
-        </p>
+
 
         <div class="shop">
             <h3>ბარის ინვენტარი</h3>
@@ -1340,10 +1338,7 @@
 
             try {
                 const response = await fetch(historyUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+                    method: 'GET'
                 });
 
                 if (!response.ok) {
@@ -1465,4 +1460,5 @@
 <!-- --- Changelog ---
 2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
 2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
-2025-11-17: Added getHistory query parameter when requesting history. (auto) -->
+2025-11-17: Added getHistory query parameter when requesting history. (auto)
+2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto) -->
