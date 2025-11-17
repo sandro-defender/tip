@@ -1,12 +1,4 @@
- <!--
-Project: Tip Tracker
-File: bar2.html
-Version: 1.6
-Author: Cursor AI
-Model: Claude Sonnet 4
-Last Modified: 2025-01-27
-Purpose: Inventory calculator with working Messenger sharing (copy + open)
--->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,11 +167,17 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             transform: translateY(0);
         }
 
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-calculate {
             background-color: var(--success);
         }
 
-        .btn-calculate:hover {
+        .btn-calculate:hover:not(:disabled) {
             background-color: var(--success);
             filter: brightness(1.1);
         }
@@ -202,15 +200,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             filter: brightness(1.1);
         }
 
-        .btn-whatsapp {
-            background-color: #25D366;
-        }
-
-        .btn-whatsapp:hover {
-            background-color: #25D366;
-            filter: brightness(1.1);
-        }
-
         .btn-reset {
             background-color: var(--error);
         }
@@ -229,22 +218,194 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             filter: brightness(1.1);
         }
 
-        .btn-sms {
-            background-color: #5BC236;
+        .btn-history {
+            background-color: var(--warning);
+            grid-column: 1 / -1;
         }
 
-        .btn-sms:hover {
-            background-color: #5BC236;
+        .btn-history:hover {
+            background-color: var(--warning);
             filter: brightness(1.1);
         }
 
-        .btn-email {
-            background-color: #D44638;
+        /* History Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
         }
 
-        .btn-email:hover {
-            background-color: #D44638;
-            filter: brightness(1.1);
+        .modal.visible {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background-color: var(--surface-secondary);
+            color: var(--text);
+            transform: none;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .history-item {
+            background-color: var(--surface-secondary);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .history-item.success {
+            border-left-color: var(--success);
+        }
+
+        .history-item.positive {
+            border-left-color: var(--info);
+        }
+
+        .history-item.negative {
+            border-left-color: var(--error);
+        }
+
+        .history-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+
+        .history-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .history-detail-label {
+            color: var(--text-secondary);
+        }
+
+        .history-detail-value {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .history-status {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .history-status.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .history-status.positive {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .history-status.negative {
+            background-color: var(--error);
+            color: white;
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-history i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .loading-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-history .loading {
+            width: 32px;
+            height: 32px;
+            border-width: 3px;
+            margin: 0 auto 16px;
         }
 
         /* Share container styling */
@@ -312,7 +473,7 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
 
         #result {
             margin-top: 24px;
-            display: none; /* Hide the results initially */
+            display: none;
             color: var(--text);
             background-color: var(--surface-secondary);
             border-radius: 8px;
@@ -326,7 +487,7 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
         }
 
         #result.visible {
-            display: block; /* Show the results when it has the "visible" class */
+            display: block;
         }
 
         #result .input-group {
@@ -413,6 +574,41 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             transform: scale(1.1) rotate(10deg);
         }
 
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status message */
+        .status-message {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-message.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .status-message.error {
+            background-color: var(--error);
+            color: white;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 500px) {
             .calculator {
@@ -431,6 +627,9 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
     <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
     <div class="calculator">
         <h2>ინვენტარის კალკულატორი</h2>
+        
+
+
         <div class="shop">
             <h3>ბარის ინვენტარი</h3>
             <div class="input-group">
@@ -460,13 +659,19 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
         </div>
 
         <div class="button-group">
-            <button onclick="calculate()" class="btn-calculate">
+            <button onclick="calculate()" class="btn-calculate" id="calculateBtn">
                 <span>გამოთვლა</span>
             </button>
             <button onclick="resetForm()" class="btn-reset">
                 <span>გასუფთავება</span>
             </button>
+            <button onclick="loadHistory()" class="btn-history">
+                <i class="fas fa-history"></i>
+                <span>ისტორია</span>
+            </button>
         </div>
+
+        <div id="statusMessage"></div>
 
         <div class="share-container" id="action-buttons" style="display: none;">
             <h3 class="share-title">შედეგების გაზიარება</h3>
@@ -499,75 +704,138 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
         <div id="timestamp"></div>
     </div>
 
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-history"></i> გამოთვლების ისტორია</h2>
+                <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+            </div>
+            <div id="historyContent">
+                <div class="loading-history">
+                    <div class="loading"></div>
+                    <p>იტვირთება...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Constants and State
         const DOM = {
             result: document.getElementById('result'),
             difference: document.getElementById('difference'),
             timestamp: document.getElementById('timestamp'),
-            actionButtons: document.getElementById('action-buttons')
+            actionButtons: document.getElementById('action-buttons'),
+            statusMessage: document.getElementById('statusMessage'),
+            calculateBtn: document.getElementById('calculateBtn'),
+            historyModal: document.getElementById('historyModal'),
+            historyContent: document.getElementById('historyContent')
         };
+
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzLBXpFUBGwZHqUKhuUlFe7LJwddXe3zT6k4eoG5BjAd5DbXNMOpbHblk2gtM4Qnerh/exec';
+
+        const ThemeManager = (() => {
+            const STORAGE_KEY = 'theme';
+
+            const detectDeviceTheme = () => {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    return 'dark';
+                }
+                return 'light';
+            };
+
+            const getStoredTheme = () => localStorage.getItem(STORAGE_KEY) || 'auto';
+
+            const getEffectiveTheme = (theme) => theme === 'auto' ? detectDeviceTheme() : theme;
+
+            const updateToggleButton = (theme) => {
+                const themeToggle = document.getElementById('themeToggle');
+                if (!themeToggle) return;
+
+                if (theme === 'auto') {
+                    themeToggle.textContent = '📲';
+                    themeToggle.setAttribute('aria-label', 'Switch to light mode');
+                } else if (theme === 'light') {
+                    themeToggle.textContent = '🌞';
+                    themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+                } else {
+                    themeToggle.textContent = '🌙';
+                    themeToggle.setAttribute('aria-label', 'Switch to auto mode');
+                }
+            };
+
+            const applyTheme = (theme, { save = true } = {}) => {
+                const effectiveTheme = getEffectiveTheme(theme);
+                document.body.setAttribute('data-theme', effectiveTheme);
+                if (save) {
+                    localStorage.setItem(STORAGE_KEY, theme);
+                }
+                updateToggleButton(theme);
+                if (DOM.result.classList.contains('visible')) {
+                    applyThemeToResults();
+                }
+            };
+
+            const cycleTheme = () => {
+                const current = getStoredTheme();
+                const next = current === 'auto' ? 'light' : (current === 'light' ? 'dark' : 'auto');
+                applyTheme(next);
+            };
+
+            const handleSystemThemeChange = () => {
+                if (getStoredTheme() === 'auto') {
+                    applyTheme('auto', { save: false });
+                }
+            };
+
+            const setupSystemThemeListeners = () => {
+                if (!window.matchMedia) return;
+                const queries = ['(prefers-color-scheme: dark)', '(prefers-color-scheme: light)'];
+                queries.forEach(query => {
+                    const mediaQuery = window.matchMedia(query);
+                    if (mediaQuery.addEventListener) {
+                        mediaQuery.addEventListener('change', handleSystemThemeChange);
+                    } else if (mediaQuery.addListener) {
+                        mediaQuery.addListener(handleSystemThemeChange);
+                    }
+                });
+            };
+
+            const init = () => {
+                applyTheme(getStoredTheme(), { save: false });
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle && !themeToggle.dataset.themeBound) {
+                    themeToggle.addEventListener('click', cycleTheme);
+                    themeToggle.dataset.themeBound = 'true';
+                }
+                setupSystemThemeListeners();
+            };
+
+            return { init, applyTheme };
+        })();
 
         // მენიუს ჩატვირთვა
         fetch('/includes/menu.html')
             .then(response => response.text())
             .then(data => {
-            document.getElementById('menu-container').innerHTML = data;
+                document.getElementById('menu-container').innerHTML = data;
             })
             .catch(error => console.error('Error loading menu:', error));
 
         // Theme Management
         document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            
-            // Hide action buttons initially
+            ThemeManager.init();
             DOM.actionButtons.style.display = 'none';
         });
 
-        // Theme Functions
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 
-                             (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            
-            document.body.setAttribute('data-theme', savedTheme);
-            localStorage.setItem('theme', savedTheme);
-            updateThemeToggleButton(savedTheme);
-        }
-
-        // Toggle between light and dark themes
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            document.body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeToggleButton(newTheme);
-        }
-
-        // Update theme toggle button appearance
-        function updateThemeToggleButton(theme) {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.textContent = theme === 'light' ? '🌙' : '🌞';
-            themeToggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
-
-            // Apply theme to results if they're visible
-            if (DOM.result.classList.contains('visible')) {
-                applyThemeToResults();
-            }
-        }
-
-        // Apply current theme to dynamically generated results
         function applyThemeToResults() {
-            // Make sure all elements exist
             if (!DOM.result || !DOM.difference || !DOM.timestamp) return;
 
-            // Apply theme-specific styles
             DOM.result.style.backgroundColor = 'var(--surface)';
             DOM.result.style.color = 'var(--text)';
             DOM.result.style.borderColor = 'var(--border)';
 
-            // Handle error message if present
             const errorMessage = DOM.result.querySelector('div[style*="background-color: var(--error)"]');
             if (errorMessage) {
                 errorMessage.style.backgroundColor = 'var(--error)';
@@ -577,7 +845,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             DOM.difference.style.color = 'var(--text)';
             DOM.timestamp.style.color = 'var(--text)';
 
-            // Apply styles to all labels and spans in the result
             const labels = DOM.result.querySelectorAll('label');
             const spans = DOM.result.querySelectorAll('span');
 
@@ -590,14 +857,52 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             });
         }
 
-        function calculate() {
-            // Hide action buttons when starting a new calculation
+        function showStatus(message, type = 'success') {
+            DOM.statusMessage.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+            setTimeout(() => {
+                DOM.statusMessage.innerHTML = '';
+            }, 3000);
+        }
+
+        async function saveToGoogleSheets(data) {
+            const sheetsUrl = GOOGLE_SHEETS_URL.trim();
+            
+            if (!sheetsUrl) {
+                console.log('No Google Sheets URL provided - skipping save');
+                return { success: true, skipped: true };
+            }
+
+            try {
+                DOM.calculateBtn.disabled = true;
+                DOM.calculateBtn.innerHTML = '<div class="loading"></div><span>შენახვა...</span>';
+
+                const response = await fetch(sheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Note: with no-cors, we can't read the response
+                // We assume success if no error was thrown
+                return { success: true };
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                return { success: false, error: error.message };
+            } finally {
+                DOM.calculateBtn.disabled = false;
+                DOM.calculateBtn.innerHTML = '<span>გამოთვლა</span>';
+            }
+        }
+
+        async function calculate() {
             DOM.actionButtons.style.display = 'none';
 
             var total1 = parseInt(document.getElementById('total1').value);
             var received1 = parseInt(document.getElementById('received1').value);
             var reprints1 = parseInt(document.getElementById('reprints1').value);
-
             var endDay1 = parseInt(document.getElementById('endDay1').value);
 
             if (isNaN(total1) || isNaN(received1) || isNaN(reprints1) || isNaN(endDay1) ||
@@ -610,16 +915,38 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 DOM.result.classList.add('visible');
                 DOM.difference.innerText = "";
                 DOM.timestamp.innerText = "";
-
-                // Keep action buttons hidden on error
                 DOM.actionButtons.style.display = 'none';
                 return;
             }
 
             var remaining1 = total1 + received1 - reprints1;
             var difference1 = endDay1 - remaining1;
+            var timestamp = new Date().toISOString();
 
-            // Create result HTML with proper styling
+            // Prepare data for Google Sheets
+            const sheetData = {
+                timestamp: timestamp,
+                date: new Date().toLocaleDateString('ka-GE'),
+                time: new Date().toLocaleTimeString('ka-GE'),
+                initialStock: total1,
+                received: received1,
+                sold: reprints1,
+                finalStock: endDay1,
+                expectedStock: remaining1,
+                difference: difference1,
+                status: difference1 === 0 ? 'იდეალური' : (difference1 > 0 ? 'მეტობა' : 'დანაკლისი')
+            };
+
+            // Save to Google Sheets
+            const saveResult = await saveToGoogleSheets(sheetData);
+            
+            if (saveResult.success && !saveResult.skipped) {
+                showStatus('✅ ისტორია წარმატებით შეინახა Google Sheets-ში', 'success');
+            } else if (!saveResult.success) {
+                showStatus('⚠️ შენახვა ვერ მოხერხდა, მაგრამ გამოთვლა შესრულდა', 'error');
+            }
+
+            // Display results
             DOM.result.innerHTML = `
                 <h3>გამოთვლის შედეგები:</h3>
                 <div class="input-group">
@@ -644,7 +971,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 </div>
             `;
 
-            // Update difference display with color coding
             const differenceClass = difference1 === 0 ? 'success' : (difference1 > 0 ? 'positive' : 'negative');
             let differenceText = '';
 
@@ -660,42 +986,26 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 <div class="difference ${differenceClass}">${differenceText}</div>
             `;
 
-            // Show the results
             DOM.result.classList.add('visible');
+            DOM.timestamp.innerText = `გამოთვლა შესრულდა: ${new Date(timestamp).toLocaleString('ka-GE')}`;
 
-            // Display timestamp
-            var timestamp = new Date().toLocaleString();
-            DOM.timestamp.innerText = `გამოთვლა შესრულდა: ${timestamp}`;
-
-            // Ensure theme is applied to the newly created elements
             applyThemeToResults();
-
-            // Show action buttons
             DOM.actionButtons.style.display = 'block';
-
-            // Add animation to action buttons
             DOM.actionButtons.style.animation = 'fadeIn 0.5s ease';
-
-            // Make sure the share container is positioned correctly
             DOM.actionButtons.style.position = 'relative';
-
-            // Scroll to results
             DOM.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function printResults() {
-            // Check if results are visible
             if (!DOM.result.classList.contains('visible')) {
                 alert('გთხოვთ ჯერ გამოთვალოთ შედეგები დაბეჭდვამდე.');
                 return;
             }
 
-            // Get only the results data
             var resultElement = DOM.result;
             var differenceElement = DOM.difference;
             var timestampElement = DOM.timestamp;
 
-            // Extract the values from the results
             var resultValues = {};
             var labels = resultElement.querySelectorAll('.input-group label');
             var spans = resultElement.querySelectorAll('.input-group span');
@@ -706,21 +1016,17 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 resultValues[labelText] = valueText;
             });
 
-            // Get the difference text
             var differenceText = '';
             if (differenceElement.querySelector('.difference')) {
                 differenceText = differenceElement.querySelector('.difference').textContent;
             }
 
-            // Get timestamp
             var timestampText = timestampElement.innerText;
 
-            // Create a print-only div that will be shown only during printing
             var printDiv = document.createElement('div');
             printDiv.id = 'print-only-content';
-            printDiv.style.display = 'none'; // Hide initially
+            printDiv.style.display = 'none';
 
-            // Add the print-only content
             printDiv.innerHTML = `
                 <div class="print-results">
                     <div class="print-result-item">
@@ -748,10 +1054,8 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 </div>
             `;
 
-            // Add the print-only div to the document
             document.body.appendChild(printDiv);
 
-            // Add print-specific styles to the head
             var printStyleSheet = document.createElement('style');
             printStyleSheet.id = 'print-styles';
             printStyleSheet.textContent = `
@@ -812,11 +1116,9 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
 
             document.head.appendChild(printStyleSheet);
 
-            // Trigger print
             setTimeout(function() {
                 window.print();
 
-                // Clean up after printing
                 setTimeout(function() {
                     document.body.removeChild(printDiv);
                     document.head.removeChild(printStyleSheet);
@@ -832,7 +1134,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             const title = "📋 სიგარეტის ანგარიში 📋\n";
             const divider = "━━━━━━━━━━━━━━━━━\n";
 
-            // Get spans containing the values
             const resultElement = DOM.result;
             const spans = resultElement.querySelectorAll('.input-group span');
             const labels = resultElement.querySelectorAll('.input-group label');
@@ -855,7 +1156,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 }
             });
 
-            // Get and format the difference text
             let differenceText = DOM.difference.querySelector('.difference').textContent;
             if (differenceText.includes('იდეალური დამთხვევა')) {
                 differenceText = '🎯 ' + differenceText;
@@ -865,7 +1165,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 differenceText = '📉 ' + differenceText;
             }
 
-            // Format timestamp
             const timestampText = '⏱️ ' + DOM.timestamp.innerText;
 
             return {
@@ -881,13 +1180,7 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             };
         }
 
-        // Messenger sharing functions
         function getMessengerShareLink(message) {
-            /**
-             * Generates a Messenger share link with properly encoded message
-             * @param {string} message - The message to share
-             * @returns {string} - The complete Messenger share URL
-             */
             const encodedMessage = encodeURIComponent(message);
             return `https://m.me/?text=${encodedMessage}`;
         }
@@ -898,10 +1191,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
         }
 
         function shareToMessenger() {
-            /**
-             * Shares results to Messenger with copy-to-clipboard functionality
-             * Note: Facebook policy prevents pre-filling message content
-             */
             const formattedData = formatResultsForSharing();
             if (!formattedData) {
                 alert('გთხოვთ ჯერ გამოთვალოთ შედეგები გაზიარებამდე.');
@@ -910,7 +1199,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
 
             const message = formattedData.getFullMessage();
             
-            // Copy message to clipboard first
             const tempTextarea = document.createElement('textarea');
             tempTextarea.value = message;
             document.body.appendChild(tempTextarea);
@@ -919,7 +1207,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    // Show notification
                     const shareContainer = DOM.actionButtons;
                     const notification = document.createElement('div');
                     notification.className = 'copy-notification';
@@ -936,7 +1223,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                         setTimeout(() => shareContainer.removeChild(notification), 300);
                     }, 4000);
 
-                    // Open Messenger immediately after copying
                     const messengerUrl = 'https://m.me/';
                     window.open(messengerUrl, '_blank', 'noopener,noreferrer');
                 } else {
@@ -950,19 +1236,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             document.body.removeChild(tempTextarea);
         }
 
-        function shareToMessengerUrl(shareUrl) {
-            // Works only when NOT in Messenger webview
-            const scheme = `fb-messenger://share/?link=${encodeURIComponent(shareUrl)}`;
-            // Try deep link first, fallback to web dialog (requires FB App config)
-            window.location.href = scheme;
-            setTimeout(() => {
-                const appId = 'YOUR_FACEBOOK_APP_ID'; // if you have one
-                const redirect = window.location.origin;
-                const dialog = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(shareUrl)}&app_id=${appId}&redirect_uri=${encodeURIComponent(redirect)}`;
-                window.location.href = dialog;
-            }, 600);
-        }
-
         async function shareResults() {
             const formattedData = formatResultsForSharing();
             if (!formattedData) {
@@ -970,14 +1243,12 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 return;
             }
 
-            // If inside Messenger, sharing is blocked → copy + prompt to open in browser
             if (isMessengerWebView()) {
                 copyToClipboard();
                 alert('Messenger-ში ჩაშენებული ბრაუზერი ბლოკავს გაზიარებას. გახსენით გვერდი გარე ბრაუზერში და ცადეთ ხელახლა, ან ჩასვით დაკოპირებული ტექსტი ჩატში.');
                 return;
             }
 
-            // Try native share first
             if (navigator.share) {
                 try {
                     await navigator.share({
@@ -993,7 +1264,6 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
                 }
             }
 
-            // Fallback for desktop or unsupported browsers
             copyToClipboard();
         }
 
@@ -1030,75 +1300,165 @@ Purpose: Inventory calculator with working Messenger sharing (copy + open)
             document.body.removeChild(tempTextarea);
         }
 
-        // Function to reset the form and hide results
         function resetForm() {
-            // Clear all input fields
             document.getElementById('total1').value = '';
             document.getElementById('received1').value = '';
             document.getElementById('reprints1').value = '';
             document.getElementById('endDay1').value = '';
 
-            // Hide results
             DOM.result.classList.remove('visible');
             DOM.difference.innerHTML = '';
             DOM.timestamp.innerText = '';
+            DOM.statusMessage.innerHTML = '';
 
-            // Hide action buttons
             DOM.actionButtons.style.display = 'none';
 
-            // Focus on the first input field
             document.getElementById('total1').focus();
         }
 
-        // Initialize theme when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize theme
-            initTheme();
-
-            // Apply theme to any existing results
-            if (DOM.result.classList.contains('visible')) {
-                applyThemeToResults();
+        async function loadHistory() {
+            const sheetsUrl = GOOGLE_SHEETS_URL.trim();
+            
+            if (!sheetsUrl) {
+                alert('Google Sheets URL არ არის კონფიგურირებული.');
+                return;
             }
 
-            // Hide action buttons initially
-            DOM.actionButtons.style.display = 'none';
+            // Ensure we request the history action
+            const historyUrl = sheetsUrl.includes('?') ? `${sheetsUrl}&action=getHistory` : `${sheetsUrl}?action=getHistory`;
+
+            // Show modal
+            DOM.historyModal.classList.add('visible');
+            DOM.historyContent.innerHTML = `
+                <div class="loading-history">
+                    <div class="loading"></div>
+                    <p>ისტორია იტვირთება...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(historyUrl, {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch history');
+                }
+
+                const data = await response.json();
+                
+                if (data.result === 'success' && data.history && data.history.length > 0) {
+                    displayHistory(data.history);
+                } else {
+                    DOM.historyContent.innerHTML = `
+                        <div class="no-history">
+                            <i class="fas fa-inbox"></i>
+                            <p>ისტორია ჯერ ცარიელია</p>
+                            <p style="font-size: 0.875rem; margin-top: 8px;">დაიწყეთ გამოთვლები და ისინი აქ გამოჩნდება</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                DOM.historyContent.innerHTML = `
+                    <div class="no-history">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>ისტორიის ჩატვირთვა ვერ მოხერხდა</p>
+                        <p style="font-size: 0.875rem; margin-top: 8px;">დარწმუნდით, რომ Google Apps Script სწორად არის კონფიგურირებული</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayHistory(history) {
+            // Sort by timestamp descending (newest first)
+            history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let historyHTML = '<div class="history-list">';
+
+            history.forEach(item => {
+                const statusClass = item.difference === 0 ? 'success' : (item.difference > 0 ? 'positive' : 'negative');
+                const statusText = item.status || (item.difference === 0 ? 'იდეალური' : (item.difference > 0 ? 'მეტობა' : 'დანაკლისი'));
+                
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleDateString('ka-GE', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                const formattedTime = date.toLocaleTimeString('ka-GE', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                historyHTML += `
+                    <div class="history-item ${statusClass}">
+                        <div class="history-date">
+                            <i class="far fa-calendar"></i> ${formattedDate} • 
+                            <i class="far fa-clock"></i> ${formattedTime}
+                        </div>
+                        <div class="history-details">
+                            <div class="history-detail">
+                                <span class="history-detail-label">საწყისი:</span>
+                                <span class="history-detail-value">${item.initialStock}</span>
+                            </div>
+                            <div class="history-detail">
+                                <span class="history-detail-label">მიღებული:</span>
+                                <span class="history-detail-value">+${item.received}</span>
+                            </div>
+                            <div class="history-detail">
+                                <span class="history-detail-label">გაყიდული:</span>
+                                <span class="history-detail-value">-${item.sold}</span>
+                            </div>
+                            <div class="history-detail">
+                                <span class="history-detail-label">საბოლოო:</span>
+                                <span class="history-detail-value">${item.finalStock}</span>
+                            </div>
+                            <div class="history-detail">
+                                <span class="history-detail-label">მოსალოდნელი:</span>
+                                <span class="history-detail-value">${item.expectedStock}</span>
+                            </div>
+                            <div class="history-detail">
+                                <span class="history-detail-label">სხვაობა:</span>
+                                <span class="history-detail-value">${item.difference > 0 ? '+' : ''}${item.difference}</span>
+                            </div>
+                        </div>
+                        <div class="history-status ${statusClass}">
+                            ${statusText === 'იდეალური' ? '🎯' : (statusText === 'მეტობა' ? '📈' : '📉')} ${statusText}
+                        </div>
+                    </div>
+                `;
+            });
+
+            historyHTML += '</div>';
+            DOM.historyContent.innerHTML = historyHTML;
+        }
+
+        function closeHistoryModal() {
+            DOM.historyModal.classList.remove('visible');
+        }
+
+        // Close modal when clicking outside
+        DOM.historyModal.addEventListener('click', function(event) {
+            if (event.target === DOM.historyModal) {
+                closeHistoryModal();
+            }
         });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && DOM.historyModal.classList.contains('visible')) {
+                closeHistoryModal();
+            }
+        });
+
+        
     </script>
 
-    <!--
-    CHANGELOG
-    ---------
-    [2025-01-27] v1.6 – Fixed Messenger sharing to work with Facebook policy restrictions
-    Reason: Facebook policy prevents pre-filling message content in Messenger shares
-    Changes: 
-    - Updated shareToMessenger() to copy message to clipboard first
-    - Added user-friendly notification explaining the copy-paste process
-    - Opens Messenger after copying message with clear instructions
-    - Maintains getMessengerShareLink() function for potential future use
-    - Improved user experience with Georgian language notifications
-    Thoughts: Copy-to-clipboard approach works around Facebook's policy restrictions
-    Model: Claude Sonnet 4
-    
-    [2025-01-27] v1.5 – Enhanced Messenger sharing with m.me link format
-    Reason: Implemented direct Messenger sharing using m.me/?text= format for better user experience
-    Changes: 
-    - Added getMessengerShareLink(message) function that returns properly encoded Messenger URL
-    - Added shareToMessenger() function for direct Messenger sharing
-    - Added dedicated Messenger share button with Facebook Messenger icon
-    - Uses https://m.me/?text=ENCODED_MESSAGE format for reliable sharing
-    - Opens Messenger in new tab/window for better user experience
-    Thoughts: Direct m.me links provide more reliable sharing than Web Share API or deep links
-    Model: Claude Sonnet 4
-    
-    [2025-01-27] v1.4 – Added Messenger sharing support and detection
-    Reason: Messenger in-app browser blocks Web Share API after recent updates
-    Changes: 
-    - Added isMessengerWebView() detection for FBAN/FBAV/FB_IAB user agents
-    - Enhanced shareResults() with Messenger-specific fallback (copy + alert)
-    - Added shareToMessengerUrl() for deep link sharing (works outside Messenger)
-    - Improved user experience with Georgian language alerts
-    Thoughts: Users in Messenger will get copy-to-clipboard + instructions to open in external browser
-    Model: Claude Sonnet 4
-    -->
 </body>
 </html>
+<!-- --- Changelog ---
+2025-11-17: Added auto theme detection/cycling and hardcoded Sheets URL. (auto)
+2025-11-17: Hid Sheets URL UI and switched history fetch to doGet. (auto)
+2025-11-17: Added getHistory query parameter when requesting history. (auto)
+2025-11-17: Removed custom headers from history fetch to avoid preflight. (auto) -->
