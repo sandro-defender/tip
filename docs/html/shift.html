@@ -1,16 +1,5 @@
 <!DOCTYPE html>
-<!-- 
-Changelog:
-- Modified color pattern to display working days in alternating colors: (r.r.r/g.g.g/lr.lr.lr/g.g.g/r.r.r/...)
-- Added light-red color for alternating working days
-- Updated JavaScript logic to implement 12-day cycle pattern
-- Updated work day counting to include both red and light-red days
-- Modified description to reflect new color scheme
-- Added bottom padding to avoid overlap with bottom menu
 
-Date Modified: 2025-09-19
-AI Model Used: GPT-5
--->
 <html lang="ka" data-theme="light">
 <head>
     <script>
@@ -393,13 +382,49 @@ AI Model Used: GPT-5
             .catch(error => console.error('Error loading menu:', error));
 
             // <--- მენიუს ჩატვირთვა
-        // Theme toggling functionality
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
+        // Theme detection synced with portal
+        function detectDeviceTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
+            }
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                return 'light';
+            }
+            return 'dark';
         }
+
+        function applyTheme(theme) {
+            const resolvedTheme = theme === 'auto' ? detectDeviceTheme() : (theme || detectDeviceTheme());
+            document.documentElement.setAttribute('data-theme', resolvedTheme);
+        }
+
+        function handleDeviceThemeChange() {
+            const storedTheme = localStorage.getItem('theme') || 'auto';
+            if (storedTheme === 'auto') {
+                applyTheme('auto');
+            }
+        }
+
+        function setupDeviceThemeListener() {
+            if (!window.matchMedia) return;
+            const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+            const listener = () => handleDeviceThemeChange();
+
+            if (typeof darkQuery.addEventListener === 'function') {
+                darkQuery.addEventListener('change', listener);
+                lightQuery.addEventListener('change', listener);
+            } else if (typeof darkQuery.addListener === 'function') {
+                darkQuery.addListener(listener);
+                lightQuery.addListener(listener);
+            }
+        }
+
+        (function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            applyTheme(savedTheme);
+            setupDeviceThemeListener();
+        })();
 
         let selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
@@ -512,3 +537,5 @@ AI Model Used: GPT-5
     </script>
 </body>
 </html>
+<!-- --- Changelog ---
+2025-11-17: Synced theme with auto device detection used by the main portal. (auto) -->
