@@ -10,7 +10,7 @@ preview_urls = true   # or false, depending on your preference
 # wrangler secret put API_PASSWORD
 
 [[d1_databases]]
-binding = "DB"
+binding = "bar-DB"
 database_name = "bar-data"
 database_id = "83c0015f-9160-4ec7-aa88-e9131f939ad3"
 
