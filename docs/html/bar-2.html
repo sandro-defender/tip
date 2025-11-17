@@ -1,0 +1,1102 @@
+<!--
+https://script.google.com/macros/s/AKfycbyo50C3S6KRbOxKKM_UK_wjRp3SM8YcUCh5z7EYKr8tWhWergH--Z6QB50dlJ5g5mU_/exec
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        fetch("/includes/head.html")
+            .then(response => response.text())
+            .then(data => document.head.innerHTML += data)
+            .catch(error => console.error("Error loading head:", error));
+    </script>
+    <title>სიგარეტის ინვენტარის კალკულატორი</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Imports */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* Theme Variables */
+        :root {
+            /* Light Theme */
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #06b6d4;
+            --text: #1f2937;
+            --text-secondary: #4b5563;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --surface-secondary: #f3f4f6;
+            --border: #e5e7eb;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #0ea5e9;
+            --text: #f9fafb;
+            --text-secondary: #d1d5db;
+            --background: #111827;
+            --surface: #1f2937;
+            --surface-secondary: #374151;
+            --border: #374151;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 
+                      0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+            --success: #059669;
+            --error: #dc2626;
+            --warning: #d97706;
+            --info: #2563eb;
+        }
+
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0 0 110px 0;
+            background-color: var(--background);
+            color: var(--text);
+            transition: all 0.3s ease;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Calculator Container */
+        .calculator {
+            max-width: 450px;
+            margin: 40px auto;
+            padding: 24px;
+            border-radius: 12px;
+            background-color: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--surface-secondary);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button {
+            padding: 12px 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-calculate {
+            background-color: var(--success);
+        }
+
+        .btn-calculate:hover:not(:disabled) {
+            background-color: var(--success);
+            filter: brightness(1.1);
+        }
+
+        .btn-print {
+            background-color: var(--info);
+        }
+
+        .btn-print:hover {
+            background-color: var(--info);
+            filter: brightness(1.1);
+        }
+
+        .btn-messenger {
+            background-color: #0084ff;
+        }
+
+        .btn-messenger:hover {
+            background-color: #0084ff;
+            filter: brightness(1.1);
+        }
+
+        .btn-reset {
+            background-color: var(--error);
+        }
+
+        .btn-reset:hover {
+            background-color: var(--error);
+            filter: brightness(1.1);
+        }
+
+        .btn-copy {
+            background-color: var(--text-secondary);
+        }
+
+        .btn-copy:hover {
+            background-color: var(--text-secondary);
+            filter: brightness(1.1);
+        }
+
+        .btn-history {
+            background-color: var(--warning);
+        }
+
+        .btn-history:hover {
+            background-color: var(--warning);
+            filter: brightness(1.1);
+        }
+
+        /* Share container styling */
+        .share-container {
+            margin-top: 24px;
+            padding: 20px;
+            background-color: var(--surface-secondary);
+            border-radius: 12px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .share-title {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .share-options {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .share-options button {
+            width: auto;
+            height: 48px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 24px;
+            font-size: 1rem;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .share-options button:hover {
+            transform: translateY(-3px);
+        }
+
+        /* Copy notification */
+        .copy-notification {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.3s ease forwards;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        @keyframes slideDown {
+            from { top: -50px; }
+            to { top: -10px; }
+        }
+
+        #result {
+            margin-top: 24px;
+            display: none;
+            color: var(--text);
+            background-color: var(--surface-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #result.visible {
+            display: block;
+        }
+
+        #result .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        #result .input-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        #result .input-group label {
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+
+        #result .input-group span {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        #difference {
+            margin-top: 16px;
+        }
+
+        .difference {
+            color: var(--text);
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 16px;
+            background-color: var(--surface);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .difference.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .difference.positive {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .difference.negative {
+            background-color: var(--error);
+            color: white;
+        }
+
+        #timestamp {
+            margin-top: 12px;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            background: var(--surface);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status message */
+        .status-message {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .status-message.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .status-message.error {
+            background-color: var(--error);
+            color: white;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 500px) {
+            .calculator {
+                margin: 20px 16px;
+                padding: 20px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-container"></div>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <div class="calculator">
+        <h2>ინვენტარის კალკულატორი</h2>
+        
+        <!-- Google Sheets Configuration -->
+        <div class="input-group">
+            <label for="sheetsUrl">
+                <i class="fas fa-link"></i> Google Sheets Web App URL:
+            </label>
+            <input type="text" id="sheetsUrl" 
+                   placeholder="ჩასვით Google Apps Script URL"
+                   value="">
+            <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 4px; display: block;">
+                მაგალითი: https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+            </small>
+        </div>
+
+        <div class="shop">
+            <h3>ბარის ინვენტარი</h3>
+            <div class="input-group">
+                <label for="total1">საწყისი მარაგი:</label>
+                <input type="number" id="total1" placeholder="ჩაავიბარე" min="0"
+                       inputmode="numeric" pattern="[0-9]*"
+                       onkeypress="return event.charCode >= 48">
+            </div>
+            <div class="input-group">
+                <label for="received1">მიღებული დღეს:</label>
+                <input type="number" id="received1" placeholder="მივიღე" min="0"
+                       inputmode="numeric" pattern="[0-9]*"
+                       onkeypress="return event.charCode >= 48">
+            </div>
+            <div class="input-group">
+                <label for="reprints1">გაყიდული დღეს:</label>
+                <input type="number" id="reprints1" placeholder="გაიყიდა" min="0"
+                       inputmode="numeric" pattern="[0-9]*"
+                       onkeypress="return event.charCode >= 48">
+            </div>
+            <div class="input-group">
+                <label for="endDay1">საბოლოო მარაგი:</label>
+                <input type="number" id="endDay1" placeholder="დარჩა" min="0"
+                       inputmode="numeric" pattern="[0-9]*"
+                       onkeypress="return event.charCode >= 48">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="calculate()" class="btn-calculate" id="calculateBtn">
+                <span>გამოთვლა</span>
+            </button>
+            <button onclick="resetForm()" class="btn-reset">
+                <span>გასუფთავება</span>
+            </button>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="share-container" id="action-buttons" style="display: none;">
+            <h3 class="share-title">შედეგების გაზიარება</h3>
+
+            <div class="button-group">
+                <button onclick="printResults()" class="btn-print">
+                    <i class="fas fa-print"></i>
+                    <span>დაბეჭდვა</span>
+                </button>
+                <button onclick="copyToClipboard()" class="btn-copy">
+                    <i class="fas fa-copy"></i>
+                    <span>კოპირება</span>
+                </button>
+            </div>
+
+            <div class="share-options">
+                <button onclick="shareToMessenger()" class="btn-messenger">
+                    <i class="fab fa-facebook-messenger"></i>
+                    <span>Messenger</span>
+                </button>
+                <button onclick="shareResults()" class="btn-share" id="shareButton">
+                    <i class="fas fa-share-alt"></i>
+                    <span>გაზიარება</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="result"></div>
+        <div id="difference"></div>
+        <div id="timestamp"></div>
+    </div>
+
+    <script>
+        // Constants and State
+        const DOM = {
+            result: document.getElementById('result'),
+            difference: document.getElementById('difference'),
+            timestamp: document.getElementById('timestamp'),
+            actionButtons: document.getElementById('action-buttons'),
+            statusMessage: document.getElementById('statusMessage'),
+            sheetsUrl: document.getElementById('sheetsUrl'),
+            calculateBtn: document.getElementById('calculateBtn')
+        };
+
+        // Load saved Google Sheets URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('googleSheetsUrl');
+            if (savedUrl) {
+                DOM.sheetsUrl.value = savedUrl;
+            }
+
+            // Save URL when it changes
+            DOM.sheetsUrl.addEventListener('change', () => {
+                localStorage.setItem('googleSheetsUrl', DOM.sheetsUrl.value);
+            });
+        });
+
+        // მენიუს ჩატვირთვა
+        fetch('/includes/menu.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('menu-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading menu:', error));
+
+        // Theme Management
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            DOM.actionButtons.style.display = 'none';
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 
+                             (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            
+            document.body.setAttribute('data-theme', savedTheme);
+            localStorage.setItem('theme', savedTheme);
+            updateThemeToggleButton(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeToggleButton(newTheme);
+        }
+
+        function updateThemeToggleButton(theme) {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.textContent = theme === 'light' ? '🌙' : '🌞';
+            themeToggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+
+            if (DOM.result.classList.contains('visible')) {
+                applyThemeToResults();
+            }
+        }
+
+        function applyThemeToResults() {
+            if (!DOM.result || !DOM.difference || !DOM.timestamp) return;
+
+            DOM.result.style.backgroundColor = 'var(--surface)';
+            DOM.result.style.color = 'var(--text)';
+            DOM.result.style.borderColor = 'var(--border)';
+
+            const errorMessage = DOM.result.querySelector('div[style*="background-color: var(--error)"]');
+            if (errorMessage) {
+                errorMessage.style.backgroundColor = 'var(--error)';
+                errorMessage.style.color = 'white';
+            }
+
+            DOM.difference.style.color = 'var(--text)';
+            DOM.timestamp.style.color = 'var(--text)';
+
+            const labels = DOM.result.querySelectorAll('label');
+            const spans = DOM.result.querySelectorAll('span');
+
+            labels.forEach(label => {
+                label.style.color = 'var(--text)';
+            });
+
+            spans.forEach(span => {
+                span.style.color = 'var(--text)';
+            });
+        }
+
+        function showStatus(message, type = 'success') {
+            DOM.statusMessage.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+            setTimeout(() => {
+                DOM.statusMessage.innerHTML = '';
+            }, 3000);
+        }
+
+        async function saveToGoogleSheets(data) {
+            const sheetsUrl = DOM.sheetsUrl.value.trim();
+            
+            if (!sheetsUrl) {
+                console.log('No Google Sheets URL provided - skipping save');
+                return { success: true, skipped: true };
+            }
+
+            try {
+                DOM.calculateBtn.disabled = true;
+                DOM.calculateBtn.innerHTML = '<div class="loading"></div><span>შენახვა...</span>';
+
+                const response = await fetch(sheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Note: with no-cors, we can't read the response
+                // We assume success if no error was thrown
+                return { success: true };
+            } catch (error) {
+                console.error('Error saving to Google Sheets:', error);
+                return { success: false, error: error.message };
+            } finally {
+                DOM.calculateBtn.disabled = false;
+                DOM.calculateBtn.innerHTML = '<span>გამოთვლა</span>';
+            }
+        }
+
+        async function calculate() {
+            DOM.actionButtons.style.display = 'none';
+
+            var total1 = parseInt(document.getElementById('total1').value);
+            var received1 = parseInt(document.getElementById('received1').value);
+            var reprints1 = parseInt(document.getElementById('reprints1').value);
+            var endDay1 = parseInt(document.getElementById('endDay1').value);
+
+            if (isNaN(total1) || isNaN(received1) || isNaN(reprints1) || isNaN(endDay1) ||
+                total1 < 0 || received1 < 0 || reprints1 < 0 || endDay1 < 0) {
+                DOM.result.innerHTML = `
+                    <div style="padding: 16px; background-color: var(--error); color: white; border-radius: 8px; text-align: center;">
+                        გთხოვთ შეიყვანოთ სწორი რიცხვები ყველა ველში. უარყოფითი რიცხვები დაუშვებელია.
+                    </div>
+                `;
+                DOM.result.classList.add('visible');
+                DOM.difference.innerText = "";
+                DOM.timestamp.innerText = "";
+                DOM.actionButtons.style.display = 'none';
+                return;
+            }
+
+            var remaining1 = total1 + received1 - reprints1;
+            var difference1 = endDay1 - remaining1;
+            var timestamp = new Date().toISOString();
+
+            // Prepare data for Google Sheets
+            const sheetData = {
+                timestamp: timestamp,
+                date: new Date().toLocaleDateString('ka-GE'),
+                time: new Date().toLocaleTimeString('ka-GE'),
+                initialStock: total1,
+                received: received1,
+                sold: reprints1,
+                finalStock: endDay1,
+                expectedStock: remaining1,
+                difference: difference1,
+                status: difference1 === 0 ? 'იდეალური' : (difference1 > 0 ? 'მეტობა' : 'დანაკლისი')
+            };
+
+            // Save to Google Sheets
+            const saveResult = await saveToGoogleSheets(sheetData);
+            
+            if (saveResult.success && !saveResult.skipped) {
+                showStatus('✅ ისტორია წარმატებით შეინახა Google Sheets-ში', 'success');
+            } else if (!saveResult.success) {
+                showStatus('⚠️ შენახვა ვერ მოხერხდა, მაგრამ გამოთვლა შესრულდა', 'error');
+            }
+
+            // Display results
+            DOM.result.innerHTML = `
+                <h3>გამოთვლის შედეგები:</h3>
+                <div class="input-group">
+                    <label>საწყისი მარაგი:</label>
+                    <span>${total1}</span>
+                </div>
+                <div class="input-group">
+                    <label>მიღებული დღეს:</label>
+                    <span>${received1}</span>
+                </div>
+                <div class="input-group">
+                    <label>გაყიდული დღეს:</label>
+                    <span>${reprints1}</span>
+                </div>
+                <div class="input-group">
+                    <label>საბოლოო მარაგი:</label>
+                    <span>${endDay1}</span>
+                </div>
+                <div class="input-group">
+                    <label>მოსალოდნელი მარაგი:</label>
+                    <span>${remaining1}</span>
+                </div>
+            `;
+
+            const differenceClass = difference1 === 0 ? 'success' : (difference1 > 0 ? 'positive' : 'negative');
+            let differenceText = '';
+
+            if (difference1 === 0) {
+                differenceText = 'იდეალური დამთხვევა!';
+            } else if (difference1 > 0) {
+                differenceText = `მეტობა: +${difference1} (მეტია ვიდრე უნდა იყოს)`;
+            } else {
+                differenceText = `დანაკლისი: ${difference1} (ნაკლებია ვიდრე უნდა იყოს)`;
+            }
+
+            DOM.difference.innerHTML = `
+                <div class="difference ${differenceClass}">${differenceText}</div>
+            `;
+
+            DOM.result.classList.add('visible');
+            DOM.timestamp.innerText = `გამოთვლა შესრულდა: ${new Date(timestamp).toLocaleString('ka-GE')}`;
+
+            applyThemeToResults();
+            DOM.actionButtons.style.display = 'block';
+            DOM.actionButtons.style.animation = 'fadeIn 0.5s ease';
+            DOM.actionButtons.style.position = 'relative';
+            DOM.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function printResults() {
+            if (!DOM.result.classList.contains('visible')) {
+                alert('გთხოვთ ჯერ გამოთვალოთ შედეგები დაბეჭდვამდე.');
+                return;
+            }
+
+            var resultElement = DOM.result;
+            var differenceElement = DOM.difference;
+            var timestampElement = DOM.timestamp;
+
+            var resultValues = {};
+            var labels = resultElement.querySelectorAll('.input-group label');
+            var spans = resultElement.querySelectorAll('.input-group span');
+
+            labels.forEach((label, index) => {
+                var labelText = label.textContent.replace(':', '');
+                var valueText = spans[index].textContent;
+                resultValues[labelText] = valueText;
+            });
+
+            var differenceText = '';
+            if (differenceElement.querySelector('.difference')) {
+                differenceText = differenceElement.querySelector('.difference').textContent;
+            }
+
+            var timestampText = timestampElement.innerText;
+
+            var printDiv = document.createElement('div');
+            printDiv.id = 'print-only-content';
+            printDiv.style.display = 'none';
+
+            printDiv.innerHTML = `
+                <div class="print-results">
+                    <div class="print-result-item">
+                        <span class="print-result-label">საწყისი მარაგი:</span>
+                        <span class="print-result-value">${resultValues['საწყისი მარაგი']}</span>
+                    </div>
+                    <div class="print-result-item">
+                        <span class="print-result-label">მიღებული დღეს:</span>
+                        <span class="print-result-value">${resultValues['მიღებული დღეს']}</span>
+                    </div>
+                    <div class="print-result-item">
+                        <span class="print-result-label">გაყიდული დღეს:</span>
+                        <span class="print-result-value">${resultValues['გაყიდული დღეს']}</span>
+                    </div>
+                    <div class="print-result-item">
+                        <span class="print-result-label">საბოლოო მარაგი:</span>
+                        <span class="print-result-value">${resultValues['საბოლოო მარაგი']}</span>
+                    </div>
+                    <div class="print-result-item">
+                        <span class="print-result-label">მოსალოდნელი მარაგი:</span>
+                        <span class="print-result-value">${resultValues['მოსალოდნელი მარაგი']}</span>
+                    </div>
+                    <div class="print-difference">${differenceText}</div>
+                    <div class="print-timestamp">${timestampText}</div>
+                </div>
+            `;
+
+            document.body.appendChild(printDiv);
+
+            var printStyleSheet = document.createElement('style');
+            printStyleSheet.id = 'print-styles';
+            printStyleSheet.textContent = `
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    #print-only-content,
+                    #print-only-content * {
+                        visibility: visible;
+                    }
+                    #print-only-content {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        display: block !important;
+                        background-color: white;
+                        color: black;
+                        padding: 20px;
+                    }
+                    .print-results {
+                        border: 1px solid #000;
+                        padding: 15px;
+                        max-width: 400px;
+                        margin: 0 auto;
+                        page-break-inside: avoid;
+                    }
+                    .print-result-item {
+                        margin-bottom: 8px;
+                        border-bottom: 1px dotted #000;
+                        padding-bottom: 5px;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                    .print-result-label {
+                        font-weight: normal;
+                    }
+                    .print-result-value {
+                        font-weight: bold;
+                    }
+                    .print-difference {
+                        margin-top: 16px;
+                        font-weight: bold;
+                        text-align: center;
+                        border: 1px solid #000;
+                        padding: 8px;
+                    }
+                    .print-timestamp {
+                        margin-top: 12px;
+                        font-style: italic;
+                        font-size: 0.75rem;
+                        text-align: center;
+                    }
+                }
+            `;
+
+            document.head.appendChild(printStyleSheet);
+
+            setTimeout(function() {
+                window.print();
+
+                setTimeout(function() {
+                    document.body.removeChild(printDiv);
+                    document.head.removeChild(printStyleSheet);
+                }, 1000);
+            }, 200);
+        }
+
+        function formatResultsForSharing() {
+            if (!DOM.result.classList.contains('visible')) {
+                return null;
+            }
+
+            const title = "📋 სიგარეტის ანგარიში 📋\n";
+            const divider = "━━━━━━━━━━━━━━━━━\n";
+
+            const resultElement = DOM.result;
+            const spans = resultElement.querySelectorAll('.input-group span');
+            const labels = resultElement.querySelectorAll('.input-group label');
+
+            let formattedResultText = '';
+            spans.forEach((span, index) => {
+                const label = labels[index].textContent.replace(':', '');
+                const value = span.textContent.trim();
+
+                if (label.includes('საწყისი მარაგი')) {
+                    formattedResultText += `🔹 ${label}: ${value}\n`;
+                } else if (label.includes('მიღებული დღეს')) {
+                    formattedResultText += `➕ ${label}: ${value}\n`;
+                } else if (label.includes('გაყიდული დღეს')) {
+                    formattedResultText += `➖ ${label}: ${value}\n`;
+                } else if (label.includes('საბოლოო მარაგი')) {
+                    formattedResultText += `🔸 ${label}: ${value}\n`;
+                } else if (label.includes('მოსალოდნელი მარაგი')) {
+                    formattedResultText += `✅ ${label}: ${value}\n`;
+                }
+            });
+
+            let differenceText = DOM.difference.querySelector('.difference').textContent;
+            if (differenceText.includes('იდეალური დამთხვევა')) {
+                differenceText = '🎯 ' + differenceText;
+            } else if (differenceText.includes('მეტობა')) {
+                differenceText = '📈 ' + differenceText;
+            } else if (differenceText.includes('დანაკლისი')) {
+                differenceText = '📉 ' + differenceText;
+            }
+
+            const timestampText = '⏱️ ' + DOM.timestamp.innerText;
+
+            return {
+                title,
+                divider,
+                formattedResultText,
+                differenceText,
+                timestampText,
+                getFullMessage(includeMarkdown = false) {
+                    const titleText = includeMarkdown ? `*${this.title.trim()}*` : this.title;
+                    return `${titleText}\n${this.divider}${this.formattedResultText}\n${this.differenceText}\n\n${this.timestampText}`;
+                }
+            };
+        }
+
+        function getMessengerShareLink(message) {
+            const encodedMessage = encodeURIComponent(message);
+            return `https://m.me/?text=${encodedMessage}`;
+        }
+
+        function isMessengerWebView() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            return /FBAN|FBAV|FB_IAB|FBAN\/Messenger/i.test(ua);
+        }
+
+        function shareToMessenger() {
+            const formattedData = formatResultsForSharing();
+            if (!formattedData) {
+                alert('გთხოვთ ჯერ გამოთვალოთ შედეგები გაზიარებამდე.');
+                return;
+            }
+
+            const message = formattedData.getFullMessage();
+            
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = message;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    const shareContainer = DOM.actionButtons;
+                    const notification = document.createElement('div');
+                    notification.className = 'copy-notification';
+                    notification.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="font-weight: bold; margin-bottom: 8px;">📋 შედეგები დაკოპირდა!</div>
+                            <div style="font-size: 0.9rem;">Messenger-ში ჩასვით და გაგზავნეთ</div>
+                        </div>
+                    `;
+                    shareContainer.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => shareContainer.removeChild(notification), 300);
+                    }, 4000);
+
+                    const messengerUrl = 'https://m.me/';
+                    window.open(messengerUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                    alert('კოპირება ვერ მოხერხდა. გთხოვთ ხელით დაკოპიროთ შედეგები.');
+                }
+            } catch (err) {
+                console.error('კოპირების შეცდომა:', err);
+                alert('კოპირება ვერ მოხერხდა. გთხოვთ ხელით დაკოპიროთ შედეგები.');
+            }
+
+            document.body.removeChild(tempTextarea);
+        }
+
+        async function shareResults() {
+            const formattedData = formatResultsForSharing();
+            if (!formattedData) {
+                alert('გთხოვთ ჯერ გამოთვალოთ შედეგები გაზიარებამდე.');
+                return;
+            }
+
+            if (isMessengerWebView()) {
+                copyToClipboard();
+                alert('Messenger-ში ჩაშენებული ბრაუზერი ბლოკავს გაზიარებას. გახსენით გვერდი გარე ბრაუზერში და ცადეთ ხელახლა, ან ჩასვით დაკოპირებული ტექსტი ჩატში.');
+                return;
+            }
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'სიგარეტის ანგარიში',
+                        text: formattedData.getFullMessage()
+                    });
+                    return;
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Error sharing:', err);
+                        alert('გაზიარება ვერ მოხერხდა');
+                    }
+                }
+            }
+
+            copyToClipboard();
+        }
+
+        function copyToClipboard() {
+            const formattedData = formatResultsForSharing();
+            if (!formattedData) {
+                alert('გთხოვთ ჯერ გამოთვალოთ შედეგები კოპირებამდე.');
+                return;
+            }
+
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = formattedData.getFullMessage();
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                const msg = successful ? 'შედეგები დაკოპირდა წარმატებით!' : 'კოპირება ვერ მოხერხდა';
+
+                const shareContainer = DOM.actionButtons;
+                const notification = document.createElement('div');
+                notification.className = 'copy-notification';
+                notification.textContent = msg;
+                shareContainer.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => shareContainer.removeChild(notification), 300);
+                }, 2000);
+            } catch (err) {
+                console.error('კოპირების შეცდომა:', err);
+            }
+
+            document.body.removeChild(tempTextarea);
+        }
+
+        function resetForm() {
+            document.getElementById('total1').value = '';
+            document.getElementById('received1').value = '';
+            document.getElementById('reprints1').value = '';
+            document.getElementById('endDay1').value = '';
+
+            DOM.result.classList.remove('visible');
+            DOM.difference.innerHTML = '';
+            DOM.timestamp.innerText = '';
+            DOM.statusMessage.innerHTML = '';
+
+            DOM.actionButtons.style.display = 'none';
+
+            document.getElementById('total1').focus();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+
+            if (DOM.result.classList.contains('visible')) {
+                applyThemeToResults();
+            }
+
+            DOM.actionButtons.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>
