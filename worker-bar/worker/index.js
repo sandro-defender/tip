@@ -20,11 +20,11 @@ export default {
   
 	  // --- CREATE TABLE IF NOT EXISTS ---
 	  async function ensureTable() {
-		if (!env.DB) {
-		  throw new Error("D1 database binding 'DB' is not configured");
+		if (!env.bar-DB) {
+		  throw new Error("D1 database binding 'bar-DB' is not configured");
 		}
   
-		await env.DB.prepare(`
+		await env.bar-DB.prepare(`
 		  CREATE TABLE IF NOT EXISTS stock_data (
 			Timestamp TEXT PRIMARY KEY,
 			Date TEXT,
@@ -52,7 +52,7 @@ export default {
 		try {
 		  await ensureTable();
 		} catch (err) {
-		  return json({ result: "error", error: `DB init failed: ${err.message}` }, 500);
+		  return json({ result: "error", error: `bar-DB init failed: ${err.message}` }, 500);
 		}
 
 		let body = {};
@@ -63,7 +63,7 @@ export default {
 		}
 
 		try {
-		  await env.DB.prepare(
+		  await env.bar-DB.prepare(
 			`INSERT OR REPLACE INTO stock_data 
 			(Timestamp, Date, Time, InitialStock, Received, Sold, FinalStock, ExpectedStock, Difference, Status)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -84,7 +84,7 @@ export default {
 
 		  return json({ result: "success" });
 		} catch (err) {
-		  return json({ result: "error", error: `DB insert failed: ${err.message}` }, 500);
+		  return json({ result: "error", error: `bar-DB insert failed: ${err.message}` }, 500);
 		}
 	  }
   
@@ -96,7 +96,7 @@ export default {
 		  try {
 			await ensureTable();
 
-			const { results } = await env.DB
+			const { results } = await env.bar-DB
 			  .prepare(`SELECT * FROM stock_data ORDER BY Timestamp ASC`)
 			  .all();
 
@@ -116,7 +116,7 @@ export default {
 			  }))
 			});
 		  } catch (err) {
-			return json({ result: "error", error: `DB query failed: ${err.message}` }, 500);
+			return json({ result: "error", error: `bar-DB query failed: ${err.message}` }, 500);
 		  }
 		}
   
