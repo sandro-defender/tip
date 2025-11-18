@@ -1,12 +1,4 @@
-<!--
-Project: Staff You - Salary & Tips Calculator
-File: html/salary.html
-Version: 1.1
-Author: Cursor AI
-Model: GPT-5
-Last Modified: 2025-10-03
-Purpose: Frontend page for salary and tips calculation with shifts and absences
--->
+
 <!DOCTYPE html>
 <html lang="ka">
 <head>
@@ -1751,27 +1743,76 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
             table.classList.toggle('expanded');
         }
 
-        // Theme management
+        // Theme management synced with Staff Portal
+        function detectDeviceTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
+            }
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                return 'light';
+            }
+            return 'dark';
+        }
+
+        function applyThemePreference(theme, saveToStorage = false) {
+            const resolvedTheme = theme === 'auto' ? detectDeviceTheme() : (theme || detectDeviceTheme());
+            document.documentElement.setAttribute('data-theme', resolvedTheme);
+            updateThemeIcon(theme);
+
+            if (saveToStorage) {
+                localStorage.setItem('theme', theme);
+            }
+        }
+
+        function handleDeviceThemeChange() {
+            const storedTheme = localStorage.getItem('theme') || 'auto';
+            if (storedTheme === 'auto') {
+                applyThemePreference('auto');
+            }
+        }
+
+        function setupDeviceThemeListener() {
+            if (!window.matchMedia) return;
+            const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+            const listener = () => handleDeviceThemeChange();
+
+            if (typeof darkQuery.addEventListener === 'function') {
+                darkQuery.addEventListener('change', listener);
+                lightQuery.addEventListener('change', listener);
+            } else if (typeof darkQuery.addListener === 'function') {
+                darkQuery.addListener(listener);
+                lightQuery.addListener(listener);
+            }
+        }
+
         function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
+            const savedTheme = localStorage.getItem('theme') || 'auto';
+            applyThemePreference(savedTheme);
+            setupDeviceThemeListener();
         }
 
         function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
+            const currentTheme = localStorage.getItem('theme') || 'auto';
+            let nextTheme;
+            if (currentTheme === 'auto') {
+                nextTheme = 'light';
+            } else if (currentTheme === 'light') {
+                nextTheme = 'dark';
+            } else {
+                nextTheme = 'auto';
+            }
+            applyThemePreference(nextTheme, true);
         }
 
         function updateThemeIcon(theme) {
             const icon = document.getElementById('theme-toggle');
-            if (icon) {
-                icon.textContent = theme === 'light' ? '🌙' : '☀️';
+            if (!icon) return;
+            if (theme === 'auto') {
+                icon.textContent = '📲';
+                return;
             }
+            icon.textContent = theme === 'light' ? '🌞' : '🌙';
         }
 
         // Initialize theme on page load
@@ -2009,31 +2050,8 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
         updateShiftSummary();
         updatePopupButtonStates();
     </script>
-    <!-- 
-     changelog:
-    // v0.4 -> 0.5: 
-    სიქოლის დათვლა: 12სთ და 1.5 ჩაიდან  (line:1192 - Changed from EXTRA_SHIFT_HOURS to REGULAR_HOURS ) (line: 1219 - added 1.5x)
-    note: სიქოლს + დოპი = +0.5 დღის ხელფასი ?
-    // v0.5 -> 0.6:
-    დოპის და სიქოლის გაბათილება
-    // v0.6 -> 0.7:
-    removed notice baner
-    // [2025-10-03] v0.7 -> v0.8 – Added Absence Types and Missed Reason popup; separated shifts vs absences in calculations; added variables summary; expanded missed days to 0–6.
-    Reason: To support granular absence penalties and clearer calculations.
-    Thoughts: Future improvement: persist chosen absence type in localStorage.
-    Model: GPT-5
-    // [2025-10-03] v0.8 -> v0.9 – Split combined modal into two popups (Shifts and Missed). In Missed, each option now has its own 0–6 day selector. Updated wiring and UI; kept calculations.
-    Reason: Improve UX and make missed selection per-option clear.
-    Thoughts: Could persist per-option last chosen day; currently single active option.
-    Model: GPT-5
-    // [2025-10-03] v0.9 -> v1.0 – Fixed tip penalty calculation (30/3 = 10%, not 3.33%); enabled multiple absence type selection; updated UI to show combined absences; improved debug output.
-    Reason: Correct calculation errors and support complex absence scenarios like "nocall+sikoli".
-    Thoughts: Multiple absence types now properly accumulate penalties and salary deductions.
-    Model: GPT-5
-    // [2025-10-03] v1.0 -> v1.1 – Fixed multiple absence selection UI bug where clicking different rows would clear previous selections.
-    Reason: UI was clearing all selections when switching between absence types instead of preserving multiple selections.
-    Thoughts: Now properly supports "unpaid+nocall" type combinations as intended.
-    Model: GPT-5
-    -->
+
+<!-- --- Changelog ---
+2025-11-17: Synced calculator theme with auto device detection settings shared across the portal. (auto) -->
 </body>
 </html>

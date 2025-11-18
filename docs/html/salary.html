@@ -85,8 +85,6 @@
             --toggle-bg: white;
             --toggle-shadow: rgba(0,0,0,0.05);
             --toggle-selected-shadow: rgba(42,109,245,0.3);
-            --debug-bg: rgba(0, 0, 0, 0.8);
-            --debug-text: #00ff00;
             --notice-banner-bg: #ff9800;
             --table-border: rgba(255,255,255,0.2);
             --table-hover: rgba(255,255,255,0.05);
@@ -107,8 +105,6 @@
             --toggle-bg: #374151;
             --toggle-shadow: rgba(0,0,0,0.3);
             --toggle-selected-shadow: rgba(96,165,250,0.3);
-            --debug-bg: rgba(0, 0, 0, 0.9);
-            --debug-text: #00ff00;
             --notice-banner-bg: #f59e0b;
             --table-border: rgba(255,255,255,0.1);
             --table-hover: rgba(255,255,255,0.1);
@@ -421,37 +417,6 @@
             transform: scale(0.95);
         }
 
-        .debug-window {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--debug-bg);
-            color: var(--debug-text);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            max-width: 300px;
-            max-height: 400px;
-            overflow: auto;
-            z-index: 1000;
-            white-space: pre;
-            display: none;
-        }
-
-        .debug-toggle {
-            position: fixed;
-            bottom: 130px;
-            right: 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            z-index: 1001;
-        }
 
         @media (max-width: 360px) {
             .result-item {
@@ -852,8 +817,6 @@
         </div>
     </div>
 
-    <button class="debug-toggle" onclick="toggleDebug()">🐞</button>
-    <div class="debug-window" id="debugWindow"></div>
 
     <!-- Shift Modal (only shifts) -->
     <div id="shiftModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2000;align-items:center;justify-content:center;">
@@ -883,7 +846,7 @@
           <div class="absence-row" data-type="buleteni">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">ბიულეტენი</span>
-              <small style="opacity:0.8;">(tip/30*2, -0h/day)</small>
+              <small style="opacity:0.8;">(-12h tip/day, -0h salary/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="buleteni" data-missed="0">0</button>
@@ -898,7 +861,7 @@
           <div class="absence-row" data-type="unpaid">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">Unpaid</span>
-              <small style="opacity:0.8;">(tip/30*2, -12h/day)</small>
+              <small style="opacity:0.8;">(-12h tip/day, -12h salary/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="unpaid" data-missed="0">0</button>
@@ -913,7 +876,7 @@
           <div class="absence-row" data-type="sikoli">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">სიქოლი</span>
-              <small style="opacity:0.8;">(tip/30*2.5, -12h/day)</small>
+              <small style="opacity:0.8;">(-18h tip/day, -12h salary/day, cancels with overtime)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="sikoli" data-missed="0">0</button>
@@ -928,7 +891,7 @@
           <div class="absence-row" data-type="nocall">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">NoCall</span>
-              <small style="opacity:0.8;">(tip/30*3, -12h/day)</small>
+              <small style="opacity:0.8;">(-24h tip/day, -12h salary/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="nocall" data-missed="0">0</button>
@@ -943,7 +906,7 @@
           <div class="absence-row" data-type="suspend">
             <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <span style="font-weight:600;">Suspend</span>
-              <small style="opacity:0.8;">(tip/30*4, -12h/day)</small>
+              <small style="opacity:0.8;">(-24h tip/day, -12h salary/day)</small>
             </div>
             <div class="button-grid" style="grid-template-columns:repeat(7,1fr);">
               <button class="toggle-btn" data-absence="suspend" data-missed="0">0</button>
@@ -1137,6 +1100,9 @@
             EXTRA_SHIFT_HOURS: 18,
             VACATION_BASE_DAYS: 14.5,
             
+            // Tip calculation base hours
+            TIP_BASE_HOURS: 180,
+            
             // Deduction rates
             PENSION_RATE: 0.02,
             
@@ -1146,7 +1112,7 @@
             // Tax rate (e.g., 20%)
             TAX_RATE: 0.20,
 
-            // Change EXTRA_SHIFT_TIP_BONUS to be calculated from tip amount
+            // Extra shift tip bonus: adds 0.5 to position multiplier per shift
             EXTRA_SHIFT_TIP_MULTIPLIER: 0.5,
 
             // Tip adjustment formula constants
@@ -1160,18 +1126,15 @@
             // Default insurance amount
             INSURANCE_DEFAULT: 0,
 
-            // --- Dev/Admin Settings ---
-            // Set to true to show the debug button and window
-            DEBUG_MODE: false
         };
 
         // Absence types configuration
         const ABSENCE_TYPES = [
-          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 0,  description: 'Medical certificate' },
-          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   divisor: 2,   tipPenaltyMultiplier: 2,   salaryHoursDeducted: 12, description: 'Unpaid absence' },
-          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   divisor: 2.5, tipPenaltyMultiplier: 2.5, salaryHoursDeducted: 12, description: 'Sick (no-doc?)' },
-          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   divisor: 3,   tipPenaltyMultiplier: 3,   salaryHoursDeducted: 12, description: 'No call / no show' },
-          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  divisor: 4,   tipPenaltyMultiplier: 4,   salaryHoursDeducted: 12, description: 'Suspension' },
+          { id: 'buleteni', label_en: 'Bulletini', label_ge: 'ბიულეტენი', salaryHoursDeducted: 0,  tipHoursDeducted: 12, description: 'Medical certificate' },
+          { id: 'unpaid',   label_en: 'Unpaid',    label_ge: 'Unpaid',   salaryHoursDeducted: 12, tipHoursDeducted: 12, description: 'Unpaid absence' },
+          { id: 'sikoli',   label_en: 'Sikoli',    label_ge: 'სიქოლი',   salaryHoursDeducted: 12, tipHoursDeducted: 18, description: 'Sick (no-doc?)' },
+          { id: 'nocall',   label_en: 'NoCall',    label_ge: 'NoCall',   salaryHoursDeducted: 12, tipHoursDeducted: 24, description: 'No call / no show' },
+          { id: 'suspend',  label_en: 'Suspend',   label_ge: 'suspend',  salaryHoursDeducted: 12, tipHoursDeducted: 24, description: 'Suspension' },
         ];
 
         function getAbsenceTypeById(id) {
@@ -1235,14 +1198,6 @@
             
             async init() {
                 console.log('Initializing calculator...');
-
-                // Hide debug button if debug mode is disabled
-                if (!CONFIG.DEBUG_MODE) {
-                    const debugToggle = document.querySelector('.debug-toggle');
-                    if (debugToggle) {
-                        debugToggle.style.display = 'none';
-                    }
-                }
                 
                 // Получаем актуальный курс валюты из API NBG
                 const liveRate = await getRateFromNBG();
@@ -1410,106 +1365,6 @@
                 this.calculate();
             },
 
-            updateDebug(calculations) {
-                const debugWindow = document.getElementById('debugWindow');
-                const {
-                    hours = 0,
-                    baseHours = 0,
-                    extraHours = 0,
-                    missedHours = 0,
-                    baseSalary = 0,
-                    extraSalary = 0,
-                    missedSalary = 0,
-                    totalSalary = 0,
-                    grossTips = 0,
-                    tipDiff = 0,
-                    tipTax = 0,
-                    tipPension = 0,
-                    netTips = 0
-                } = calculations || {};
-
-                const formatMoney = (amount, symbol = '$') => 
-                    `${amount >= 0 ? '💵' : '💸'} ${symbol}${Math.abs(amount).toFixed(2)}`;
-                const formatPercent = (amount, total) => 
-                    total ? ` (${((amount/total)*100).toFixed(1)}%)` : '';
-
-                const insuranceUSD = this.insuranceAmount / this.exchangeRate;
-
-                // Build absence summary
-                let absenceSummary = '';
-                let totalAbsencePenalty = 0;
-                for (const [typeId, days] of this.selectedAbsences) {
-                    if (days > 0) {
-                        const absenceType = getAbsenceTypeById(typeId);
-                        const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
-                        const penaltyAmount = (grossTips / 30) * penaltyMultiplier * days;
-                        totalAbsencePenalty += penaltyAmount;
-                        absenceSummary += `\n  - ${absenceType.label_en}: ${days} days (tip/30*${penaltyMultiplier} × ${days})`;
-                    }
-                }
-
-                let debugText = `
-🔍 Debug Information
-═══════════════════
-ხელფასი 14.5 დღისთვის 174სთ
-პოზ.   ხელფასი.   -2%.  საათში
-D3	525	514.5	2.9586
-D2	630	617.4	3.5483
-D1	735	720.3	4.1414
-I2	840	823.2	4.7333
-I1	945	926.1	5.3236
-Ti	1050	1029	5.9138
-──────────────────
-👤 Position Settings
-──────────────────
-📋 Position: ${this.position.toUpperCase()}
-💰 Rate: ${formatMoney(this.rate)}/hr
-📅 Working Days: ${this.days}
-➕ Extra Shifts: ${this.shifts}
-➖ Selected Absences:${absenceSummary || ' None'}
-💱 Exchange Rate: ${this.exchangeRate} GEL
-🎯 Tip Points: ${this.tipPoints}
-⚙️ Options: ${Array.from(this.options).join(', ')}
-
-⏰ Hours Breakdown
-──────────────────
-📊 Base Hours: ${baseHours} (${this.days} days × ${CONFIG.REGULAR_HOURS}hrs)
-📈 Extra Hours: ${extraHours} (${this.shifts} shifts × ${CONFIG.EXTRA_SHIFT_HOURS}hrs)
-📉 Missed Hours: ${missedHours} (from all selected absences)
-📋 Total Hours: ${hours}
-
-💰 Salary Details
-──────────────────
-💵 Base Salary: ${formatMoney(baseSalary)}
-${extraSalary ? `📈 Extra Pay: ${formatMoney(extraSalary)}${formatPercent(extraSalary, totalSalary)}\n` : ''}
-${missedSalary ? `📉 Deductions: ${formatMoney(-missedSalary)}${formatPercent(missedSalary, totalSalary)}\n` : ''}
-💰 Total Salary: ${formatMoney(totalSalary)} / ${formatMoney(totalSalary * this.exchangeRate, '₾')}
-
-🎁 Tips Calculation
-──────────────────
-ℹ️ Total absence penalty: ${totalAbsencePenalty.toFixed(2)} (calculated as tip/30*multiplier*days)
-💰 Base Tips (with position, after shift bonus, after absence penalty): ${formatMoney(grossTips)}
-${tipDiff ? `${tipDiff > 0 ? '📈' : '📉'} Tip Adjustment: ${formatMoney(tipDiff)}\n` : ''}
-${tipTax ? `📋 Tax (20%): ${formatMoney(-tipTax)}\n` : ''}
-${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
-💵 Net Tips: ${formatMoney(netTips)} / ${formatMoney(netTips * this.exchangeRate, '₾')}
-
-📚 Variables Used
-──────────────────
-- days, shifts, selectedAbsences (Map of typeId -> days)
-- position, rate
-- tipPoints, exchangeRate, options
-- baseHours, extraHours, missedHours, hours
-- baseSalary, extraSalary, missedSalary, totalSalary
-- grossTips, tipDiff, tipTax, tipPension, netTips
-`;
-
-                debugWindow.style.whiteSpace = 'pre-wrap';
-                debugWindow.style.fontFamily = 'monospace';
-                debugWindow.style.fontSize = '14px';
-                debugWindow.style.lineHeight = '1.5';
-                debugWindow.textContent = debugText;
-            },
 
             calculate() {
                 try {
@@ -1525,17 +1380,68 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                         CONFIG.VACATION_BASE_DAYS * CONFIG.REGULAR_HOURS :
                         this.days * CONFIG.REGULAR_HOURS;
 
-                    // Extra shifts add hours directly (no offset with missed)
-                    const extraHours = this.shifts * CONFIG.EXTRA_SHIFT_HOURS;
+                    // Calculate total deduction days (sikoli + buleteni + unpaid) for cancellation rule
+                    const sikoliDays = this.selectedAbsences.get('sikoli') || 0;
+                    const buleteniDays = this.selectedAbsences.get('buleteni') || 0;
+                    const unpaidDays = this.selectedAbsences.get('unpaid') || 0;
+                    const totalDeductionDays = sikoliDays + buleteniDays + unpaidDays;
+                    
+                    // Cancellation rule: overtime shifts cancel deduction days
+                    // If shifts >= total deduction days, all cancel out
+                    // If shifts < total deduction days, remaining = total - shifts
+                    const effectiveDeductionDays = Math.max(0, totalDeductionDays - this.shifts);
+                    const effectiveShifts = Math.max(0, this.shifts - totalDeductionDays);
+                    
+                    // Calculate effective days per absence type (proportional cancellation)
+                    let effectiveSikoliDays = 0;
+                    let effectiveBuleteniDays = 0;
+                    let effectiveUnpaidDays = 0;
+                    
+                    if (totalDeductionDays > 0 && effectiveDeductionDays > 0) {
+                        // Distribute remaining deduction days proportionally
+                        const cancellationRatio = effectiveDeductionDays / totalDeductionDays;
+                        effectiveSikoliDays = Math.round(sikoliDays * cancellationRatio);
+                        effectiveBuleteniDays = Math.round(buleteniDays * cancellationRatio);
+                        effectiveUnpaidDays = Math.round(unpaidDays * cancellationRatio);
+                        
+                        // Adjust for rounding errors to ensure total matches
+                        const totalEffective = effectiveSikoliDays + effectiveBuleteniDays + effectiveUnpaidDays;
+                        const roundingDiff = effectiveDeductionDays - totalEffective;
+                        if (roundingDiff !== 0) {
+                            // Adjust the largest type to account for rounding
+                            if (effectiveSikoliDays >= effectiveBuleteniDays && effectiveSikoliDays >= effectiveUnpaidDays) {
+                                effectiveSikoliDays += roundingDiff;
+                            } else if (effectiveBuleteniDays >= effectiveUnpaidDays) {
+                                effectiveBuleteniDays += roundingDiff;
+                            } else {
+                                effectiveUnpaidDays += roundingDiff;
+                            }
+                        }
+                    }
+
+                    // Extra shifts: use effective shifts (after cancellation)
+                    const extraHours = effectiveShifts * CONFIG.EXTRA_SHIFT_HOURS;
 
                     // Calculate total missed hours and salary deductions from all selected absences
+                    // Apply cancellation rule for sikoli, buleteni, and unpaid
                     let totalMissedHours = 0;
                     let totalMissedSalary = 0;
                     
                     for (const [typeId, days] of this.selectedAbsences) {
                         if (days > 0) {
                             const absenceType = getAbsenceTypeById(typeId);
-                            const missedHours = days * absenceType.salaryHoursDeducted;
+                            let effectiveDays = days;
+                            
+                            // Apply cancellation rule for sikoli, buleteni, and unpaid
+                            if (typeId === 'sikoli') {
+                                effectiveDays = effectiveSikoliDays;
+                            } else if (typeId === 'buleteni') {
+                                effectiveDays = effectiveBuleteniDays;
+                            } else if (typeId === 'unpaid') {
+                                effectiveDays = effectiveUnpaidDays;
+                            }
+                            
+                            const missedHours = effectiveDays * absenceType.salaryHoursDeducted;
                             totalMissedHours += missedHours;
                             totalMissedSalary += missedHours * this.rate;
                         }
@@ -1548,28 +1454,43 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     const extraSalary = extraHours * this.rate;
                     const totalSalary = baseSalary + extraSalary - totalMissedSalary;
 
-                    // Tips calculation
+                    // Tips calculation - hour-based system
+                    // Note: effectiveShifts, effectiveSikoliDays, effectiveBuleteniDays, effectiveUnpaidDays
+                    // are already calculated above for salary calculation (same cancellation rule applies)
                     const baseTipAmount = this.tipPoints;
                     const positionMultiplier = CONFIG.TIP_MULTIPLIERS[this.position] || 1;
-                    let grossTips = baseTipAmount * positionMultiplier;
-
-                    // Shift bonus (positive)
-                    const shiftBonus = baseTipAmount * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER * (this.shifts || 0);
-                    grossTips += shiftBonus;
-
-                    // Calculate total absence penalty from all selected absences
-                    let totalAbsencePenalty = 0;
+                    
+                    // Calculate shift bonus: add 0.5 to multiplier per effective shift
+                    const shiftBonusMultiplier = effectiveShifts * CONFIG.EXTRA_SHIFT_TIP_MULTIPLIER;
+                    const effectiveMultiplier = positionMultiplier + shiftBonusMultiplier;
+                    
+                    // Calculate total tip hours deducted from absences
+                    let totalTipHoursDeducted = 0;
                     for (const [typeId, days] of this.selectedAbsences) {
                         if (days > 0) {
                             const absenceType = getAbsenceTypeById(typeId);
-                            const penaltyMultiplier = absenceType.tipPenaltyMultiplier;
-                            const penaltyForThisType = (grossTips / 30) * penaltyMultiplier * days;
-                            totalAbsencePenalty += penaltyForThisType;
+                            let effectiveDays = days;
+                            
+                            // Apply cancellation rule for sikoli, buleteni, and unpaid
+                            if (typeId === 'sikoli') {
+                                effectiveDays = effectiveSikoliDays;
+                            } else if (typeId === 'buleteni') {
+                                effectiveDays = effectiveBuleteniDays;
+                            } else if (typeId === 'unpaid') {
+                                effectiveDays = effectiveUnpaidDays;
+                            }
+                            
+                            totalTipHoursDeducted += effectiveDays * absenceType.tipHoursDeducted;
                         }
                     }
-                    grossTips -= totalAbsencePenalty;
-
-                    // tipDiff shows net change vs base position-only tips
+                    
+                    // Calculate remaining tip hours (base 180h minus deductions)
+                    const remainingTipHours = Math.max(0, CONFIG.TIP_BASE_HOURS - totalTipHoursDeducted);
+                    
+                    // Calculate gross tips: tipPoints * effectiveMultiplier * (remainingHours / 180)
+                    const grossTips = baseTipAmount * effectiveMultiplier * (remainingTipHours / CONFIG.TIP_BASE_HOURS);
+                    
+                    // tipDiff shows net change vs base position-only tips (at full 180h)
                     const positionOnlyTips = baseTipAmount * positionMultiplier;
                     const tipDiff = (grossTips - positionOnlyTips);
 
@@ -1597,7 +1518,17 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                         tipTax: originalTaxAmount,
                         tipPension: this.options.has('pension') ? pensionAmount : 0,
                         netTips: finalTips,
-                        positionOnlyTips
+                        positionOnlyTips,
+                        // New hour-based tip calculation variables
+                        remainingTipHours,
+                        totalTipHoursDeducted,
+                        effectiveShifts,
+                        effectiveSikoliDays,
+                        effectiveBuleteniDays,
+                        effectiveUnpaidDays,
+                        totalDeductionDays,
+                        effectiveDeductionDays,
+                        effectiveMultiplier
                     });
 
                 } catch (error) {
@@ -1625,9 +1556,6 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                     grossTips, tipDiff, tipTax, tipPension, netTips,
                     positionOnlyTips 
                 } = calculations;
-
-                // Update debug info first to ensure all values are passed correctly
-                this.updateDebug(calculations);
 
                 // Update hours display
                 setText('totalHours', hours);
@@ -1725,12 +1653,6 @@ ${tipPension ? `📋 Pension (2%): ${formatMoney(-tipPension)}\n` : ''}
                 }
             }
         };
-
-        // Add debug toggle function
-        function toggleDebug() {
-            const debugWindow = document.getElementById('debugWindow');
-            debugWindow.style.display = debugWindow.style.display === 'none' ? 'block' : 'none';
-        }
 
         // Initialize calculator
         (async function() {
