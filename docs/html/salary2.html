@@ -1463,7 +1463,7 @@
 
                 if (type === 'option') {
                     btn.classList.toggle('selected');
-                    this.options[btn.classList.contains('selected') ? 'add' : 'delete'](btn.dataset.option);
+                    this.calculationOptions[btn.classList.contains('selected') ? 'add' : 'delete'](btn.dataset.option);
                 } else {
                     const selector = `[data-${type === 'rate' ? 'position' : type}]`;
                     document.querySelectorAll(selector).forEach(b => b.classList.remove('selected'));
@@ -1557,7 +1557,7 @@
 
                     for (const [typeId, days] of this.selectedAbsenceTypes) {
                         if (days > 0) {
-                            const absenceType = getAbsenceTypeById(typeId);
+                            const absenceType = getAbsenceTypeConfiguration(typeId);
                             let effectiveDays = days;
 
                             // Apply cancellation rule for sikoli, buleteni, and unpaid
@@ -1784,9 +1784,9 @@
             }
         };
 
-        // Initialize calculator
+        // Initialize salary calculator on page load
         (async function () {
-            await calculator.init();
+            await salaryCalculator.initializeCalculator();
         })();
 
         function toggleTable(button) {
@@ -1874,7 +1874,7 @@
         document.getElementById('openShiftModal').onclick = function () {
             document.getElementById('shiftModal').style.display = 'flex';
             Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
-                btn.classList.toggle('selected', parseInt(btn.dataset.shifts) === calculator.shifts);
+                btn.classList.toggle('selected', parseInt(btn.dataset.shifts) === salaryCalculator.overtimeShifts);
             });
         };
         document.getElementById('closeShiftModal').onclick = function () {
@@ -1885,8 +1885,8 @@
         });
         Array.from(document.querySelectorAll('#modalShiftsGrid .toggle-btn')).forEach(btn => {
             btn.onclick = function () {
-                calculator.shifts = parseInt(btn.dataset.shifts);
-                calculator.calculate();
+                salaryCalculator.overtimeShifts = parseInt(btn.dataset.shifts);
+                salaryCalculator.performCalculation();
                 updateShiftSummary();
                 updateClearButtonVisibility();
                 updatePopupButtonStates();
@@ -1933,12 +1933,12 @@
                 // Auto-import current value
                 const value = parseFloat(localStorage.getItem('TipsPerPoint') || localStorage.getItem('tipPoints')) || 0;
                 if (value > 0) {
-                    calculator.tipPoints = value;
+                    salaryCalculator.tipPointsAmount = value;
                     document.getElementById('tipAmount').value = value;
-                    calculator.calculate();
+                    salaryCalculator.performCalculation();
                     tipImportModal.style.display = 'none';
                 } else {
-                    calculator.showError('მიმდინარე მნიშვნელობა არ არის ხელმისაწვდომი');
+                    salaryCalculator.displayErrorMessage('მიმდინარე მნიშვნელობა არ არის ხელმისაწვდომი');
                 }
             };
 
@@ -1949,12 +1949,12 @@
                 // Auto-import forecast value
                 const value = parseFloat(localStorage.getItem('TipsPerPoint-FORECAST')) || 0;
                 if (value > 0) {
-                    calculator.tipPoints = value;
+                    salaryCalculator.tipPointsAmount = value;
                     document.getElementById('tipAmount').value = value;
-                    calculator.calculate();
+                    salaryCalculator.performCalculation();
                     tipImportModal.style.display = 'none';
                 } else {
-                    calculator.showError('პროგნოზირებული მნიშვნელობა არ არის ხელმისაწვდომი');
+                    salaryCalculator.displayErrorMessage('პროგნოზირებული მნიშვნელობა არ არის ხელმისაწვდომი');
                 }
             };
         }
@@ -1969,7 +1969,7 @@
                 Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
 
                 // Then highlight currently selected absences
-                for (const [typeId, days] of calculator.selectedAbsences) {
+                for (const [typeId, days] of salaryCalculator.selectedAbsenceTypes) {
                     console.log(`Restoring ${typeId}: ${days} days`);
                     Array.from(document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`)).forEach(btn => {
                         if (parseInt(btn.dataset.missed) === days) {
@@ -1986,10 +1986,10 @@
         // Clear All button functionality
         document.getElementById('clearAllSelections').onclick = function () {
             // Clear all absence data
-            calculator.selectedAbsences.clear();
+            salaryCalculator.selectedAbsenceTypes.clear();
 
             // Clear all shift data
-            calculator.shifts = 0;
+            salaryCalculator.overtimeShifts = 0;
 
             // Clear all visual selections in missed modal
             Array.from(document.querySelectorAll('#missedModal .toggle-btn')).forEach(b => b.classList.remove('selected'));
@@ -1999,7 +1999,8 @@
 
 
 
-            calculator.calculate();
+
+            salaryCalculator.performCalculation();
             updateShiftSummary();
             updateClearButtonVisibility();
             updatePopupButtonStates();
@@ -2016,9 +2017,9 @@
 
                 // Update the data first
                 if (days === 0) {
-                    calculator.selectedAbsences.delete(type);
+                    salaryCalculator.selectedAbsenceTypes.delete(type);
                 } else {
-                    calculator.selectedAbsences.set(type, days);
+                    salaryCalculator.selectedAbsenceTypes.set(type, days);
                 }
 
                 // Now update ALL visual states based on current data
@@ -2030,7 +2031,7 @@
 
 
                     // Then restore all selections from the data
-                    for (const [typeId, selectedDays] of calculator.selectedAbsences) {
+                    for (const [typeId, selectedDays] of salaryCalculator.selectedAbsenceTypes) {
                         if (selectedDays > 0) {
                             const buttons = document.querySelectorAll(`#missedModal .toggle-btn[data-absence="${typeId}"]`);
 
@@ -2046,20 +2047,18 @@
                     updatePopupButtonStates();
                 }, 10);
 
-
-
-                calculator.calculate();
+                salaryCalculator.performCalculation();
                 updateShiftSummary();
                 updatePopupButtonStates();
             };
         });
 
         function updateShiftSummary() {
-            let summary = `დამატებითი სმენები: ${calculator.shifts}`;
-            if (calculator.selectedAbsences.size > 0) {
+            let summary = `დამატებითი სმენები: ${salaryCalculator.overtimeShifts}`;
+            if (salaryCalculator.selectedAbsenceTypes.size > 0) {
                 const absenceParts = [];
-                for (const [typeId, days] of calculator.selectedAbsences) {
-                    const type = getAbsenceTypeById(typeId);
+                for (const [typeId, days] of salaryCalculator.selectedAbsenceTypes) {
+                    const type = getAbsenceTypeConfiguration(typeId);
                     absenceParts.push(`${type.label_en}: ${days}`);
                 }
                 summary += ` | გაცდენები: ${absenceParts.join(', ')}`;
@@ -2072,8 +2071,8 @@
 
         function updateClearButtonVisibility() {
             const clearButton = document.getElementById('clearAllSelections');
-            const hasShifts = calculator.shifts > 0;
-            const hasAbsences = calculator.selectedAbsences.size > 0;
+            const hasShifts = salaryCalculator.overtimeShifts > 0;
+            const hasAbsences = salaryCalculator.selectedAbsenceTypes.size > 0;
 
             if (hasShifts || hasAbsences) {
                 clearButton.style.display = 'inline-block';
@@ -2085,7 +2084,7 @@
         function updatePopupButtonStates() {
             // Update shift modal button state
             const shiftButton = document.getElementById('openShiftModal');
-            if (calculator.shifts > 0) {
+            if (salaryCalculator.overtimeShifts > 0) {
                 shiftButton.classList.add('selected');
             } else {
                 shiftButton.classList.remove('selected');
@@ -2093,7 +2092,7 @@
 
             // Update missed modal button state
             const missedButton = document.getElementById('openMissedModal');
-            if (calculator.selectedAbsences.size > 0) {
+            if (salaryCalculator.selectedAbsenceTypes.size > 0) {
                 missedButton.classList.add('selected');
             } else {
                 missedButton.classList.remove('selected');
